@@ -103,10 +103,10 @@
         tblHyenas_S <- read_csv(paste(access_data_path,
                                       "tblHyenas_serena_13Jan16.csv", sep = ''))
       
-    ## a.2) combine tblHyenas data frames into one by appending as new rows
+      ## a.2) combine tblHyenas data frames into one by appending as new rows
         tbl_hyenas <- bind_rows(tblHyenas_T, tblHyenas_S)
       
-    ## a.3) clean up workspace by removing Talek and Serena tblHyenas
+      ## a.3) clean up workspace by removing Talek and Serena tblHyenas
         rm(tblHyenas_T, tblHyenas_S)
         
     ## b) Import table Darting, which contains darting record data
@@ -124,3 +124,42 @@
 ###########################################################
 ####                4  Massage Data                    ####
 ###########################################################   
+
+  ### 4.1 Remove Failed Wells
+      # update luma_raw by removing any well that failed due to high CV, 
+      # non-specific peaks or low pyrosequencing signal (see meta data file
+      # for specific details)
+      luma_raw <- filter (luma_raw, analysis_status == "y")
+        
+        
+  ### 4.2 Controls
+    ## a) Subset Controls 
+      # subset luma_raw into a data frame that contains all LUMA controls
+        luma_cntrl <- filter (luma_raw, grepl("hy", sample_ID))
+      
+    ## b) Gather luma_cntrl
+      # gather the luma_cntrl data so that methylation duplicates are in 
+      # long format
+        luma_cntrl <- luma_cntrl %>%
+          gather (meth_dup, dup, dup1:dup2)
+        
+    
+  ### 4.3 Linearization Standards
+    ## a) Subset Linearization Standards
+      #subset luma_raw into a data frame that contains all LUMA linearization 
+      #standards
+        luma_linearz <- filter (luma_raw, grepl("lam", sample_ID)) 
+      
+      
+  ### 4.4 Data
+    ## a)  Subset Data
+      # subset luma_raw into a data frame that contains all LUMA data. 
+      # sample_IDs are numbers
+        luma_data <- filter (luma_raw, grepl("^[[:digit:]]", sample_ID)) 
+        
+
+
+###########################################################
+####                5  Assess Controls                 ####
+###########################################################        
+       
