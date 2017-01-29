@@ -8,42 +8,62 @@
 ### PURPOSE: This code is desingned to analyze LUMA data.
 
 ### Special thanks to all contributors and commentors on stackoverflow 
-### for creative code suggestions and solutions.
+### and other open source communities for creative and informative coding
+### solutions.
 
 
     # Code Blocks
-    # 1: Load Packages
-    # 2: Import Data
-    # 3: Set Global Values
-    # 4: Query and Select Sessions 
-    # 5: Save and Write Out Data File to .csv
+    # 1: Configure Workspace
+    # 2: Set Working Directory
+    # 3: Import Data
+    # 4: Massage Data
+    # 5: Assess Controls 
+    # 6: 
 
 
 
 ###########################################################
-####                 1  Load Packages                  ####
+####            1  Configure Workspace                 ####
 ###########################################################
 
-  # clear global environment
+  ### 1.1 clear global environment
     rm(list = ls())
 
-  # Require - load a packages  into a current R session
 
-
-  ### 1.1  Data Manipulation and Descriptive Stats Packages
+  ### 1.2 Require - load a packages  into a current R session
+    ## a) Data Manipulation and Descriptive Stats Packages
+      require(dplyr)
+      require(plyr)
+      require(purrr)
+      require(readr)
+      require(reshape)
+      require(reshape2)
+      require(tidyr)
+      options(gsubfn.engine = "R") #fixes tcltk bug; run before require sqldf
+      require(sqldf)
     
-    require(dplyr)
-    require(plyr)
-    require(purrr)
-    require(readr)
-    require(reshape)
-    require(reshape2)
-    require(tidyr)
-    options(gsubfn.engine = "R") #fixes tcltk bug; run before require sqldf
-    require(sqldf)
+    ## b) Graph Plotting and Visualization Packages
+      require(ggplot2)
+      require(sjPlot)
+      require(sciplot)
+      require(effects)
+      require(plotrix)
+      require(scatterplot3d)
+      #require(texi2dvi)
+      #require(stargazer)
+      #require(xtable)
+      
+    ## c) Modeling Packages
+      # Modeling Packages
+      require(lme4)
+      require(arm)
+      require(car)
+      require(lsmeans)
+      require(boot)
+      require(bbmle)
 
     
-  ### 1.2 Get Version and Session Info
+  ### 1.3 Get Version and Session Info
     R.Version()
     sessionInfo()    
     # Ran with...
@@ -161,5 +181,155 @@
 
 ###########################################################
 ####                5  Assess Controls                 ####
-###########################################################        
+###########################################################  
+        
+  ### 5.1 Intra-Class CV
+    ## a) hy_pool and hy_100% Intra-Class CV
+      # use ddply to calulate the intra-class CV (within plate variation)
+      # for pooled samples.
+        intra_CV <- ddply (luma_cntrl, .(plate_rxn_ID, sample_ID),
+                           summarise,
+                           N = sum(!is.na(methylation)),
+                           mean = round (mean(methylation, na.rm = T), 2),
+                           median =  round (quantile(methylation, c(.5),
+                                                     na.rm = T), 2),
+                           sd = round (sd(methylation, na.rm = T), 2),
+                           cv = 100* (sd/mean))
+    
        
+                               
+        
+  ### 5.2 Inter-Class CV
+    ## a) hy_pool and hy_100% Inter-Class CV
+      # use ddply to calulate the inter-class CV (between plate variation) 
+      # for pooled samples.  
+        inter_CV <- ddply (luma_cntrl, .( sample_ID), summarise,
+                           N = sum(!is.na(methylation)),
+                           mean = round (mean(methylation, na.rm = T), 2),
+                           median =  round (quantile(methylation, c(.5),
+                                                     na.rm = T), 2),
+                           sd = round (sd(methylation, na.rm = T), 2),
+                           cv = 100* (sd/mean))
+        
+        
+  ### 5.3 Check Linearization
+    ## a) Predicted Values
+      # arrange the luma_linearz descending order by plate_pos_seq
+        luma_linearz <- arrange(luma_linearz, plate_pos_seq)
+      
+      # make a vector of predicted and append those to the linearization 
+      # data frame
+        luma_linearz$pred_meth <- as.numeric(c(100, 75, 65, 50, 25, 0))
+        
+    ## b) Graph Linearization Data
+      # Graph the actual and predicted methylation values from Lambda phage
+      # DNA methylation standard curves
+        ggplot(luma_linearz, aes (x = sample_ID, group=1)) +
+                 geom_line(aes(y = pred_meth, color = "pred_meth"), 
+                           size = 1) +
+                 geom_line(aes(y = methylation, color = "methylation"), 
+                           size = 1) +
+          scale_color_manual(values = c("red", "dark grey")) +
+          # scale_color_hue(l = 50) + # Use a slightly darker palette than normal
+          scale_x_discrete(limits = c(luma_linearz$sample_ID)) +
+          labs (title = "LUMA Global 
+                DNA Mehtylation Standard Curve") +
+          ylab ("% Global DNA Methylation") +
+          xlab ("Standard Curve")
+        
+    ## c) Save Plot
+      # use ggsave to save the linearization plot
+        ggsave("luma_linearization.pdf", plot = last_plot(), device = NULL, 
+               path = "./output", scale = 1, width = 6, height = 4, 
+               units = c("in"), dpi = 300, limitsize = TRUE)
+
+        
+  ### 5.4 Check Plates for Drift    
+    ## a) Graph Controls Across Plates
+      # Graph the control on each reaction plate to assess for any plate drift
+        ggplot(luma_cntrl, aes (x = as.factor(plate_pos_factor), 
+                                y = methylation, color = sample_ID, 
+                                group = sample_ID)) +
+          geom_line(size = 1) +
+          facet_grid(. ~ plate_rxn_ID) +
+          scale_color_manual(values = c("red", "dark grey")) +
+          scale_x_discrete() +
+          labs (title = "LUMA Global DNA Mehtylation 
+                Plate by Plate Controls") +
+          ylab ("% Global DNA Methylation") +
+          xlab ("Plate Positions")
+    
+    ## b) Save Plot    
+      # use ggsave to save the control drift plot
+        ggsave("control_drift.pdf", plot = last_plot(), device = NULL, 
+               path = "./output", scale = 1, width = 9, height = 3, 
+               units = c("in"), dpi = 300, limitsize = TRUE)   
+        
+    ## c) Graph Controls Across Plates 
+      # Graph the control on each reaction plate to assess for any plate drift 
+        ggplot(luma_cntrl, aes (x = well, y = methylation,
+                                color = sample_ID, group = sample_ID)) +
+          geom_line(size = 1) +
+          facet_grid(plate_rxn_ID ~ sample_ID) +
+          scale_color_manual(values = c("red", "dark grey")) +
+          scale_x_discrete() +
+          labs (title = "LUMA Global DNA Mehtylation 
+                Plate by Plate Controls") +
+          ylab ("% Global DNA Methylation") +
+          xlab ("Plate Positions")
+        
+    ## d) Save Plot
+      # use ggsave to save the linearization plot
+        ggsave("double_panel_control_drift.pdf", plot = last_plot(), device = NULL, 
+               path = "./output", scale = 1, width = 7, height = 7, 
+               units = c("in"), dpi = 300, limitsize = TRUE)   
+        
+    ## c) Graph Controls Across Plates 
+      # Graph the controls on each reaction plate to assess for any plate drift
+      # least squares regression is used for the fit function 
+        ggplot(luma_cntrl, aes (x = well, y = methylation,
+                                color = sample_ID, group = sample_ID)) +
+          geom_point(size = 1) +
+          geom_smooth(method = lm, se = F) +
+          facet_grid(plate_rxn_ID ~ sample_ID) +
+          scale_color_manual(values = c("red", "dark grey")) +
+          scale_x_discrete() +
+          labs (title = "LUMA Global DNA Mehtylation 
+                Plate by Plate Controls") +
+          ylab ("% Global DNA Methylation") +
+          xlab ("Plate Positions")
+  
+    ## d) Save Plot
+      # use ggsave to save the linearization plot
+        ggsave("double_panel_control_drift.pdf", plot = last_plot(), device = NULL, 
+               path = "./output", scale = 1, width = 7, height = 7, 
+               units = c("in"), dpi = 300, limitsize = TRUE) 
+   
+        
+    ## e) Subset Controls 
+      # subset luma_raw into a data frame that contains one of the LUMA control
+      # dupliates
+        luma_pool <- filter (luma_cntrl, grepl("pool", sample_ID))     
+        luma_pool <- filter (luma_pool, grepl("dup1", meth_dup))
+    
+    ## f) Plate by Plate Linear Regression
+      # For each plate model the possible drift between controls; output is
+      # a list of lm objects
+        plate_drift = dlply(luma_pool, .(plate_rxn_ID), lm,
+                            formula = methylation ~ plate_pos_factor)
+
+      # For use in plyr's ldply() function, the utility function should
+      # return a data frame. We save some effort in simple linear regression
+      # by noting that the two-sided p-value of the t-test of zero slope is the
+      # same as that of the overall F test:
+        extractfun <- function(m) {
+          cf <- coef(m)
+          tinfo <- summary(m)$coefficients[2, c(2, 4)]
+          r2 <- summary(m)$r.squared
+          data.frame(intercept = cf[1], slope = cf[2], n = length(resid(m)),
+                     slope.se = tinfo[1], pval = tinfo[2], Rsq = r2)
+        }
+        
+      # Take a list (of models) as input and output a data frame:
+        ldply(plate_drift, extractfun)
+      
