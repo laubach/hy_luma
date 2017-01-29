@@ -197,8 +197,6 @@
                            cv = 100* (sd/mean))
     
        
-                               
-        
   ### 5.2 Inter-Class CV
     ## a) hy_pool and hy_100% Inter-Class CV
       # use ddply to calulate the inter-class CV (between plate variation) 
@@ -245,46 +243,8 @@
 
         
   ### 5.4 Check Plates for Drift    
-    ## a) Graph Controls Across Plates
-      # Graph the control on each reaction plate to assess for any plate drift
-        ggplot(luma_cntrl, aes (x = as.factor(plate_pos_factor), 
-                                y = methylation, color = sample_ID, 
-                                group = sample_ID)) +
-          geom_line(size = 1) +
-          facet_grid(. ~ plate_rxn_ID) +
-          scale_color_manual(values = c("red", "dark grey")) +
-          scale_x_discrete() +
-          labs (title = "LUMA Global DNA Mehtylation 
-                Plate by Plate Controls") +
-          ylab ("% Global DNA Methylation") +
-          xlab ("Plate Positions")
-    
-    ## b) Save Plot    
-      # use ggsave to save the control drift plot
-        ggsave("control_drift.pdf", plot = last_plot(), device = NULL, 
-               path = "./output", scale = 1, width = 9, height = 3, 
-               units = c("in"), dpi = 300, limitsize = TRUE)   
         
-    ## c) Graph Controls Across Plates 
-      # Graph the control on each reaction plate to assess for any plate drift 
-        ggplot(luma_cntrl, aes (x = well, y = methylation,
-                                color = sample_ID, group = sample_ID)) +
-          geom_line(size = 1) +
-          facet_grid(plate_rxn_ID ~ sample_ID) +
-          scale_color_manual(values = c("red", "dark grey")) +
-          scale_x_discrete() +
-          labs (title = "LUMA Global DNA Mehtylation 
-                Plate by Plate Controls") +
-          ylab ("% Global DNA Methylation") +
-          xlab ("Plate Positions")
-        
-    ## d) Save Plot
-      # use ggsave to save the linearization plot
-        ggsave("double_panel_control_drift.pdf", plot = last_plot(), device = NULL, 
-               path = "./output", scale = 1, width = 7, height = 7, 
-               units = c("in"), dpi = 300, limitsize = TRUE)   
-        
-    ## c) Graph Controls Across Plates 
+    ## a) Graph Controls Across Plates 
       # Graph the controls on each reaction plate to assess for any plate drift
       # least squares regression is used for the fit function 
         ggplot(luma_cntrl, aes (x = well, y = methylation,
@@ -299,7 +259,7 @@
           ylab ("% Global DNA Methylation") +
           xlab ("Plate Positions")
   
-    ## d) Save Plot
+    ## b) Save Plot
       # use ggsave to save the linearization plot
         ggsave("double_panel_control_drift.pdf", plot = last_plot(), device = NULL, 
                path = "./output", scale = 1, width = 7, height = 7, 
@@ -316,7 +276,7 @@
       # For each plate model the possible drift between controls; output is
       # a list of lm objects
         plate_drift = dlply(luma_pool, .(plate_rxn_ID), lm,
-                            formula = methylation ~ plate_pos_factor)
+                            formula = methylation ~ plate_pos_seq)
 
       # For use in plyr's ldply() function, the utility function should
       # return a data frame. We save some effort in simple linear regression
@@ -332,4 +292,5 @@
         
       # Take a list (of models) as input and output a data frame:
         ldply(plate_drift, extractfun)
+   
       
