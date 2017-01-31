@@ -291,6 +291,52 @@
         }
         
       # Take a list (of models) as input and output a data frame:
-        ldply(plate_drift, extractfun)
+        drift_coef <- ldply(plate_drift, extractfun)
    
+        
+  ### 5.5 Calibrate Methylation Values
+        
+    ## a) Join drift_coef to luma_data
+      # A Left join of 'luma_data' with 'drift_coef', making an updated
+      # 'luma_data' dataframe which includes the drift slope, 'slope,'.
+      # parent table. Parent tables are linked on 'plate_rxn_ID.'
+        luma_data <- sqldf("SELECT
+                            luma_data.*           
+                            , drift_coef.slope   
+                            FROM luma_data      
+                            LEFT JOIN drift_coef       
+                            ON luma_data.plate_rxn_ID = 
+                            drift_coef.plate_rxn_ID")
+        
+    ## b) Weigth Plate Calibration
+      # Use ddply calculate a weighted plate calibration, with the result of 
+      # shrinking drift towards the plate center (hy_pool control mean); 
+      # a symmetrical shrinkage.
+        calibration <- ddply (luma_data, .(plate_rxn_ID, sample_ID),
+                           summarise,
+                           meth_adjust = ifelse(plate_pos_factor == 1, 
+                                      (((1-(plate_pos_seq/24))*slope) + 
+                                         methylation), 
+                                      (methylation - ((plate_pos_seq/24)-1)
+                                       * slope))) 
       
+    ## a) Join drift_coef to luma_data
+      # A Left join of 'luma_data' with 'drift_coef', making an updated
+      # 'luma_data' dataframe which includes the drift slope, 'slope,'.
+      # parent table. Parent tables are linked on 'plate_rxn_ID.'
+        luma_data <- sqldf("SELECT
+                           luma_data.*           
+                           , calibration .meth_adjust   
+                           FROM luma_data      
+                           LEFT JOIN calibration       
+                           ON luma_data.sample_ID = 
+                           calibration.sample_ID")    
+      
+                       
+                       
+                       
+                  
+                              
+     
+
+       
