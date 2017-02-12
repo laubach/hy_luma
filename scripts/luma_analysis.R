@@ -49,9 +49,10 @@
       require(effects)
       require(plotrix)
       require(scatterplot3d)
-      #require(texi2dvi)
-      #require(stargazer)
-      #require(xtable)
+      require(texi2dvi)
+      require(stargazer)
+      require(xtable)
+    
       
     ## c) Modeling Packages
       # Modeling Packages
@@ -76,7 +77,7 @@
 ###########################################################
 
   ### 2.1 Set a working directory
-    setwd("~/Git/luma")
+    setwd("~/Git/fisi_lab/hy_luma")
   
 
   ### 2.2 Create path to a LUMA data folder
@@ -195,8 +196,8 @@
                                                      na.rm = T), 2),
                            sd = round (sd(methylation, na.rm = T), 2),
                            cv = 100* (sd/mean))
-    
-       
+ 
+        
   ### 5.2 Inter-Class CV
     ## a) hy_pool and hy_100% Inter-Class CV
       # use ddply to calulate the inter-class CV (between plate variation) 
@@ -331,6 +332,9 @@
                            LEFT JOIN calibration       
                            ON luma_data.sample_ID = 
                            calibration.sample_ID")    
+        
+        
+  
 # rename commit 1  
 # rename commit 2        
 
