@@ -2,7 +2,7 @@
 ########   Spotted Hyena Global DNA Methylation    ########
 ########               LUMA Analysis               ########
 ########             By: Zach Laubach              ########
-########       last updated: 21 January 2017       ########
+########       last updated: 12 February 2017       ########
 ###########################################################
 
 ### PURPOSE: This code is desingned to analyze LUMA data.
@@ -12,14 +12,15 @@
 ### solutions.
 
 
-    # Code Blocks
+  # Code Blocks
     # 1: Configure Workspace
     # 2: Set Working Directory
     # 3: Import Data
-    # 4: Massage Data
+    # 4: Prepare Raw Data
     # 5: Assess Controls 
-    # 6: 
-
+    # 6: Build Data Set
+    # 7: Descriptive Statistics (Univariate)
+    # 8: Bi-Variate Analysis
 
 
 ###########################################################
@@ -52,6 +53,7 @@
       require(texi2dvi)
       require(stargazer)
       require(xtable)
+      require(gridExtra)
     
       
     ## c) Modeling Packages
@@ -72,6 +74,8 @@
     #Platform: x86_64-apple-darwin13.4.0 (64-bit)
     #Running under: OS X 10.12 (Sierra)
 
+    
+    
 ###########################################################
 ####            2  Set Working Directory               ####
 ###########################################################
@@ -91,7 +95,9 @@
   ### 2.4 Create path to sample selection data folder (from repository query)
     select_data_path <- paste("~/R/R_wd/fisi/project/hy_GR_global_DNA_meth/",
                               "sample_selection/output/", sep = '')
+ 
     
+       
 ###########################################################
 ####                  3  Import Data                   ####
 ###########################################################      
@@ -113,6 +119,9 @@
     # file in the sample_selection output folder.
       samp_select <- read_csv(paste(select_data_path,
                                     "sample_request_03May2016.csv", sep = ''))
+      
+    # clean up/standardie categorical age names
+      samp_select$Age[grepl("s", samp_select$Age)]<-"subadult"
       
       
   ### 3.3 Import Access Fisi Tables
@@ -143,7 +152,7 @@
   
            
 ###########################################################
-####                4  Massage Data                    ####
+####              4  Prepare Raw Data                  ####
 ###########################################################   
 
   ### 4.1 Remove Failed Wells
@@ -196,7 +205,12 @@
                                                      na.rm = T), 2),
                            sd = round (sd(methylation, na.rm = T), 2),
                            cv = 100* (sd/mean))
- 
+        
+    ## b) save the data frame of summary stats out as a pdf into output file
+        pdf("output/intra_CV.pdf", height = 6, width = 7)
+        grid.table(intra_CV)
+        dev.off()
+        
         
   ### 5.2 Inter-Class CV
     ## a) hy_pool and hy_100% Inter-Class CV
@@ -210,7 +224,12 @@
                            sd = round (sd(methylation, na.rm = T), 2),
                            cv = 100* (sd/mean))
         
+    ## b) save the data frame of summary stats out as a pdf into output file
+        pdf("output/inter_CV.pdf", height = 6, width = 7)
+        grid.table(inter_CV)
+        dev.off()
         
+              
   ### 5.3 Check Linearization
     ## a) Predicted Values
       # arrange the luma_linearz descending order by plate_pos_seq
@@ -266,7 +285,6 @@
                path = "./output", scale = 1, width = 7, height = 7, 
                units = c("in"), dpi = 300, limitsize = TRUE) 
    
-        
     ## e) Subset Controls 
       # subset luma_raw into a data frame that contains one of the LUMA control
       # dupliates
@@ -294,8 +312,18 @@
       # Take a list (of models) as input and output a data frame:
         drift_coef <- ldply(plate_drift, extractfun)
    
+    ## g) save the data frame of summary stats out as a pdf into output file
+        pdf("output/drift_coef.pdf", height = 4, width = 8)
+        grid.table(drift_coef)
+        dev.off()
+      
+
         
-  ### 5.5 Calibrate Methylation Values
+###########################################################
+####                6  Build Data Set                  ####
+###########################################################          
+        
+  ### 6.1 Calibrate Methylation Values
         
     ## a) Join drift_coef to luma_data
       # A Left join of 'luma_data' with 'drift_coef', making an updated
@@ -309,7 +337,7 @@
                             ON luma_data.plate_rxn_ID = 
                             drift_coef.plate_rxn_ID")
         
-    ## b) Weigth Plate Calibration
+    ## b) Weigthed Plate Calibration
       # Use ddply calculate a weighted plate calibration, with the result of 
       # shrinking drift towards the plate center (hy_pool control mean); 
       # a symmetrical shrinkage.
@@ -321,10 +349,10 @@
                                       (methylation - ((plate_pos_seq/24)-1)
                                        * slope))) 
       
-    ## a) Join drift_coef to luma_data
-      # A Left join of 'luma_data' with 'drift_coef', making an updated
+    ## c) Join calibrated methylation to luma_data
+      # A Left join of 'luma_data' with 'calibration', making an updated
       # 'luma_data' dataframe which includes the drift slope, 'slope,'.
-      # parent table. Parent tables are linked on 'plate_rxn_ID.'
+      # parent table. Parent tables are linked on 'sample_ID.'
         luma_data <- sqldf("SELECT
                            luma_data.*           
                            , calibration .meth_adjust   
@@ -332,17 +360,205 @@
                            LEFT JOIN calibration       
                            ON luma_data.sample_ID = 
                            calibration.sample_ID")    
+
+                
+  ### 6.2 Link Samples to Hyena ID
+    # Join the luma_data back to samp_select so that methylation values can
+    # be linked to hyena ID and kay code by the sample ID
+    
+    ## a) Rename luma_data variable
+      # change name of 'notes' variable to resolve ambigouos join error
+        luma_data <- dplyr::rename(luma_data, assay_notes = notes)
         
-        
+    ## a) Join luma_data to samp_select
+      # A Left join of 'luma_data' with 'samp_select', making an updated
+      # 'luma_data' dataframe which includes the drift slope, 'slope,'.
+      # parent table. Parent tables are linked on 'sample_ID.'
+        luma_data <- sqldf("SELECT
+                           luma_data. plate_rxn_ID, plate_pos_seq, 
+                            plate_pos_factor, well, methylation,
+                            analysis_status, assay_notes, dup1, dup2, stdev, cv,
+                            slope, meth_adjust,           
+                            samp_select.*  
+                           FROM luma_data      
+                           LEFT JOIN samp_select       
+                           ON luma_data.sample_ID = 
+                           samp_select.sample_ID")   
   
-# rename commit 1  
-# rename commit 2        
 
-                       
-                       
-                       
-                  
-                              
-     
+  ### 6.3 Link Samples to Demographic Data
+    # Join the luma_data back to samp_select so that methylation values can
+    # be linked to hyena ID and kay code by the sample ID
+        
+    ## a) Join luma_data to samp_select
+      # A Left join of 'luma_data' with 'samp_select', making an updated
+      # 'luma_data' dataframe which includes the drift slope, 'slope,'.
+      # parent table. Parent tables are linked on 'sample_ID.' The 'GROUP BY'
+      # function resolves redundant duplicates from join. 
+        luma_data <- sqldf("SELECT
+                            luma_data.*           
+                            , tbl_hyenas.*  
+                            FROM luma_data      
+                            LEFT JOIN tbl_hyenas       
+                            ON luma_data.ID = 
+                            tbl_hyenas.ID
+                            GROUP BY sample_ID")         
+      
+    ## b) Reorder Age variable for graphing
+        luma_data$Age <- factor(luma_data$Age, levels = c("cub", "subadult",
+                                "adult"))
+ 
+        
+               
+###########################################################
+####      7  Descriptive Statistics (Univariate)       ####
+###########################################################         
 
+  ### 7.1 Outcome Univariate 
+    ## a) Descriptive Stats Outcome
+      # calculate the mean, median and standard deviation of % methylation
+      # and the adjusted % methylation values
+        univar_meth = ddply(luma_data, .(), summarise,
+                            N = sum(!is.na(methylation)),
+                            mean = mean(methylation, na.rm = T),
+                            median =  quantile(methylation, c(.5),
+                                                      na.rm = T),
+                            sd = sd(methylation, na.rm = T),
+                            N_adjust = sum(!is.na(meth_adjust)),
+                            mean_adjust = mean(meth_adjust, 
+                                                      na.rm = T),
+                            median_adjust =  quantile(meth_adjust, c(.5),
+                                                      na.rm = T),
+                            sd_adjust = sd(meth_adjust, na.rm = T))
+        
+    ## b) save the data frame of summary stats out as a pdf into output file
+        pdf("output/univar_meth.pdf", height = 4, width = 8)
+        grid.table(univar_meth)
+        dev.off()
+        
+    ## c) Histogram Outcome (adjust_meth)
+        ggplot(data=luma_data, aes(x=meth_adjust, y = ..density..)) + 
+          geom_histogram(breaks=seq(60, 100, by = 0.5), 
+                         col="black",
+                         aes(fill = ..count..)) +
+          scale_fill_gradient("Count", low = "light green", high = 
+                                "dark blue") +
+          geom_density() +
+          xlim(c(60,100)) +
+          labs(title="Histogram for % Methylation") +
+          labs(x="% Methylation", y="Frequency")
+    
+    ## b) Save Plot
+      # use ggsave to save the linearization plot
+        ggsave("meth_histogram.pdf", plot = last_plot(), device = NULL, 
+               path = "./output", scale = 1, width = 7, height = 5, 
+               units = c("in"), dpi = 300, limitsize = TRUE)
+        
+        
+  ### 7.2 Predictive Variables Univariate      
+    ## a) Descriptive Stats Sex
+        univar_sex <- ddply(luma_data, .(Sex), summarise,
+                            N = sum(!is.na(Sex)))
+    
+    ## b) save the data frame of summary stats out as a pdf into output file
+        pdf("output/univar_sex.pdf", height = 4, width = 8)
+        grid.table(univar_sex)
+        dev.off() 
+        
+    ## c) Descriptive Stats Age
+      # calculate the N, mean, median and standard deviation of hyena ages 
+        univar_age <- ddply(luma_data, .(Age), summarise,
+                            N = sum(!is.na(Age)),
+                            mean = round(mean(AgeMonths, na.rm = T), 2),
+                            median =  round (quantile(AgeMonths, c(.5),
+                                               na.rm = T), 2),
+                            sd = round(sd(AgeMonths, na.rm = T), 2))
        
+    ## d) save the data frame of summary stats out as a pdf into output file
+          pdf("output/univar_age.pdf", height = 5, width = 8)
+          grid.table(univar_age)
+          dev.off()
+        
+    
+                       
+###########################################################
+####              8  Bi-Variate Analysis               ####
+###########################################################                  
+
+  ### 8.1 Bivariate Analysis Meth by Sex                                    
+    ## a) Boxplot of Bivariate Analysis Meth by Sex
+      # graph of the raw data for percent global DNA methylaiton by sex
+        ggplot(luma_data, aes (x = Sex, 
+                                y = meth_adjust)) +
+          geom_jitter(aes(alpha = 0.5)) +
+          geom_boxplot(aes(fill = Sex, alpha = 0.5)) +
+          scale_fill_manual(values = c("red", "dark blue")) +
+          ylim(c(60,90))+
+          labs (title = "Percent Global 
+DNA Mehtylation by Sex") +
+          ylab ("% Global DNA Methylation") +
+          xlab ("Sex")
+
+    ## b) Save Plot
+      # use ggsave to save the linearization plot
+        ggsave("meth_sex_box.pdf", plot = last_plot(), device = NULL, 
+                path = "./output", scale = 1, width = 7, height = 5, 
+                units = c("in"), dpi = 300, limitsize = TRUE)      
+   
+               
+  ### 8.2 Bivariate Analysis Meth by Age        
+    ## a) Boxplot Bivariate Analysis Methy by Age     
+      # graph of the raw data for percent global DNA methylaiton by maternal rank
+        ggplot(luma_data, aes (x = Age, y = meth_adjust)) +
+          geom_jitter(aes(alpha = 0.5)) +
+          geom_boxplot(aes(fill = Age, alpha = 0.5)) +
+          scale_fill_manual(values = c("yellow", "dark green", "dark blue")) +
+          ylim(c(60,90))+
+          labs (title = "Percent Global 
+DNA Mehtylation by Age") +
+          ylab ("% Global DNA Methylation") +
+          xlab ("Age")      
+    
+    ## b) Save Plot
+      # use ggsave to save the linearization plot
+        ggsave("meth_age_box.pdf", plot = last_plot(), device = NULL, 
+               path = "./output", scale = 1, width = 7, height = 5, 
+               units = c("in"), dpi = 300, limitsize = TRUE)    
+  
+        
+              
+#### NOT WORKING YET ####
+    # graph of the raw data for percent global DNA methylaiton by maternal rank
+      # stratified by age
+        ggplot(luma_data, aes(x = factor(Age), y = meth_adjust, group = Sex, 
+                              shape = Sex, color = Sex)) + 
+          #geom_line(aes(linetype = variable)) +
+          geom_point(shape = 1) +
+          scale_colour_hue(l = 50) + # Use a slightly darker palette than normal
+          geom_smooth(method = lm, se = F) + # Add linear regression best fit lines
+          labs(title = "Percent Global DNA Mehtylation 
+                by Maternal Rank by Age",
+                fill = "age" ) +
+          ylab("% Global DNA Methylation") +
+          xlab("Maternal Rank")
+
+        #######   Centering and Variable Transformations  ########
+        
+        # *** NOTE: AGAIN, with continuous predictor variables 1). check 
+        # *** distributions, 2). meaningful range of data (i.e. no extrapolation),
+        # *** and 3). for correlations between predictive variables using both
+        # *** plot(data.frame) and cor(data.frame)
+        
+        # 1). Transformations
+        # z score standardization of outcome to improve generalizability
+        prozac$z.percent.meth <- scale(prozac$percent.meth, center = F, scale = T)
+        
+        # 2). Centering
+        # no need to center categorical variables, but should always
+        # consider centering continous predictors, because meaningless
+        # intercepts can leverage overall mean about the pivot point 
+        # (mean of X and mean of y)
+        
+        # 3). Check correlations
+        # for continuous predictor variables, strong correlations can clue
+        # violations of independence       
