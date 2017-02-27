@@ -287,7 +287,7 @@
    
     ## e) Subset Controls 
       # subset luma_raw into a data frame that contains one of the LUMA control
-      # dupliates
+      # duplicates
         luma_pool <- filter (luma_cntrl, grepl("pool", sample_ID))     
         luma_pool <- filter (luma_pool, grepl("dup1", meth_dup))
     
@@ -368,7 +368,7 @@
     
     ## a) Rename luma_data variable
       # change name of 'notes' variable to resolve ambigouos join error
-        luma_data <- dplyr::rename(luma_data, assay_notes = notes)
+      #  luma_data <- dplyr::rename(luma_data, assay_notes = notes)
         
     ## a) Join luma_data to samp_select
       # A Left join of 'luma_data' with 'samp_select', making an updated
@@ -395,15 +395,16 @@
       # 'luma_data' dataframe which includes the drift slope, 'slope,'.
       # parent table. Parent tables are linked on 'sample_ID.' The 'GROUP BY'
       # function resolves redundant duplicates from join. 
-        luma_data <- sqldf("SELECT
-                            luma_data.*           
-                            , tbl_hyenas.*  
-                            FROM luma_data      
-                            LEFT JOIN tbl_hyenas       
-                            ON luma_data.ID = 
-                            tbl_hyenas.ID
-                            GROUP BY sample_ID")         
-      
+#        luma_data <- sqldf("SELECT
+#                            luma_data.*           
+#                            , tbl_hyenas.*  
+#                            FROM luma_data      
+#                            LEFT JOIN tbl_hyenas       
+#                            ON luma_data.ID = 
+#                            tbl_hyenas.ID
+#                            GROUP BY sample_ID")         
+        
+       
     ## b) Reorder Age variable for graphing
         luma_data$Age <- factor(luma_data$Age, levels = c("cub", "subadult",
                                 "adult"))
@@ -444,17 +445,58 @@
           scale_fill_gradient("Count", low = "light green", high = 
                                 "dark blue") +
           geom_density() +
-          xlim(c(60,100)) +
+          xlim(c(20,90)) +
           labs(title="Histogram for % Methylation") +
           labs(x="% Methylation", y="Frequency")
     
-    ## b) Save Plot
+    ## d) Save Plot
       # use ggsave to save the linearization plot
         ggsave("meth_histogram.pdf", plot = last_plot(), device = NULL, 
                path = "./output", scale = 1, width = 7, height = 5, 
                units = c("in"), dpi = 300, limitsize = TRUE)
         
-        
+    ## e) Remove Outliers
+      RemoveOutlier <- function (data, nos_sd, sd, mean) {
+        low_cut <- mean - (nos_sd * sd) 
+        hi_cut <- mean + (nos_sd * sd)
+        data <- filter(data, methylation > low_cut & methylation < hi_cut)
+      }  
+    
+    ## f) Run RemoverOutlier function to generate another data set      
+      luma_data_no_out <- RemoveOutlier(data = luma_data, nos_sd = 2, 
+                                        sd = univar_meth$sd,
+                                        mean = univar_meth$mean)   
+
+  
+    ## g) Histogram Outcome (adjust_meth and outliers removed)
+      ggplot(data=luma_data_no_out, aes(x=meth_adjust, y = ..density..)) + 
+        geom_histogram(breaks=seq(60, 100, by = 0.5), 
+                       col="black",
+                       aes(fill = ..count..)) +
+        scale_fill_gradient("Count", low = "light green", high = 
+                              "dark blue") +
+        geom_density() +
+        xlim(c(20,90)) +
+        labs(title="Histogram for % Methylation
+             (No Outliers") +
+        labs(x="% Methylation", y="Frequency")
+      
+    ## h) Save Plot
+      # use ggsave to save the linearization plot
+      ggsave("meth_histogram_no_out.pdf", plot = last_plot(), device = NULL, 
+             path = "./output", scale = 1, width = 7, height = 5, 
+             units = c("in"), dpi = 300, limitsize = TRUE)  
+      
+    
+    
+    
+    
+    
+    
+    
+    
+    
+             
   ### 7.2 Predictive Variables Univariate      
     ## a) Descriptive Stats Sex
         univar_sex <- ddply(luma_data, .(Sex), summarise,
@@ -493,7 +535,7 @@
           geom_jitter(aes(alpha = 0.5)) +
           geom_boxplot(aes(fill = Sex, alpha = 0.5)) +
           scale_fill_manual(values = c("red", "dark blue")) +
-          ylim(c(60,90))+
+          ylim(c(20,90))+
           labs (title = "Percent Global 
 DNA Mehtylation by Sex") +
           ylab ("% Global DNA Methylation") +
@@ -513,7 +555,7 @@ DNA Mehtylation by Sex") +
           geom_jitter(aes(alpha = 0.5)) +
           geom_boxplot(aes(fill = Age, alpha = 0.5)) +
           scale_fill_manual(values = c("yellow", "dark green", "dark blue")) +
-          ylim(c(60,90))+
+          ylim(c(20,90))+
           labs (title = "Percent Global 
 DNA Mehtylation by Age") +
           ylab ("% Global DNA Methylation") +
@@ -525,7 +567,22 @@ DNA Mehtylation by Age") +
                path = "./output", scale = 1, width = 7, height = 5, 
                units = c("in"), dpi = 300, limitsize = TRUE)    
   
+   
         
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+            
               
 #### NOT WORKING YET ####
     # graph of the raw data for percent global DNA methylaiton by maternal rank
