@@ -531,7 +531,7 @@
     # name to save each table
           
     ## a) File name for sample_request table
-      csv.file.name.luma <- paste (luma_data_out_path, "luma_data",
+      csv.file.name.luma <- paste (luma_data_out_path, "luma_data_no_out",
                                    ".csv", sep= "")   
     
     ## b) File name for sample_request table
