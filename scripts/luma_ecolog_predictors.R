@@ -17,7 +17,7 @@
     # 2: Set Working Directory
     # 3: Import Data
     # 4: Tidy Data
-    # 5: 
+    # 5: Bi-variate 
     # 6: 
     # 7: 
     # 8: 
@@ -319,14 +319,101 @@
       
       
 ###########################################################
-####              5  Bi-Variate Analysis               ####
+####              5  Variable Formatting               ####
 ###########################################################  
+  
+  ### 5.1 Maternal Rank Variable
+    ## a) Create Quartiles of Maternal Rank
+      # convert strank to numeric
+      luma_data$strank <- as.numeric(luma_data$strank)
+      # use quantile function to cut strank into 4 levels (approximately same
+      # number in each level)
+      luma_data <- within(luma_data, strank.quart.order
+                          <- as.integer(cut(strank, 
+                                         quantile(strank, probs=0:4/4,
+                                                  na.rm = T), 
+                                         include.lowest = T)))
     
- 
-###########################################################
-####                6  Build Data Set                  ####
-###########################################################          
+    ## b) Rename Quartile Levels
+      #rename maternal rank variable from 1-4 to high, mid, low, bottom as a new 
+      # variable. The strank.quart.order variable is retained to define 
+      # reference and set group order for graphing
+      luma_data$strank.quart <- as.factor (cut(luma_data$strank.quart.order, 
+                                                   breaks=c(0, 1, 2, 3, 4), 
+                                                   labels=c("high", "mid", 
+                                                            "low", "bottom")))
+  
+  
+  ### 5.2 Age Variable
+    ## a) Re-order Age Variable
+      # change Age variable to a factor from a character
+      luma_data$Age <- as.factor(luma_data$Age)
+      # re-order the age variable based so it is not base on not alphabetic 
+      # order this sets the reference level for ANOVA to adult
+      luma_data <- transform(luma_data, 
+                             Age = factor(Age,
+                                          levels = c("adult", 
+                                                     "subadult", "cub"), 
+                                          ordered = TRUE))
+      
+      
+    ### 5.3 Prey Density Variables
+      ## a) center     
+      
+  
+  ### 5.4  Reduce Data Set
+    ## a) Select variables to drop
+      luma_data_group <- luma_data %>%
+      select (- c(sample_ID))    
+      
+    ## b) Cobmine Age columns
+      for (i in 1:nrow(luma_data_group)) { 
         
+        
+        luma_data_group$AgeMonths <- ifelse(is.na(luma_data_group$AgeMonths),
+                                luma_data_group$EsimatedAgeMo,
+                                paste(luma_data_group$AgeMonths) 
+      }
+      
+      
+    ## c) Group rows with same ID and within an age group
+      luma_data_group <- ddply (luma_data_group, .(ID, Age), group_by,
+                                DartingDate = first(DartingDate), 
+                                AgeMonths = mean(AgeMonths),
+                                meth_adjust = mean(meth_adjust))
+      
+      luma_data_group <- luma_data_group %>% 
+        group_by (ID, Age) %>%
+        summarise ( meth_adjust = mean(meth_adjust),
+                    KayCode = first(KayCode),
+                    DartingDate = first(DartingDate),
+                    Sex = first(Sex),
+                    AgeMonths = mean(AgeMonths),
+                    Clan = first(Clan),
+                    Status = first(Status),
+                    FirstSeen = first(FirstSeen),
+                    DenGrad = first(DenGrad),
+                    Disappeared = first(Disappeared), 
+                    Mom = first(Mom),
+                    Birthdate = first(Birthdate),
+                   
+                  )
+  # Or use mutate to create the column and then do the distinc
+      luma_data_group3 <- luma_data_group %>% 
+        filter (!is.na(meth_adjust))%>%
+        group_by (ID, Age) %>%
+        mutate(n = n()) %>% 
+        distinct(meth_adjust, .keep_all=TRUE)
+        
+      
+      
+###########################################################
+####              6  Bi-Variate Analysis               ####
+###########################################################          
+      # cross tabulation of sex and age, by quartiles of maternal rank
+      table(luma_data$Sex, luma_data$strank.quart)
+      table(luma_data$Age, luma_data$strank.quart)
+   
           
 ###########################################################
 ####      7  Descriptive Statistics (Univariate)       ####
