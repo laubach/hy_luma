@@ -2,7 +2,7 @@
 ########   Spotted Hyena Global DNA Methylation    ########
 ########         LUMA Ecological Predictors        ########
 ########             By: Zach Laubach              ########
-########       last updated: 12 February 2017      ########
+########        last updated: 12 Sept 2017         ########
 ###########################################################
 
 ### PURPOSE: This code is desingned to analyze LUMA data.
@@ -17,9 +17,9 @@
     # 2: Set Working Directory
     # 3: Import Data
     # 4: Tidy Data
-    # 5: Bi-variate 
-    # 6: 
-    # 7: 
+    # 5: Variable Formatting 
+    # 6: Univariate Analysis (Predictors)
+    # 7: Bi-Variate Analysis
     # 8: 
 
 
@@ -55,8 +55,8 @@
       #require(texi2dvi)
       #require(stargazer)
       #require(xtable)
-      #require(gridExtra)
-    
+      require(gridExtra)
+  
       
     ## c) Modeling Packages
       # Modeling Packages
@@ -166,7 +166,7 @@
     ## b) Select Variables
      # Column names to retain in a list
      luma_data_var_names <- c("meth_adjust", "sample_ID", "Hyena", "KayCode", 
-                              "DartingDate", "Sex","Age", "AgeMonths", 
+                              "DartingDate", "Sex", "Age", "AgeMonths", 
                               "EstimatedAgeMo", "Clan")
      # Select columns based names from a list  
      luma_data <- (luma_data[,c(luma_data_var_names)]) 
@@ -352,77 +352,344 @@
       # order this sets the reference level for ANOVA to adult
       luma_data <- transform(luma_data, 
                              Age = factor(Age,
-                                          levels = c("adult", 
-                                                     "subadult", "cub"), 
+                                          levels = c("cub", 
+                                                     "subadult", "adult"), 
                                           ordered = TRUE))
-      
-      
-    ### 5.3 Prey Density Variables
-      ## a) center     
-      
-  
-  ### 5.4  Reduce Data Set
+
+                                
+  ### 5.3  Reduce Data Set
     ## a) Select variables to drop
       luma_data_group <- luma_data %>%
-      select (- c(sample_ID))    
+        dplyr::select(- c(sample_ID))    
       
     ## b) Cobmine Age columns
-      for (i in 1:nrow(luma_data_group)) { 
-        
-        
+      # replace NA in AgeMonths column where there is a value in 
+      # EstimatedAgeMo column
         luma_data_group$AgeMonths <- ifelse(is.na(luma_data_group$AgeMonths),
-                                luma_data_group$EsimatedAgeMo,
-                                paste(luma_data_group$AgeMonths) 
-      }
-      
+                                            luma_data_group$EstimatedAgeMo,
+                                            luma_data_group$AgeMonths) 
+      # Drop extra EstimatedAgeMo column
+        luma_data_group <- luma_data_group %>%
+          select (- c(EstimatedAgeMo)) 
       
     ## c) Group rows with same ID and within an age group
-      luma_data_group <- ddply (luma_data_group, .(ID, Age), group_by,
-                                DartingDate = first(DartingDate), 
-                                AgeMonths = mean(AgeMonths),
-                                meth_adjust = mean(meth_adjust))
-      
-      luma_data_group <- luma_data_group %>% 
-        group_by (ID, Age) %>%
-        summarise ( meth_adjust = mean(meth_adjust),
-                    KayCode = first(KayCode),
-                    DartingDate = first(DartingDate),
-                    Sex = first(Sex),
-                    AgeMonths = mean(AgeMonths),
-                    Clan = first(Clan),
-                    Status = first(Status),
-                    FirstSeen = first(FirstSeen),
-                    DenGrad = first(DenGrad),
-                    Disappeared = first(Disappeared), 
-                    Mom = first(Mom),
-                    Birthdate = first(Birthdate),
-                   
-                  )
-  # Or use mutate to create the column and then do the distinc
-      luma_data_group3 <- luma_data_group %>% 
-        filter (!is.na(meth_adjust))%>%
-        group_by (ID, Age) %>%
-        mutate(n = n()) %>% 
-        distinct(meth_adjust, .keep_all=TRUE)
+        luma_data_group <- luma_data_group %>% 
+          filter (!is.na(meth_adjust))%>% # remove rows where meth_adjust NA
+          group_by (ID, Age) %>%    # set grouping same ID within same cat age
+          group_by (meth_adjust = mean(meth_adjust)) %>%  # take avg meth_adjust
+                                                  # value for repeat ID within
+                                                  # same categorical age
+          group_by (AgeMonths = mean(AgeMonths)) %>% # Avg age in months
+          mutate (n = n()) %>%       # make var of n for uniqur rows            
+          distinct (meth_adjust, .keep_all=TRUE) # keep all rows where var value
+                                                # is unique while retaining all
+                                                # all other variables
+        
+      # OR long form listing specific variables to retain
+      #  luma_data_group <- luma_data_group %>% 
+      #    group_by (ID, Age) %>%
+      #    summarise ( meth_adjust = mean(meth_adjust),
+      #                KayCode = first(KayCode),
+      #                DartingDate = first(DartingDate),
+      #                Sex = first(Sex),
+      #                AgeMonths = mean(AgeMonths),
+      #                Clan = first(Clan),
+      #                Status = first(Status),
+      #                FirstSeen = first(FirstSeen),
+      #                DenGrad = first(DenGrad),
+      #                Disappeared = first(Disappeared), 
+      #                Mom = first(Mom),
+      #                Birthdate = first(Birthdate))
         
       
       
 ###########################################################
-####              6  Bi-Variate Analysis               ####
+####       6  UniVariate Analysis (Predictors)         ####
 ###########################################################          
-      # cross tabulation of sex and age, by quartiles of maternal rank
-      table(luma_data$Sex, luma_data$strank.quart)
-      table(luma_data$Age, luma_data$strank.quart)
-   
-          
-###########################################################
-####      7  Descriptive Statistics (Univariate)       ####
-###########################################################         
-
+      
+  ### 6.1 Univariate Stats of Predictors
+    ## a) Predictive variable summary
+      pred_var_summry <- ddply (luma_data_group, .(), summarise,
+                        mean.age = round (mean(AgeMonths, na.rm = T),
+                                          2),
+                        fem.sex.raito = (sum(grepl("f",
+                                               luma_data_group$Sex))) /
+                                    (sum(grepl("m",
+                                               luma_data_group$Sex) |
+                                           grepl("f",
+                                                 luma_data_group$Sex))),
+                        mean.peri.prey = round (mean(total.peri_concpt, 
+                                                     na.rm = T), 2),
+                        mean.gest.prey = round (mean(total.gest, na.rm = T),
+                                                2),
+                        mean.birth.3.prey = round (mean(total.birth.3, 
+                                                        na.rm = T), 2),
+                        mean.3.6.prey = round (mean(total.3.6, na.rm = T),
+                                               2),
+                        mean.6.9.prey = round (mean(total.6.9, na.rm = T),
+                                               2))
+                        
     
+  ### 6.3 Center Predictive Variables
+    ## a) center function based on column means    
+      center_fxn <- function(x) {
+        xcenter = colMeans(x, na.rm = T)
+        x - rep(xcenter, rep.int(nrow(x), ncol(x)))
+      }
+      
+    ## b) make a list of variable names to center, value = T is necessary
+      # or column positions will be returned
+      vars_to_center <- grep("total", names(luma_data_group), value = T)
+      
+      ## c) Center data in the select columns and replace non  
+      luma_data_group[ ,c(vars_to_center)] <- center_fxn(luma_data_group
+                                                   [ ,c(vars_to_center)])
+      
+
+  
+
 ###########################################################
-####            8  Identify Sample Re-Runs             ####
-###########################################################         
+####              7  Bi-Variate Analysis               ####
+###########################################################          
+      
+  ### 7.1 cross tabulation of predicitive variables to get n per group
+      table(luma_data_group$Sex, luma_data_group$strank.quart)
+      table(luma_data_group$Age, luma_data_group$strank.quart)
+      table(luma_data_group$Age, luma_data_group$Sex)
+      table(luma_data_group$Age, luma_data_group$strank.quart, 
+            luma_data_group$Sex) 
+      
+      
+  ### 7.2 Bivariate Statistics Methylation by Sex
+    ## a) Summary Stats Methylation by Sex
+      meth_by_sex = ddply(luma_data_group, .(Sex), summarise,
+                             N = sum(!is.na(meth_adjust)),
+                             mean = round (mean(meth_adjust, na.rm = T), 2),
+                             median =  round (quantile(meth_adjust, c(.5), 
+                                                       na.rm = T), 2),
+                             sd = round (sd(meth_adjust, na.rm = T), 2))
+      
+    ## b) save the data frame of summary stats out as a pdf into output file
+      pdf("output/meth_by_sex.pdf", height = 6, width = 7)
+      grid.table(meth_by_sex)
+      dev.off()
+      
+    ## c) Plot Methylation by Sex
+      ggplot(data = subset(luma_data_group, !is.na(x = Sex)), 
+             aes(x = Sex, y = meth_adjust, color = Sex)) + 
+        geom_point(shape = 1) +
+        scale_colour_hue(l = 50) + # Use a slightly darker palette than normal
+        labs(title = "Percent Global DNA 
+Mehtylation by Sex") +
+        ylab("% Global DNA Methylation") +
+        xlab("Sex")
+      
+    ## d) boxplot of DNA methylation by Sex
+      boxplot(meth_adjust ~ Sex,data = luma_data_group, 
+              main = "Boxplots of Hyena Global DNA 
+              Methylation by Sex",
+              xlab = "Sex", 
+              ylab = "% Global DNA Methylation", horizontal=F, 
+              col=grey.colors(2))
+      
+    ## e) Bivariate Regression Methylatin by Sex
+      sex.mod <- lmer(meth_adjust ~ Sex + (1|ID), 
+                      data = luma_data_group, na.action = exclude)
+ 
+      summary(sex.mod)  # print model summary, effects and SE
+      confint(sex.mod)  # print 95% CIs for parameter estimates 
+     
+      
+  ### 7.3 Bivariate Statistics Methylation by Age 
+    ## a) Summary Stats Methylation by Age
+      meth_by_age = ddply(luma_data_group, .(Age), summarise,
+                          N = sum(!is.na(meth_adjust)),
+                          mean = round (mean(meth_adjust, na.rm = T), 2),
+                          median =  round (quantile(meth_adjust, c(.5), 
+                                                    na.rm = T), 2),
+                          sd = round (sd(meth_adjust, na.rm = T), 2))
+      
+    ## b) save the data frame of summary stats out as a pdf into output file
+      pdf("output/meth_by_age.pdf", height = 6, width = 7)
+      grid.table(meth_by_age)
+      dev.off()
+      
+    ## c) Plot Methylation by Age
+      # graph of the raw data for percent global DNA methylaiton by maternal rank
+      # stratified by age
+      ggplot(data = subset(luma_data_group, !is.na(x = Age)), 
+             aes(x = Age, y = meth_adjust, color = Age)) + 
+        geom_point(shape = 1) +
+        scale_colour_hue(l = 50) + # Use a slightly darker palette than normal
+        labs(title = "Percent Global DNA 
+Mehtylation by Age") +
+        ylab("% Global DNA Methylation") +
+        xlab("Categorical Age")
+      
+    ## d) Boxplot of DNA methylation across factors of age
+      boxplot(meth_adjust ~ Age,data = luma_data_group, 
+              main = "Boxplots of Hyena Global DNA 
+              Methylation by Age",
+              xlab = "Age", 
+              ylab = "% Global DNA Methylation", horizontal=F, 
+              col=grey.colors(3))
+      
+    ## e) Bivariate Regression Methylatino by Age  
+      age.mod <- lmer(meth_adjust ~ Age + (1|ID), 
+                      data = luma_data_group)
+    
+      summary(age.mod)  # print model summary, effects and SE
+      confint(age.mod)  # print 95% CIs for parameter estimates
+      
+      
+  ### 7.4 Bivariate Statistics Methylation by Rank
+    ## a) Summary Stats Methylation by Rank
+      meth_by_rank = ddply(luma_data_group, .(strank.quart), summarise,
+                          N = sum(!is.na(meth_adjust)),
+                          mean = round (mean(meth_adjust, na.rm = T), 2),
+                          median =  round (quantile(meth_adjust, c(.5), 
+                                                    na.rm = T), 2),
+                          sd = round (sd(meth_adjust, na.rm = T), 2))
+      
+    ## b) save the data frame of summary stats out as a pdf into output file
+      pdf("output/meth_by_rank.pdf", height = 6, width = 7)
+      grid.table(meth_by_rank)
+      dev.off()
+      
+    ## c) Plot Methylation by Sex
+      # graph of the raw data for percent global DNA methylaiton by maternal rank
+      ggplot(data = subset(luma_data_group, !is.na(x = strank.quart)), 
+             aes (x = strank.quart.order, y = meth_adjust, 
+                  color = strank.quart)) +
+        geom_point(shape = 1) +
+        scale_colour_hue(l = 50) + # Use a slightly darker palette than normal
+        labs (title = "Percent Global DNA 
+Mehtylation by Maternal Rank") +
+        ylab ("% Global DNA Methylation") +
+        xlab ("Maternal Rank")
+      
+    ## d) boxplot of DNA methylation across quartiles of maternal rank
+      boxplot(meth_adjust ~ strank.quart, data = luma_data_group, 
+              main = "Boxplots of Hyena Global DNA Methylation 
+              by Maternal Rank",
+              xlab = "Maternal Rank Quartiles", 
+              ylab = "% Global DNA Methylation", horizontal=F, 
+              col=grey.colors(4))
+      
+    ## e)  MODEL Mehtylation by Maternal Rank Quartile 
+      mat.rank.mod <- lmer(meth_adjust ~ strank.quart + (1|ID), 
+                           data = luma_data_group)
+      
+      summary(mat.rank.mod)  # print model summary, effects and SE
+      confint(mat.rank.mod)  # print 95% CIs for parameter estimates
+      
+      #head(model.matrix(mat.rank.mod)) #view first six rows of design matrix
+      #lsmip(mat.rank.mod, ~ strank.quart) #graph estimated means
+      #lsmeans(mat.rank.mod, pairwise ~ strank.quart)  # pairwise comparisons
+      # plot of beta coeffiecints and SEs within each group using CAR package
+      #arm::coefplot(mat.rank.mod, int=T, var.las=0, 
+      #              h.axis=T, cex.pts=1, vertical=F, 
+      #              main= "Treatment Constrast Esimates:
+      #              Comparing Maternal Rank Quartiles", lwd=3)
+      
+      
+      
+################ Prey bivariatie meth
+      
+      ## 3. MODEL with PERICONCEPTION PREY
+      peri_concept.mod <- lmer(meth_adjust ~ total.peri_concpt + (1|ID), 
+                      data = luma_data_group)
+      #display(fit.anova) # this is an alternative that shows less info than summary
+      summary(peri_concept.mod)  # print model summary, effects and SE
+      confint(peri_concept.mod)  # print 95% CIs for parameter estimates
+      
+      
+      
+      
+      ## 3. MODEL with Gestational PREY
+      gest.mod <- lmer(meth_adjust ~ total.gest + (1|ID), 
+                               data = luma_data_group)
+      #display(fit.anova) # this is an alternative that shows less info than summary
+      summary( gest.mod)  # print model summary, effects and SE
+      confint( gest.mod)  # print 95% CIs for parameter estimates
+      
+      
+      
+      
+      ## 3. MODEL with Birth to 3 Months PREY
+      birth_3.mod <- lmer(meth_adjust ~ total.birth.3 + (1|ID), 
+                       data = luma_data_group)
+      #display(fit.anova) # this is an alternative that shows less info than summary
+      summary( birth_3.mod)  # print model summary, effects and SE
+      confint( birth_3.mod)  # print 95% CIs for parameter estimates
+      
+      
+      
+      ## 3. MODEL with 3-6 Months PREY
+      three_6.mod <- lmer(meth_adjust ~ total.3.6 + (1|ID), 
+                          data = luma_data_group)
+      #display(fit.anova) # this is an alternative that shows less info than summary
+      summary( three_6.mod)  # print model summary, effects and SE
+      confint( three_6.mod)  # print 95% CIs for parameter estimates
+      
+      
+      
+      ## 3. MODEL with 6-9 Months PREY
+      six_9.mod <- lmer(meth_adjust ~ total.6.9 + (1|ID), 
+                          data = luma_data_group)
+      #display(fit.anova) # this is an alternative that shows less info than summary
+      summary(six_9.mod)  # print model summary, effects and SE
+      confint(six_9.mod)  # print 95% CIs for parameter estimates
+    
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      # graph of the raw data for percent global DNA methylaiton by maternal rank
+      # stratified by sex
+      ggplot(luma_data_group, aes(x = strank.quart.order, y = meth_adjust, color = Sex)) + 
+        geom_point(shape = 1) +
+        scale_colour_hue(l = 50) + # Use a slightly darker palette than normal
+        geom_smooth(method = lm, se = F) + # Add linear regression best fit lines
+        labs(title = "Percent Global DNA Mehtylation by Maternal 
+             Rank for Males and Females", fill = "Sex" ) +
+        ylab("% Global DNA Methylation") +
+        xlab("Maternal Rank")
+      
+    
+      
+      # graph of the raw data for percent global DNA methylaiton by maternal rank
+      # stratified by age
+      ggplot(subset(luma_data_group, !is.na(x = Age)), 
+             aes(x = strank.quart.order, y = meth_adjust, color = Age )) + 
+        geom_point(shape = 1) +
+        scale_colour_hue(l = 50) + # Use a slightly darker palette than normal
+        geom_smooth(method = lm, se = F) + # Add linear regression best fit lines
+        labs(title = "Percent Global DNA Mehtylation 
+             by Maternal Rank by Age",
+             fill = "age" ) +
+        ylab("% Global DNA Methylation") +
+        xlab("Maternal Rank")
+      
+   
+      
+      
+      
+      
+      
+      
+
+###########################################################
+####                     8 Models                      ####
+###########################################################      
+      
+            
+         
  
 ###########################################################
 ####             9. Save Intermediate Tables           ####
