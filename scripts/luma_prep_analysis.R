@@ -171,7 +171,7 @@
                            cv = 100* (sd/mean))
         
     ## b) save the data frame of summary stats out as a pdf into output file
-        pdf("output/intra_CV.pdf", height = 6, width = 7)
+        pdf("output/output_luma_prep/intra_CV.pdf", height = 6, width = 7)
         grid.table(intra_CV)
         dev.off()
         
@@ -189,7 +189,7 @@
                            cv = 100* (sd/mean))
         
     ## b) save the data frame of summary stats out as a pdf into output file
-        pdf("output/inter_CV.pdf", height = 6, width = 7)
+        pdf("output/output_luma_prep/inter_CV.pdf", height = 6, width = 7)
         grid.table(inter_CV)
         dev.off()
         
@@ -222,7 +222,8 @@
     ## c) Save Plot
       # use ggsave to save the linearization plot
         ggsave("luma_linearization.pdf", plot = last_plot(), device = NULL, 
-               path = "./output", scale = 1, width = 6, height = 4, 
+               path = "./output/output_luma_prep", scale = 1, width = 6, 
+               height = 4, 
                units = c("in"), dpi = 300, limitsize = TRUE)
 
         
@@ -246,7 +247,7 @@
     ## b) Save Plot
       # use ggsave to save the linearization plot
         ggsave("double_panel_control_drift.pdf", plot = last_plot(), device = NULL, 
-               path = "./output", scale = 1, width = 7, height = 7, 
+               path = "./output/output_luma_prep", scale = 1, width = 7, height = 7, 
                units = c("in"), dpi = 300, limitsize = TRUE) 
    
     ## e) Subset Controls 
@@ -277,7 +278,7 @@
         drift_coef <- ldply(plate_drift, extractfun)
    
     ## g) save the data frame of summary stats out as a pdf into output file
-        pdf("output/drift_coef.pdf", height = 4, width = 8)
+        pdf("output/output_luma_prep/drift_coef.pdf", height = 4, width = 8)
         grid.table(drift_coef)
         dev.off()
       
@@ -374,7 +375,7 @@
                             sd_adjust = sd(meth_adjust, na.rm = T))
         
     ## b) save the data frame of summary stats out as a pdf into output file
-        pdf("output/univar_meth.pdf", height = 4, width = 8)
+        pdf("output/output_luma_prep/univar_meth.pdf", height = 4, width = 8)
         grid.table(univar_meth)
         dev.off()
         
@@ -393,7 +394,8 @@
     ## d) Save Plot
       # use ggsave to save the linearization plot
         ggsave("meth_histogram.pdf", plot = last_plot(), device = NULL, 
-               path = "./output", scale = 1, width = 7, height = 5, 
+               path = "./output/output_luma_prep", scale = 1, width = 7, 
+               height = 5, 
                units = c("in"), dpi = 300, limitsize = TRUE)
         
     ## e) Remove Outliers
@@ -425,7 +427,8 @@
     ## h) Save Plot
       # use ggsave to save the linearization plot
       ggsave("meth_histogram_no_out.pdf", plot = last_plot(), device = NULL, 
-             path = "./output", scale = 1, width = 7, height = 5, 
+             path = "./output/output_luma_prep/", scale = 1, width = 7, 
+             height = 5, 
              units = c("in"), dpi = 300, limitsize = TRUE)  
       
     
@@ -446,7 +449,8 @@
                                  sd_adjust = sd(meth_adjust, na.rm = T))
       
     ## b) save the data frame of summary stats out as a pdf into output file
-      pdf("output/univar_meth_no_out.pdf", height = 4, width = 8)
+      pdf("output/output_luma_prep/univar_meth_no_out.pdf", height = 4, 
+          width = 8)
       grid.table(univar_meth_no_out)
       dev.off()  
     
@@ -457,7 +461,7 @@
                             N = sum(!is.na(Sex)))
     
     ## b) save the data frame of summary stats out as a pdf into output file
-        pdf("output/univar_sex.pdf", height = 4, width = 8)
+        pdf("output/output_luma_prep/univar_sex.pdf", height = 4, width = 8)
         grid.table(univar_sex)
         dev.off() 
         
@@ -471,7 +475,7 @@
                             sd = round(sd(AgeMonths, na.rm = T), 2))
        
     ## d) save the data frame of summary stats out as a pdf into output file
-          pdf("output/univar_age.pdf", height = 5, width = 8)
+          pdf("output/output_luma_prep/univar_age.pdf", height = 5, width = 8)
           grid.table(univar_age)
           dev.off()
         
