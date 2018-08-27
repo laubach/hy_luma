@@ -277,7 +277,7 @@
     ## a) Graph Controls Across Plates 
       # Graph the controls on each reaction plate to assess for any plate drift
       # least squares regression is used for the fit function 
-        ggplot(luma_cntrl, aes (x = well, y = methylation,
+        ggplot(luma_cntrl, aes (x = plate_pos_seq, y = methylation,
                                 color = sample_ID, group = sample_ID)) +
           geom_point(size = 1) +
           geom_smooth(method = lm, se = F) +
@@ -345,13 +345,25 @@
     ## b) Weigthed Plate Calibration
       # Use dplyr to calculate a weighted plate calibration, with the result of 
       # shrinking drift towards the plate center (hy_pool control mean); 
-      # a symmetrical shrinkage.
+      # a symmetrical shrinkage. 
+        # NOTE: samples added here with single channel pippet well by well
+        # so plate_pos_seq is count from 1-48
         calibration <- luma_data %>%
+          #******************************************filter by here
           group_by (plate_rxn_ID, sample_ID) %>%
           summarize(meth_adjust = ifelse(plate_pos_factor == 1,
                                          (((1-(plate_pos_seq/24))*estimate) +
                                             methylation),
                                          (methylation - ((plate_pos_seq/24)-1)
+                                          * estimate))) 
+        # NOTE: samples added here with single channel pippet well by well
+        # so plate_pos_seq is count from 1-48
+        calibration2 <- luma_data %>%
+          group_by (plate_rxn_ID, sample_ID) %>%
+          summarize(meth_adjust = ifelse(plate_pos_factor == 1,
+                                         (((1-(plate_pos_seq/2))*estimate) +
+                                            methylation),
+                                         (methylation - ((plate_pos_seq/2)-1)
                                           * estimate))) 
       
     ## c) Join calibrated methylation to luma_data
@@ -404,7 +416,7 @@
                                        litrank, mortality.source, death.date,
                                        weaned, clan, park)), by = "id")
         
-    ## d) Join luma_data to tbl_Darting
+    ## d) Join luma_data to tbl_dart_hy
         # A Left join of 'luma_data' with 'tbl_dart_hy', making an updated
         # 'luma_data' dataframe. Parent tables are linked on 'kay.code' and 
         # 'darting.date'  
