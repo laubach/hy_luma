@@ -87,7 +87,7 @@
       # load sjPlot packages
         library ('sjPlot')    
     
-    ## b) Modeling Packages
+    ## c) Modeling Packages
       # Check for broom and install if not already installed
         if (!'broom' %in% installed.packages()[,1]){
           install.packages ('broom')
@@ -96,11 +96,11 @@
         library ('broom')   
         
       # Check for lmerTest and install if not already installed
-        if (!'lmerTest' %in% installed.packages()[,1]){
-          install.packages ('lmerTest')
-        }
+      #  if (!'lmerTest' %in% installed.packages()[,1]){
+      #    install.packages ('lmerTest')
+      #  }
       # load lmerTest packages
-        library ('lmerTest')   
+      #  library ('lmerTest')   
         
         
       # Check for nlme and install if not already installed
@@ -123,6 +123,13 @@
         }
         # load effects packages
         library ('effects')
+        
+      # Check for aod and install if not already installed
+        if (!'aod' %in% installed.packages()[,1]){
+          install.packages ('aod')
+        }
+      # load aod packages
+        library ('aod')
     
   
   ### 1.3 Get Version and Session Info
@@ -167,10 +174,12 @@
       luma_data <- read_csv(paste(luma_data_path,
                                   "luma_data_no_out.csv", sep = ''))
       
-  
+    ## b) check that all variables are of appropriate class    
+      sapply(luma_data, class)
+      
   ### 2.2 Import prey density data       
-    ## a) Import prey density data, which was created with the R script
-      # 'calc_prey_density'
+    # Import prey density data, which was created with the R script
+    # 'calc_prey_density'
      
     ## a) Create a list of prey summary file names 
       files <- list.files(paste(prey_data_path), pattern = "*.csv")
@@ -189,28 +198,28 @@
     ## b) manually load tblFemalerank  
     tblFemalerank <- read_csv(paste0("/Volumes/Holekamp/code_repository/R",
                                     "/1_output_tidy_tbls/tblFemalerank.csv"))
-      
     
 
+    
 ###############################################################################
 ##############                 3. Data management                ##############
 ###############################################################################
   
     
-  ### 3.2 Tidy luma_data  
+  ### 3.1 Tidy luma_data  
+    ## a) view the variable classes to determine which need to be modified
+      spec(luma_data)
     
-    ## a) fix dates and times functions TEMPORARILY NOT WORKING
+    ## b) fix dates and times functions TEMPORARILY NOT WORKING
     #source (file = paste0("/Volumes/Holekamp/code_repository/R/",
       #                    "4_scripts_source/fix_dates_and_times.R"))
     
-    ## b) Convert dates stored as character (e.g. 03-aug-05) to formatted dates
+    ## c) Convert dates stored as character (e.g. 03-aug-05) to formatted dates
       luma_data$darting.date <- as.Date(luma_data$darting.date, 
                                       format = "%d-%b-%y")
       luma_data$birthdate <- as.Date(luma_data$birthdate, 
                                       format = "%d-%b-%y")
       luma_data$weaned <-  as.Date(luma_data$weaned, 
-                                      format = "%d-%b-%y")
-      luma_data$first.seen <-  as.Date(luma_data$first.seen, 
                                       format = "%d-%b-%y")
       luma_data$first.seen <-  as.Date(luma_data$first.seen, 
                                       format = "%d-%b-%y")
@@ -220,89 +229,14 @@
                                       format = "%d-%b-%y")
       luma_data$death.date <-  as.Date(luma_data$death.date, 
                                         format = "%d-%b-%y")
-
-  ### 3.2 Tidy tblFemalerank
-    ## a) Pattern recognize numbers from Year variable and copy; gets rid of
-      # unwanted text characters
-      tblFemalerank$year <- as.numeric(regmatches(tblFemalerank$year, 
-                                           gregexpr("[[:digit:]]+",
-                                                    tblFemalerank$year)))
       
-    ## b) rename 'id' variable as 'mom' 
-      tblFemalerank <- rename_(tblFemalerank, "mom" = "id")
     
-                 
-  ### 3.3 Join Data Sets: Append female rank covariates to LUMA data
-    ## a) extract the year for date of interest (here Birthdate) using lubridate
-      # and make a new variable
-      luma_data$year <- year(as.Date(luma_data$birthdate, format="%Y-%m-%d"))
-   
-   
-    ## b) Left join tblFemalerank to luma_data  
-      # append to luma_data each hyena's mom's rank from the year that 
-      # they were born 
-      luma_data <- sqldf("SELECT
-                        luma_data.*           
-                        , tblFemalerank. absrank, strank
-                        FROM luma_data      
-                        LEFT JOIN tblFemalerank       
-                        ON tblFemalerank.mom = luma_data.mom
-                            AND tblFemalerank.year = luma_data.year") 
- 
-    ## c) rename 'absrank' variable as 'mom.absrank' 
-      luma_data <- rename_(luma_data, "mom.absrank" = "absrank")
-      
-    ## d) rename 'strank' variable as 'mom.strank' 
-      luma_data <- rename_(luma_data, "mom.strank" = "strank") 
-      
-  
-  ### 3.4 Clean maternal rank variable
-    ## a) convert mom's strank to numeric
-      luma_data$mom.strank <- as.numeric(luma_data$mom.strank)
-      
-    ## b) Create quartiles of maternal rank
-        # use quantile function to cut strank into 4 levels (approximately same
-      # number in each level)
-      luma_data <- within(luma_data, mom.strank.quart.order
-                          <- as.integer(cut(mom.strank, 
-                                         quantile(mom.strank, probs=0:4/4,
-                                                  na.rm = T), 
-                                         include.lowest = T)))
-      # NOTE: Could also use dplyr
-        #  luma_data <- luma_data %>% 
-        #    mutate(strank.quart.order = ntile(strank, 4))
-      
-    ## c) Rename quartile levels
-      #rename maternal rank variable from 1-4 to high, mid, low, bottom as a  
-      # new variable. The strank.quart.order variable is retained to define 
-      # reference and set group order for graphing
-      luma_data$mom.strank.quart <- as.factor(cut
-                                              (luma_data$mom.strank.quart.order,
-                                                breaks = c(0, 1, 2, 3, 4),
-                                                labels = c("Q1 (lowest)",
-                                                           "Q2", "Q3",
-                                                           "Q4 (highest)")))
-
-    ## d) re-order to sets the reference level for high
-      luma_data <- transform (luma_data, 
-                              mom.strank.quart = factor(mom.strank.quart,
-                                                    levels = c("Q1 (lowest)",
-                                                              "Q2","Q3",
-                                                              "Q4 (highest)")))
-      
-      
-  ### 3.4 Clean and format age and sex variables
-
-    ## a) fix transcription inconsistencies (e.g. all 'sub' to 'subadult') 
-       luma_data <- luma_data %>%
-        mutate(age = replace(age, str_detect(age, "s"), "subadult")) 
-    
-    ## b) Create an estimated age in months by subracting birthdate from
+    ## d) Create an estimated age in months by subracting birthdate from
       # darting.date using lubridate
       luma_data <- luma_data %>%
-        mutate(age.date = interval(birthdate, darting.date) %/% months(1))
-    
-    ## c) Cobmine Age columns to fill in NA
+        mutate(age.mon = interval(birthdate, darting.date) %/% months(1))
+      
+    ## e) Cobmine age columns to fill in NA
       # replace NA in age.months column where there is a value in 
       # estimated.age.mo column
       luma_data$age.months <- ifelse(is.na(luma_data$age.months),
@@ -311,91 +245,193 @@
       # drop extra EstimatedAgeMo column
       luma_data <- luma_data %>%
         select (- c(estimated.age.mo)) 
-      # replace NA in age.date column where there is a value in 
-      # age.months column
-      luma_data$age.date <- ifelse(is.na(luma_data$age.date),
-                                     luma_data$age.months,
-                                     luma_data$age.date)
       
-    ## d) Create an age class variable basted age.date 
+      # replace NA in age.mon column where there is a value in 
+      # age.months column
+      luma_data$age.mon <- ifelse(is.na(luma_data$age.mon),
+                                   luma_data$age.months,
+                                   luma_data$age.mon)
+      
+    ## f) fix age transcription inconsistencies (e.g. all 'sub' to 'subadult') 
+      luma_data <- luma_data %>%
+        mutate(age = replace(age, str_detect(age, "s"), "subadult")) 
+      
+    ## g) Create a categorical age variable based age.mon 
       # darting.date using lubridate
       luma_data <- luma_data %>%
-        mutate(age.class.date = case_when(age.date <= 12 ~ c("cub"),
-                                          age.date > 12 & 
-                                            age.date <=24 ~ c("subadult"),
-                                          age.date > 24 ~ c("adult")))
+        mutate(age.cat = case_when(age.mon <= 12 ~ c("cub"),
+                                          age.mon > 12 & 
+                                            age.mon <=24 ~ c("subadult"),
+                                          age.mon > 24 ~ c("adult")))
       
-    ## e) replace NA in age.class.date column where there is a value in 
+    ## h) replace NA in age.cat column where there is a value in 
       # age column
       # first convert age to character
       luma_data$age <- as.character(luma_data$age)
-      luma_data$age.class.date <- ifelse(is.na(luma_data$age.class.date),
-                                     luma_data$age,
-                                     luma_data$age.class.date)
+      luma_data$age.cat <- ifelse(is.na(luma_data$age.cat),
+                                         luma_data$age,
+                                         luma_data$age.cat)
+      
+      # drop extra EstimatedAgeMo column
+      luma_data <- luma_data %>%
+        select (- c(age)) 
+      
+    ## f) Create *nominal* factor (with ordered levels)  
+      # Set levels (odering) age.cat variable and sets the reference level 
+      # to cub makes this
+      # NOTE: model output is difference in means btwn reference and each 
+      # level; factorial contrasts are differences in group level means
+      # stored internally as 1, 2, 3 (equal spacing)
+      luma_data <- transform(luma_data, 
+                             age.cat = factor(age.cat,
+                                              levels = c("cub", 
+                                                         "subadult", 
+                                                         "adult")))
+    ## e) Create *interval* factor (with ordered levels)  
+      # Set order and *equally* spaced categorical age variable a
+      # NOTE: model output a p for trend
+      # polynomial contrasts are linear, quadratic, cubic etc. estimates
+      # stored internally as 1, 2, 3 etc. (equal spacing)
+      luma_data <- transform(luma_data, 
+                             age.inter = ordered(age.cat,
+                                                 levels = c("cub",
+                                                            "subadult",
+                                                            "adult")))
      
-    ## f) Re-order age.class.date variable  
-      # re-order the age variable based so it is not base on not alphabetic 
-      # order this sets the reference level for ANOVA to cub
-      luma_data <- transform(luma_data, 
-                             age.class.date = factor(age.class.date,
-                                          levels = c("cub", 
-                                                     "subadult", "adult")))
-    ## g) Re-order age variable  
-      # re-order the age variable based so it is not base on not alphabetic 
-      # order this sets the reference level for ANOVA to cub
-      luma_data <- transform(luma_data, 
-                             age = factor(age,
-                                          levels = c("cub", 
-                                                     "subadult", "adult")))
-       
-    ## h) Re-code sex as a factor  
+    ## g) Create *ordinal* factor (with ordered levels)  
+      # Set order and *unequally* spaced categorical age variable 
+      # (e.g. median/mean of each category)
+      # NOTE: model output a p for trend; assumes linear monotonic association
+      # estimates, which is a change y with respect to each unit change in x
+      # is scaled to x and stored internally as numeric value
+      luma_data <- luma_data %>%
+        mutate(age.ordin = as.numeric(case_when(age.mon <= 12 ~ c(10.65),
+                                   age.mon > 12 & 
+                                     age.mon <=24 ~ c(17.49),
+                                   age.mon > 24 ~ c(60.34))))
+
+    ## h) Re-code sex as a nominal factor  
       luma_data$sex <- as.factor(luma_data$sex)
 
+    ## i) extract the year for date of interest (here Birthdate) using lubridate
+      # and make a new variable
+      luma_data$rank_year <- year(as.Date(luma_data$birthdate, 
+                                          format="%Y-%m-%d"))
       
-  ### 3.5 Make a new variable hum.pop
-    ## a) create a two-level factor indicating human population size 
-    # (hi - talek hyena born after 2006 and lo - all other hynes for which 
-    #  clan is known)
-      luma_data$hum.pop <- ifelse((luma_data$clan == "talek" & 
-                                     luma_data$year > 2006),
-                                  "hi", "lo")
-    
-  
-  ### 3.6 Make a new variable intra.lit.rank
-    ## a) create blank variable to store data 
-      luma_data$intra.lit.rank <- NA
-      
-    ## b) Loop through number.littermates and litrank variables to create
-        # a three-level factor 
-      for (i in 1:nrow(luma_data)) {
-        if((!is.na (luma_data$number.littermates[i]))  # check no NAs
-           && luma_data$number.littermates[i] == 0) { # check 0 littermates
-          luma_data$intra.lit.rank[i] <- "single"}
-        else if((!is.na (luma_data$litrank[i]))  # check no NAs
-                && luma_data$litrank[i] == 1) { # check twin's rank 1
-          luma_data$intra.lit.rank[i] <- "twin_hi"}
-        else if((!is.na (luma_data$litrank[i]))  # check no NAs
-                && luma_data$litrank[i] == 2) { # check twin's rank 2
-          luma_data$intra.lit.rank[i] <- "twin_lo"}
-      }
+    ## j) Make a new variable hum.distrb
+      # create a two-level ordinal factor indicating human population size 
+      # (hi - talek hyena born after 2006 and lo - all other hynes for which 
+      # clan is known)
+      luma_data$hum.distrb <- ifelse(((luma_data$clan %in% c("talek",
+                                                            "fig.tree")) & 
+                                     luma_data$rank_year > 2000),
+                                  "large", "small")
 
-     # A more recent and faster way to do this
-      #luma_data <- luma_data  %>%
-      #  mutate(intra.lit.rank = case_when(number.littermates == 0 ~ c("single"),
-      #                                    litrank == 1 ~ c("twin_hi"),
-      #                                    litrank == 2 ~ c("twin_lo")))
-                                         
+    ## j) Re-order hum.distrb levels and re-code variable as categorical
+      luma_data <- transform(luma_data,
+                             hum.distrb = factor(hum.distrb,
+                                              levels = c("small", "large")))
+      
+
   
-  ### 3.6 Reduce and group luma_data
+    ## k) Make a new variable intra.lit.rank
+      #create blank variable to store data 
+    #   luma_data$intra.lit.rank <- NA
+    
+    ## l) Loop through number.littermates and litrank variables to create
+      # a three-level factor 
+    #  for (i in 1:nrow(luma_data)) {
+    #    if((!is.na (luma_data$number.littermates[i]))  # check no NAs
+    #       && luma_data$number.littermates[i] == 0) { # check 0 littermates
+    #      luma_data$intra.lit.rank[i] <- "single"}
+    #    else if((!is.na (luma_data$litrank[i]))  # check no NAs
+    #            && luma_data$litrank[i] == 1) { # check twin's rank 1
+    #      luma_data$intra.lit.rank[i] <- "twin_hi"}
+    #    else if((!is.na (luma_data$litrank[i]))  # check no NAs
+    #            && luma_data$litrank[i] == 2) { # check twin's rank 2
+    #      luma_data$intra.lit.rank[i] <- "twin_lo"}
+    #  }
+
+    ## k) Make a new 2 level nomial variable lit.size
+      luma_data <- luma_data  %>%
+        mutate(lit.size = case_when(number.littermates == 0 ~ c("single"),
+                                          litrank == 1 ~ c("twin"),
+                                          litrank == 2 ~ c("twin")))
+
+    ## l) Recod as nominal factor and set level (order)
+      luma_data <- transform(luma_data,
+                             lit.size = factor(lit.size, 
+                                               levels = c("single","twin")))
+
+   
+  ### 3.2 Tidy tblFemalerank
+    ## a) Pattern recognize numbers from Year variable and copy; gets rid of
+      # unwanted text characters
+      tblFemalerank$rank_year <- as.numeric(regmatches(tblFemalerank$year, 
+                                           gregexpr("[[:digit:]]+",
+                                                    tblFemalerank$year)))
+      
+    ## b) rename 'id' variable as 'mom' 
+      tblFemalerank <- rename_(tblFemalerank, "mom" = "id")
+      ### 3.3 Join Data Sets: Append female rank covariates to LUMA data
+      
+      
+      
+  ### 3.3 Left join tblFemalerank to luma_data  
+      # append to luma_data each hyena's mom's rank from the year that 
+      # they were born 
+      luma_data2 <- sqldf("SELECT
+                         luma_data.*           
+                         , tblFemalerank. absrank, strank
+                         FROM luma_data      
+                         LEFT JOIN tblFemalerank       
+                         ON tblFemalerank.mom = luma_data.mom
+                         AND tblFemalerank.rank_year = luma_data.rank_year") 
+      
+  
+  ### 3.4 Tidy joined table 
+    ## a) rename 'absrank' variable as 'mom.absrank' 
+      luma_data <- rename_(luma_data, "mom.absrank" = "absrank")
+      
+    ## b) rename 'strank' variable as 'mom.strank' 
+      luma_data <- rename_(luma_data, "mom.strank" = "strank") 
+      
+    ## c) convert mom's strank to numeric
+      luma_data$mom.strank <- as.numeric(luma_data$mom.strank)
+      
+    ## f) Create quartiles of maternal rank
+      # use quantile function to cut strank into 4 levels (approximately same
+      # number in each level)
+      luma_data <- within(luma_data, mom.strank.quart.order
+                          <- as.integer(cut(mom.strank, 
+                                            quantile(mom.strank, probs=0:4/4,
+                                                     na.rm = T), 
+                                            include.lowest = T)))
+      # NOTE: Could also use dplyr
+      #  luma_data <- luma_data %>% 
+      #    mutate(strank.quart.order = ntile(strank, 4))
+      
+
+    ## g) Create a nominal factor and rename and re-order the levels to 
+      # sets the reference level for lowest rank 
+      luma_data <- transform (luma_data, 
+                              mom.strank.quart = 
+                                factor(mom.strank.quart.order,
+                                       levels = c(1, 2, 3, 4),
+                                       labels= c("Q1 (lowest)",
+                                                 "Q2","Q3",
+                                                 "Q4 (highest)")))
+  
+  ### 3.5 Reduce and group luma_data
     # Create new reduced and grouped data sets to be used in some downstream
     # anlayses
-  
+
     ## a) Group rows with same hyena ID and within an age group
         luma_data_group <- luma_data %>% 
           filter (!is.na(methylation))%>% # check/remove rows where meth NA
-          group_by (id, age.class.date) %>% # set grouping same ID within same cat age
-          #mutate (mom = mom) %>%
-          summarise (reps = sum(!is.na(methylation)), # n per ID w/in age class
+          group_by (id, age.cat) %>% # set grouping same ID within same cat age
+          summarise (age.reps = sum(!is.na(methylation)), # n per ID w/in age 
+                                                          # class
                      methylation = mean(methylation), # avg methylation
                                                       # value for repeat ID 
                                                       # within same age cat
@@ -404,7 +440,7 @@
                      darting.date = as.Date(mean(darting.date)), # for multiple
                       # darting dates in same age category, take avg of dates
                      sex = first(sex),
-                     age = first(age),
+                     #age = first(age),
                      age.months = mean(age.months),   # avg age in months
                      reproductive.status = first(reproductive.status),
                      mass = mean(mass),
@@ -430,10 +466,11 @@
                      mom.strank = as.numeric(first(mom.strank)),
                      mom.strank.quart = as.factor(first(mom.strank.quart)),
                      mom.strank.quart.order = (first(mom.strank.quart.order)),
-                     hum.pop = (first(hum.pop)),
-                     intra.lit.rank = (first(intra.lit.rank)),
-                     age.date = (mean(age.date)))
-                     #age.class.date = first(age.class.date))
+                     hum.distrb = (first(hum.distrb)),
+                     lit.size = (first(lit.size)),
+                     age.mon = (mean(age.mon)),
+                     rank_year = (first(rank_year)),
+                     age.ordin = first(age.ordin))
                      
     ## b) Ungroup the data frame
         # dplyr retains grouping after creation of data frame that uses 
@@ -441,7 +478,7 @@
           luma_data_group <- ungroup(luma_data_group)
         
     
-  ### 3.7 Clean prey density data and combine with LUMA data
+  ### 3.6 Clean prey density data and combine with LUMA data
     ## a) Select a subset of the prey_density data by column names
         prey_density <- prey_density %>%
           select(grep("tot", names(prey_density)), # contains 'tot'
@@ -508,9 +545,10 @@
   ### 4.3 Descriptive stats age    
     ## a) Age summary  
       age_var_summary <- luma_data_group %>%
-        group_by (age.class.date) %>%
+        group_by (age.cat) %>%
         summarise (n.age = n(),
-                   avg.age = round (mean(age.months, na.rm = T),2),
+                   avg.age = round (mean(age.months, na.rm = T), 2),
+                   med.age = round (median(age.months, na.rm = T), 2),
                    stdev.age = round (sd(age.months, na.rm = T), 2)) %>%
         mutate (freq.age =  (n.age / sum(n.age)))
           
@@ -541,7 +579,7 @@
     ## a) Intra litter rank summary 
       intra_lit_rank_summary <- luma_data_group %>%
         #group_by (id) %>%
-        group_by (intra.lit.rank) %>%
+        group_by (lit.size) %>%
         summarise(n=n_distinct(id)) %>%
         mutate(freq = n / sum(n))
       
@@ -557,7 +595,7 @@
       ## a) Human pop size (proxy) summary 
       hum_pop_summary <- luma_data_group %>%
         #group_by (id) %>%
-        group_by (hum.pop) %>%
+        group_by (hum.distrb) %>%
         summarise(n=n_distinct(id)) %>%
         mutate(freq = n / sum(n))
       
@@ -741,7 +779,7 @@ Mehtylation by Sex") +
       # NOTE: uses luma_data_group; first average over ID within age cat. 
       # and then take avg
       meth_by_age <- luma_data_group %>%
-        group_by (age.class.date) %>%
+        group_by (age.cat) %>%
         summarise (n.id = n(),
                    avg = round (mean(methylation, na.rm = T), 2),
                    median =  round (quantile(methylation, c(.5), na.rm = T), 2),
@@ -757,8 +795,8 @@ Mehtylation by Sex") +
     ## c) Plot Methylation by Age
       # graph of the raw data for percent global DNA methylaiton by maternal 
       # rank stratified by age 
-      ggplot(data = subset(luma_data_group, !is.na(x = age.class.date)), 
-             aes(x = age.class.date, y = methylation, color = age.class.date)) + 
+      ggplot(data = subset(luma_data_group, !is.na(x = age.cat)), 
+             aes(x = age.cat, y = methylation, color = age.cat)) + 
         geom_boxplot() +
         theme(text = element_text(size=20))+
         scale_colour_hue(l = 50) + # Use a slightly darker palette than normal
@@ -776,8 +814,8 @@ Mehtylation by Age") +
   
     ## e) Bivariate Regression Methylatino by Age
       # uses 'nmle' package, which will provided p-value estimates
-      age.lme <- lme(methylation ~ age.class.date, random =~1|id, 
-                     subset(luma_data_group,!is.na(x = age.class.date)))
+      age.lme <- lme(methylation ~ age.cat, random =~1|id, 
+                     subset(luma_data_group,!is.na(x = age.cat)))
       
       summary(age.lme)            #  print model summary, effects and SE
       intervals(age.lme, 
@@ -845,11 +883,11 @@ Mehtylation by Maternal Rank") +
   
 
   ### 6.4 Bivariate Statistics Methylation by intra litter rank
-    ## a) Summary stats methylation by intra.lit.rank 
+    ## a) Summary stats methylation by lit.size 
       # NOTE: uses luma_data_group; first average over ID within age cat. 
       # and then take avg
       meth_by_intra_lit_rank <- luma_data_group %>%
-        group_by (intra.lit.rank) %>%
+        group_by (lit.size) %>%
         summarise (n.id = n(),
                    avg = round (mean(methylation, na.rm = T), 2),
                    median =  round (quantile(methylation, c(.5), na.rm = T), 2),
@@ -866,9 +904,9 @@ Mehtylation by Maternal Rank") +
     ## c) Plot mehtylation by intra litter rank
       # graph of the raw data for percent global DNA methylaiton by intra
       # litter rank
-      ggplot(data = subset(luma_data_group, !is.na(x = intra.lit.rank)),
-             aes(x = intra.lit.rank, y = methylation,
-                 color = intra.lit.rank)) + 
+      ggplot(data = subset(luma_data_group, !is.na(x = lit.size)),
+             aes(x = lit.size, y = methylation,
+                 color = lit.size)) + 
         geom_boxplot() +
         theme(text = element_text(size=20))+
         scale_colour_hue(l = 50) + # Use a slightly darker palette than normal
@@ -887,21 +925,21 @@ Mehtylation by Intra Litter Rank") +
       
       ## e) Bivariate Regression Methylatino by maternal rank 
       # uses 'nmle' package, which will provided p-value estimates
-      intra.lit.rank.lme <- lme(methylation ~ intra.lit.rank, random =~1|id, 
-                          subset(luma_data_group,!is.na(x = intra.lit.rank)))
+      lit.size.lme <- lme(methylation ~ lit.size, random =~1|id, 
+                          subset(luma_data_group,!is.na(x = lit.size)))
       
-      summary(intra.lit.rank.lme)   #  print model summary, effects and SE
-      intervals(intra.lit.rank.lme, 
+      summary(lit.size.lme)   #  print model summary, effects and SE
+      intervals(lit.size.lme, 
                 which = "fixed")    # print 95% CIs for parameter estimates
-      anova(intra.lit.rank.lme)     # generate p-value from Wald test
+      anova(lit.size.lme)     # generate p-value from Wald test
       
       
   ### 6.5 Bivariate Statistics Methylation by human population size
-    ## a) Summary stats methylation by hum.pop
+    ## a) Summary stats methylation by hum.distrb
       # NOTE: uses luma_data_group; first average over ID within age cat. 
       # and then take avg
       meth_by_hum_pop <- luma_data_group %>%
-        group_by (hum.pop) %>%
+        group_by (hum.distrb) %>%
         summarise (n.id = n(),
                    avg = round (mean(methylation, na.rm = T), 2),
                    median =  round (quantile(methylation, c(.5), na.rm = T), 2),
@@ -917,9 +955,9 @@ Mehtylation by Intra Litter Rank") +
     ## c) Plot mehtylation by human population size
       # graph of the raw data for percent global DNA methylaiton by human 
       # populaiton size
-      ggplot(data = subset(luma_data_group, !is.na(x = hum.pop)),
-             aes(x = hum.pop, y = methylation,
-                 color = hum.pop)) + 
+      ggplot(data = subset(luma_data_group, !is.na(x = hum.distrb)),
+             aes(x = hum.distrb, y = methylation,
+                 color = hum.distrb)) + 
         geom_boxplot() +
         theme(text = element_text(size=20))+
         scale_colour_hue(l = 50) + # Use a slightly darker palette than normal
@@ -938,13 +976,13 @@ Mehtylation by Human Population Size") +
       
     ## e) Bivariate Regression Methylatino by human population size
       # uses 'nmle' package, which will provided p-value estimates
-      hum.pop.lme <- lme(methylation ~ hum.pop, random =~1|id, 
-                                subset(luma_data_group,!is.na(x = hum.pop)))
+      hum.distrb.lme <- lme(methylation ~ hum.distrb, random =~1|id, 
+                                subset(luma_data_group,!is.na(x = hum.distrb)))
       
-      summary(hum.pop.lme)        #  print model summary, effects and SE
-      intervals(hum.pop.lme, 
+      summary(hum.distrb.lme)        #  print model summary, effects and SE
+      intervals(hum.distrb.lme, 
                 which = "fixed")  # print 95% CIs for parameter estimates
-      anova(hum.pop.lme)          # generate p-value from Wald test
+      anova(hum.distrb.lme)          # generate p-value from Wald test
       
     
   ### 6.6 Bivariate statistics methylation by periconceptional prey density 
@@ -1040,9 +1078,9 @@ Mehtylation by Human Population Size") +
   ### 6.11 View methylation by rank within age strata
     ## a) Graph of the raw data for percent global DNA methylaiton by maternal rank
       # stratified by age
-      ggplot(subset(luma_data_group, !is.na(x = age.class.date)),
+      ggplot(subset(luma_data_group, !is.na(x = age.cat)),
              aes(x = mom.strank.quart.order, y = methylation, 
-                 color = age.class.date )) +
+                 color = age.cat )) +
         geom_point(shape = 1) +
         theme(text = element_text(size=20))+
         scale_colour_hue(l = 50) + # Use a slightly darker palette than normal
@@ -1064,9 +1102,9 @@ Mehtylation by Human Population Size") +
       
     ## c) Box-plots of methylation by rank within age categories  
       ggplot(subset(luma_data_group, 
-                    !is.na(x = mom.strank.quart)&!is.na(x=age.class.date)),
+                    !is.na(x = mom.strank.quart)&!is.na(x=age.cat)),
              aes(y = methylation, x = factor(mom.strank.quart), 
-                 fill = age.class.date))+
+                 fill = age.cat))+
         geom_boxplot() +
         theme(text = element_text(size=20))+
         labs(title = "Percent Global DNA Mehtylation by 
@@ -1088,7 +1126,7 @@ Mehtylation by Human Population Size") +
   ### 6.12 Stratify data by life history variables
     ## a) Cub subset that includes both females and males
       luma_data_cub <- luma_data_group %>%
-        filter(grepl('^cub$', age.class.date))
+        filter(grepl('^cub$', age.cat))
       
       #**hack**# Fill in two missing maternal rank quartiles
       # change mom.absrank to an integer
@@ -1109,11 +1147,11 @@ Mehtylation by Human Population Size") +
       
     ## b) Subadult subset that includes both females and males
       luma_data_sub <- luma_data_group %>%
-        dplyr::filter(grepl('sub', age.class.date))
+        dplyr::filter(grepl('sub', age.cat))
       
     ## c) Adult subset that includes both females and males
       luma_data_adult <- luma_data_group %>%
-        dplyr::filter(grepl('^adult$', age.class.date))  
+        dplyr::filter(grepl('^adult$', age.cat))  
       
       
       
@@ -1133,7 +1171,7 @@ Mehtylation by Human Population Size") +
                    sd = round (sd(methylation, na.rm = T), 2))
       
     ## b) Mehtylation by maternal rank quartile
-      cub.mom.rank.mod <- glm(methylation ~ mom.strank.quart + sex + age.date,
+      cub.mom.rank.mod <- glm(methylation ~ mom.strank.quart + sex + age.mon,
                          data = luma_data_cub)
       
     ## c) Parameter estimates
@@ -1186,7 +1224,7 @@ Mehtylation by Human Population Size") +
     
     ## j)  Mehtylation by Maternal Rank Quartiles binned
       cub.rank.mod2 <- glm(methylation ~ mom.strank.quart.comb + sex + 
-                             age.date,
+                             age.mon,
                          data = luma_data_cub)
       
       summary(cub.rank.mod2)  # print model summary, effects and SE
@@ -1196,27 +1234,27 @@ Mehtylation by Human Population Size") +
   ### 7.2 Cub model: methylation by intra litter rank      
     ## a) Check within strata descritpive stats
     luma_data_cub %>%
-        group_by (intra.lit.rank) %>%
+        group_by (lit.size) %>%
         summarise (n.id = n(),
                    avg = round (mean(methylation, na.rm = T), 2),
                    median =  round (quantile(methylation, c(.5), na.rm = T), 2),
                    sd = round (sd(methylation, na.rm = T), 2))
       
     ## b) Mehtylation by intra litter rank
-      cub.intra.rank.mod <- glm(methylation ~ intra.lit.rank + sex + 
-                                  age.date, data = luma_data_cub)
+      cub.intra.rank.mod <- glm(methylation ~ lit.size + sex + 
+                                  age.mon, data = luma_data_cub)
     ## c) Parameter estimates
     summary(cub.intra.rank.mod)  # print model summary, effects and SE
     confint(cub.intra.rank.mod)  # print 95% CIs for parameter estimates  
     
     ## d) Combine quartiles tiwn hi and lo into a single category
-    luma_data_cub$intra.lit.rank.comb <- as.factor(
-      ifelse(luma_data_cub$intra.lit.rank == "single",
+    luma_data_cub$lit.size.comb <- as.factor(
+      ifelse(luma_data_cub$lit.size == "single",
              "single", "twin"))
     
     ## e)  Mehtylation by litter size
-    cub.intra.rank.mod2 <- glm(methylation ~ intra.lit.rank.comb  + sex + 
-                           age.date,
+    cub.intra.rank.mod2 <- glm(methylation ~ lit.size.comb  + sex + 
+                           age.mon,
                          data = luma_data_cub)
     
     summary(cub.intra.rank.mod2)  # print model summary, effects and SE
@@ -1225,38 +1263,38 @@ Mehtylation by Human Population Size") +
   ### 7.3 Cub model: methylation by human population size     
     ## a) Check within strata descritpive stats
     luma_data_cub %>%
-      group_by (hum.pop) %>%
+      group_by (hum.distrb) %>%
       summarise (n.id = n(),
                  avg = round (mean(methylation, na.rm = T), 2),
                  median =  round (quantile(methylation, c(.5), na.rm = T), 2),
                  sd = round (sd(methylation, na.rm = T), 2))
     
     ## b) Mehtylation by intra litter rank
-    cub.hum.pop.mod <- glm(methylation ~ hum.pop + sex + 
-                                age.date, data = luma_data_cub)
+    cub.hum.distrb.mod <- glm(methylation ~ hum.distrb + sex + 
+                                age.mon, data = luma_data_cub)
     ## b) Parameter estimates
-    summary(cub.hum.pop.mod)  # print model summary, effects and SE
-    confint(cub.hum.pop.mod)  # print 95% CIs for parameter estimates  
+    summary(cub.hum.distrb.mod)  # print model summary, effects and SE
+    confint(cub.hum.distrb.mod)  # print 95% CIs for parameter estimates  
   
     
   ### 7.4 Cub model: methylation by prey density     
     ## a) Mehtylation by periconceptional prey density
       cub.peri.prey.mod <- glm(methylation ~ total.peri.concpt + sex + 
-                                age.date, data = luma_data_cub)
+                                age.mon, data = luma_data_cub)
     ## b) Parameter estimates
       summary(cub.peri.prey.mod)  # print model summary, effects and SE
       confint(cub.peri.prey.mod)  # print 95% CIs for parameter estimates
       
     ## c) Mehtylation by gestational prey density
       cub.gest.prey.mod <- glm(methylation ~ total.gest + total.peri.concpt +
-                                 sex +  age.date, data = luma_data_cub)
+                                 sex +  age.mon, data = luma_data_cub)
     ## d) Parameter estimates
       summary(cub.gest.prey.mod)  # print model summary, effects and SE
       confint(cub.gest.prey.mod)  # print 95% CIs for parameter estimates  
       
     ## e) Mehtylation by birth to 3 months prey density
       cub.birth.3.prey.mod <- glm(methylation ~ total.birth.3 + total.gest + 
-                                    total.peri.concpt + sex + age.date, 
+                                    total.peri.concpt + sex + age.mon, 
                                   data = luma_data_cub)
     ## f) Parameter estimates
       summary(cub.birth.3.prey.mod)  # print model summary, effects and SE
@@ -1265,7 +1303,7 @@ Mehtylation by Human Population Size") +
     ## g) Mehtylation by 3 to 6 months prey density
       cub.3.6.prey.mod <- glm(methylation ~ total.3.6 + total.birth.3 + 
                                 total.gest + total.peri.concpt +
-                                  + sex + age.date, data = luma_data_cub)
+                                  + sex + age.mon, data = luma_data_cub)
     ## h) Parameter estimates
       summary(cub.3.6.prey.mod)  # print model summary, effects and SE
       confint(cub.3.6.prey.mod)  # print 95% CIs for parameter estimates
@@ -1273,7 +1311,7 @@ Mehtylation by Human Population Size") +
     ## i) Mehtylation by 3 to 6 months prey density
       cub.6.9.prey.mod <- glm(methylation ~ total.6.9 + total.3.6 +
                               total.birth.3 + total.gest + total.peri.concpt 
-                              + sex + age.date, data = luma_data_cub)
+                              + sex + age.mon, data = luma_data_cub)
     
     ## j) Parameter estimates
       summary(cub.6.9.prey.mod)  # print model summary, effects and SE
@@ -1286,7 +1324,7 @@ Mehtylation by Human Population Size") +
       cub.peri.x.mom.rank.mod <- glm(methylation ~ 
                                        mom.strank.quart.comb * 
                                        total.peri.concpt + 
-                                       sex + age.date, data = luma_data_cub)
+                                       sex + age.mon, data = luma_data_cub)
       # Parameter estimates
       summary(cub.peri.x.mom.rank.mod)  # print model summary, effects and SE
       confint(cub.peri.x.mom.rank.mod)  # print 95% CIs for parameter estimates
@@ -1295,7 +1333,7 @@ Mehtylation by Human Population Size") +
       cub.gest.x.mom.rank.mod <- glm(methylation ~ 
                                        mom.strank.quart.comb * 
                                        total.gest + total.peri.concpt +
-                                       sex + age.date, data = luma_data_cub)
+                                       sex + age.mon, data = luma_data_cub)
       # Parameter estimates
       summary(cub.gest.x.mom.rank.mod)  # print model summary, effects and SE
       confint(cub.gest.x.mom.rank.mod)  # print 95% CIs for parameter estimates
@@ -1305,7 +1343,7 @@ Mehtylation by Human Population Size") +
                                        mom.strank.quart.comb * 
                                        total.birth.3 + total.peri.concpt + 
                                        total.gest +
-                                       sex + age.date, data = luma_data_cub)
+                                       sex + age.mon, data = luma_data_cub)
       # Parameter estimates
       summary(cub.birth.3.x.mom.rank.mod) # print model summary, effects and SE
       confint(cub.birth.3.x.mom.rank.mod)# print 95% CIs for parameter estimates
@@ -1322,7 +1360,7 @@ Mehtylation by Human Population Size") +
       # birth.3 prey hi
       cub.birth.3.hi.mom.rank.mod <- glm(methylation ~ 
                                           mom.strank.quart.comb +
-                                          sex + age.date, 
+                                          sex + age.mon, 
                                           data = luma_data_cub_birth.3_hi)
       # Parameter estimates
       summary(cub.birth.3.hi.mom.rank.mod) 
@@ -1332,7 +1370,7 @@ Mehtylation by Human Population Size") +
       # birth.3 prey lo
       cub.birth.3.lo.mom.rank.mod <- glm(methylation ~ 
                                            mom.strank.quart.comb +
-                                           sex + age.date, 
+                                           sex + age.mon, 
                                          data = luma_data_cub_birth.3_lo)
       # Parameter estimates
       summary(cub.birth.3.lo.mom.rank.mod) 
@@ -1344,7 +1382,7 @@ Mehtylation by Human Population Size") +
                                           mom.strank.quart.comb * 
                                           total.3.6 + total.peri.concpt + 
                                           total.gest + total.birth.3 +
-                                          sex + age.date, data = luma_data_cub)
+                                          sex + age.mon, data = luma_data_cub)
       # Parameter estimates
       summary(cub.3.6.x.mom.rank.mod) # print model summary, effects and SE
       confint(cub.3.6.x.mom.rank.mod) # print 95% CIs for parameter estimates
@@ -1354,7 +1392,7 @@ Mehtylation by Human Population Size") +
                                       mom.strank.quart.comb * 
                                       total.6.9 + total.peri.concpt + 
                                       total.gest + total.birth.3 + total.3.6 +
-                                      sex + age.date, data = luma_data_cub)
+                                      sex + age.mon, data = luma_data_cub)
       # Parameter estimates
       summary(cub.6.9.x.mom.rank.mod) # print model summary, effects and SE
       confint(cub.6.9.x.mom.rank.mod) # print 95% CIs for parameter estimates
@@ -1362,21 +1400,21 @@ Mehtylation by Human Population Size") +
         
   ### 7.6 Cub interaction model: mom rank by human pop   
     ## a) Maternal rank by human population size
-      hum.pop.x.mom.rank.mod <- glm(methylation ~ 
-                                       mom.strank.quart.comb * hum.pop + 
-                                       sex + age.date, data = luma_data_cub)
+      hum.distrb.x.mom.rank.mod <- glm(methylation ~ 
+                                       mom.strank.quart.comb * hum.distrb + 
+                                       sex + age.mon, data = luma_data_cub)
     ## b) Parameter estimates
-      summary(hum.pop.x.mom.rank.mod)  # print model summary, effects and SE
-      confint(hum.pop.x.mom.rank.mod)  # print 95% CIs for parameter estimates
+      summary(hum.distrb.x.mom.rank.mod)  # print model summary, effects and SE
+      confint(hum.distrb.x.mom.rank.mod)  # print 95% CIs for parameter estimates
     
     ## c) Cub subset that human pop hi
       luma_data_cub_hum_hi<- luma_data_cub %>%
-        dplyr::filter(grepl('hi', hum.pop))
+        dplyr::filter(grepl('hi', hum.distrb))
     
       
     ## d)  Mehtylation by Maternal Rank Quartiles binned hi human pop
       cub.rank.hum.hi<- glm(methylation ~ mom.strank.quart.comb + sex + 
-                             age.date,
+                             age.mon,
                            data = luma_data_cub_hum_hi)
       
       summary(cub.rank.hum.hi)  # print model summary, effects and SE
@@ -1384,11 +1422,11 @@ Mehtylation by Human Population Size") +
     
     ## e) Cub subset that human pop lo
       luma_data_cub_hum_lo<- luma_data_cub %>%
-        filter(grepl('lo', hum.pop))
+        filter(grepl('lo', hum.distrb))
       
     ## f)  Mehtylation by Maternal Rank Quartiles binned lo human pop
       cub.rank.hum.lo<- glm(methylation ~ mom.strank.quart.comb + sex + 
-                              age.date,
+                              age.mon,
                             data = luma_data_cub_hum_lo)
       
       summary(cub.rank.hum.lo)  # print model summary, effects and SE
@@ -1412,7 +1450,7 @@ Mehtylation by Human Population Size") +
                    sd = round (sd(methylation, na.rm = T), 2))
       
     ## b) Mehtylation by maternal rank quartile
-      sub.mom.rank.mod <- glm(methylation ~ mom.strank.quart + sex + age.date,
+      sub.mom.rank.mod <- glm(methylation ~ mom.strank.quart + sex + age.mon,
                               data = luma_data_sub)
       
     ## c) Parameter estimates
@@ -1464,7 +1502,7 @@ Mehtylation by Human Population Size") +
       
     ## j)  Mehtylation by Maternal Rank Quartiles binned
       sub.rank.mod2 <- glm(methylation ~ mom.strank.quart.comb + sex + 
-                             age.date,
+                             age.mon,
                            data = luma_data_sub)
       
       summary(sub.rank.mod2)  # print model summary, effects and SE
@@ -1474,27 +1512,27 @@ Mehtylation by Human Population Size") +
   ### 8.2 Sub model: methylation by intra litter rank      
     ## a) Check within strata descritpive stats
       luma_data_sub %>%
-        group_by (intra.lit.rank) %>%
+        group_by (lit.size) %>%
         summarise (n.id = n(),
                    avg = round (mean(methylation, na.rm = T), 2),
                    median =  round (quantile(methylation, c(.5), na.rm = T), 2),
                    sd = round (sd(methylation, na.rm = T), 2))
       
     ## b) Mehtylation by intra litter rank
-      sub.intra.rank.mod <- glm(methylation ~ intra.lit.rank + sex + 
-                                  age.date, data = luma_data_sub)
+      sub.intra.rank.mod <- glm(methylation ~ lit.size + sex + 
+                                  age.mon, data = luma_data_sub)
     ## c) Parameter estimates
       summary(sub.intra.rank.mod)  # print model summary, effects and SE
       confint(sub.intra.rank.mod)  # print 95% CIs for parameter estimates  
       
     ## d) Combine quartiles tiwn hi and lo into a single category
-      luma_data_sub$intra.lit.rank.comb <- as.factor(
-        ifelse(luma_data_sub$intra.lit.rank == "single",
+      luma_data_sub$lit.size.comb <- as.factor(
+        ifelse(luma_data_sub$lit.size == "single",
                "single", "twin"))
       
     ## e)  Mehtylation by litter size
-      sub.intra.rank.mod2 <- glm(methylation ~ intra.lit.rank.comb  + sex + 
-                                   age.date,
+      sub.intra.rank.mod2 <- glm(methylation ~ lit.size.comb  + sex + 
+                                   age.mon,
                                  data = luma_data_sub)
       # Parameter estimates
       summary(sub.intra.rank.mod2)  # print model summary, effects and SE
@@ -1504,38 +1542,38 @@ Mehtylation by Human Population Size") +
   ### 8.3 Sub model: methylation by human population size     
     ## a) Check within strata descritpive stats
       luma_data_sub %>%
-        group_by (hum.pop) %>%
+        group_by (hum.distrb) %>%
         summarise (n.id = n(),
                    avg = round (mean(methylation, na.rm = T), 2),
                    median =  round (quantile(methylation, c(.5), na.rm = T), 2),
                    sd = round (sd(methylation, na.rm = T), 2))
       
     ## b) Mehtylation by intra litter rank
-      sub.hum.pop.mod <- glm(methylation ~ hum.pop + sex + 
-                               age.date, data = luma_data_sub)
+      sub.hum.distrb.mod <- glm(methylation ~ hum.distrb + sex + 
+                               age.mon, data = luma_data_sub)
     ## c) Parameter estimates
-      summary(sub.hum.pop.mod)  # print model summary, effects and SE
-      confint(sub.hum.pop.mod)  # print 95% CIs for parameter estimates  
+      summary(sub.hum.distrb.mod)  # print model summary, effects and SE
+      confint(sub.hum.distrb.mod)  # print 95% CIs for parameter estimates  
       
       
   ### 8.4 sub model: methylation by prey density     
     ## a) Mehtylation by periconceptional prey density
       sub.peri.prey.mod <- glm(methylation ~ total.peri.concpt + sex + 
-                                 age.date, data = luma_data_sub)
+                                 age.mon, data = luma_data_sub)
     ## b) Parameter estimates
       summary(sub.peri.prey.mod)  # print model summary, effects and SE
       confint(sub.peri.prey.mod)  # print 95% CIs for parameter estimates
       
     ## c) Mehtylation by gestational prey density
       sub.gest.prey.mod <- glm(methylation ~ total.gest + total.peri.concpt +
-                                 sex +  age.date, data = luma_data_sub)
+                                 sex +  age.mon, data = luma_data_sub)
     ## d) Parameter estimates
       summary(sub.gest.prey.mod)  # print model summary, effects and SE
       confint(sub.gest.prey.mod)  # print 95% CIs for parameter estimates  
       
     ## e) Mehtylation by birth to 3 months prey density
       sub.birth.3.prey.mod <- glm(methylation ~ total.birth.3 + total.gest +
-                                  total.peri.concpt + sex + age.date, 
+                                  total.peri.concpt + sex + age.mon, 
                                   data = luma_data_sub)
     ## f) Parameter estimates
       summary(sub.birth.3.prey.mod)  # print model summary, effects and SE
@@ -1544,7 +1582,7 @@ Mehtylation by Human Population Size") +
       
     ## g) Mehtylation by 3 to 6 months prey density
       sub.3.6.prey.mod <- glm(methylation ~ total.3.6 + total.birth.3 +
-                              total.gest + total.peri.concpt + sex + age.date, 
+                              total.gest + total.peri.concpt + sex + age.mon, 
                               data = luma_data_sub)
     ## h) Parameter estimates
       summary(sub.3.6.prey.mod)  # print model summary, effects and SE
@@ -1553,7 +1591,7 @@ Mehtylation by Human Population Size") +
     ## i) Mehtylation by 3 to 6 months prey density
       sub.6.9.prey.mod <- glm(methylation ~ total.6.9 + total.3.6 +
                               total.birth.3 + total.gest + total.peri.concpt + 
-                                sex + age.date, data = luma_data_sub)
+                                sex + age.mon, data = luma_data_sub)
     ## j) Parameter estimates
       summary(sub.6.9.prey.mod)  # print model summary, effects and SE
       confint(sub.6.9.prey.mod)  # print 95% CIs for parameter estimates
@@ -1563,48 +1601,48 @@ Mehtylation by Human Population Size") +
   ### 8.5 Sub interaction  model: litter sizeprey density   
     ## a) Mehtylation by periconceptional prey density
       sub.peri.x.lit.size.mod <- glm(methylation ~ 
-                                       intra.lit.rank.comb * 
+                                       lit.size.comb * 
                                        total.peri.concpt + 
-                                       sex + age.date, data = luma_data_sub)
+                                       sex + age.mon, data = luma_data_sub)
       # Parameter estimates
       summary(sub.peri.x.lit.size.mod)  # print model summary, effects and SE
       confint(sub.peri.x.lit.size.mod)  # print 95% CIs for parameter estimates
       
     ## b) Mehtylation by gestation prey density
       sub.gest.x.lit.size.mod <- glm(methylation ~ 
-                                       intra.lit.rank.comb * 
+                                       lit.size.comb * 
                                        total.gest + total.peri.concpt +
-                                       sex + age.date, data = luma_data_sub)
+                                       sex + age.mon, data = luma_data_sub)
       # Parameter estimates
       summary(sub.gest.x.lit.size.mod)  # print model summary, effects and SE
       confint(sub.gest.x.lit.size.mod)  # print 95% CIs for parameter estimates
       
     ## c) Mehtylation by birth to 3 month prey density
       sub.birth.3.x.lit.size.mod <- glm(methylation ~ 
-                                          intra.lit.rank.comb * 
+                                          lit.size.comb * 
                                           total.birth.3 + total.peri.concpt + 
                                           total.gest +
-                                          sex + age.date, data = luma_data_sub)
+                                          sex + age.mon, data = luma_data_sub)
       # Parameter estimates
       summary(sub.birth.3.x.lit.size.mod) # print model summary, effects and SE
       confint(sub.birth.3.x.lit.size.mod)# print 95% CIs for parameter estimates
       
     ## d) Mehtylation by 3 to 6 month prey density
       sub.3.6.x.lit.size.mod <- glm(methylation ~ 
-                                      intra.lit.rank.comb * 
+                                      lit.size.comb * 
                                       total.3.6 + total.peri.concpt + 
                                       total.gest + total.birth.3 +
-                                      sex + age.date, data = luma_data_sub)
+                                      sex + age.mon, data = luma_data_sub)
       # Parameter estimates
       summary(sub.3.6.x.lit.size.mod) # print model summary, effects and SE
       confint(sub.3.6.x.lit.size.mod) # print 95% CIs for parameter estimates
       
     ## e) Mehtylation by 6 to 9 month prey density
       sub.6.9.x.lit.size.mod <- glm(methylation ~ 
-                                      intra.lit.rank.comb * 
+                                      lit.size.comb * 
                                       total.6.9 + total.peri.concpt + 
                                       total.gest + total.birth.3 + total.3.6 +
-                                      sex + age.date, data = luma_data_sub)
+                                      sex + age.mon, data = luma_data_sub)
       # Parameter estimates
       summary(sub.6.9.x.lit.size.mod) # print model summary, effects and SE
       confint(sub.6.9.x.lit.size.mod) # print 95% CIs for parameter estimates
@@ -1612,12 +1650,12 @@ Mehtylation by Human Population Size") +
       
   ### 8.6 sub model: litter size by human pop   
     ## a) Mehtylation by periconceptional prey density
-      hum.pop.x.lit.size.mod <- glm(methylation ~ 
-                                      intra.lit.rank.comb * hum.pop + 
-                                      sex + age.date, data = luma_data_sub)
+      hum.distrb.x.lit.size.mod <- glm(methylation ~ 
+                                      lit.size.comb * hum.distrb + 
+                                      sex + age.mon, data = luma_data_sub)
       # Parameter estimates
-      summary(hum.pop.x.lit.size.mod)  # print model summary, effects and SE
-      confint(hum.pop.x.lit.size.mod)  # print 95% CIs for parameter estimates
+      summary(hum.distrb.x.lit.size.mod)  # print model summary, effects and SE
+      confint(hum.distrb.x.lit.size.mod)  # print 95% CIs for parameter estimates
       
 
       
@@ -1637,7 +1675,7 @@ Mehtylation by Human Population Size") +
       
     ## b) Mehtylation by maternal rank quartile
       adult.mom.rank.mod <- glm(methylation ~ mom.strank.quart + sex + 
-                                  age.date, data = luma_data_adult)
+                                  age.mon, data = luma_data_adult)
       
     ## c) Parameter estimates
       summary(adult.mom.rank.mod)  # print model summary, effects and SE
@@ -1689,7 +1727,7 @@ Mehtylation by Human Population Size") +
       
     ## j)  Mehtylation by Maternal Rank Quartiles binned
       adult.rank.mod2 <- glm(methylation ~ mom.strank.quart.comb + sex + 
-                             age.date,
+                             age.mon,
                            data = luma_data_adult)
       
       summary(adult.rank.mod2)  # print model summary, effects and SE
@@ -1699,7 +1737,7 @@ Mehtylation by Human Population Size") +
   ### 9.2 Adult model: methylation by intra litter rank      
     ## a) Check within strata descritpive stats
       luma_data_adult %>%
-        group_by (intra.lit.rank) %>%
+        group_by (lit.size) %>%
         summarise (n.id = n(),
                    avg = round (mean(methylation, na.rm = T), 2),
                    median =  round (quantile(methylation, 
@@ -1707,20 +1745,20 @@ Mehtylation by Human Population Size") +
                    sd = round (sd(methylation, na.rm = T), 2))
       
     ## b) Mehtylation by intra litter rank
-      adult.intra.rank.mod <- glm(methylation ~ intra.lit.rank + sex + 
-                                  age.date, data = luma_data_adult)
+      adult.intra.rank.mod <- glm(methylation ~ lit.size + sex + 
+                                  age.mon, data = luma_data_adult)
     ## c) Parameter estimates
       summary(adult.intra.rank.mod)  # print model summary, effects and SE
       confint(adult.intra.rank.mod)  # print 95% CIs for parameter estimates  
       
     ## d) Combine quartiles tiwn hi and lo into a single category
-      luma_data_adult$intra.lit.rank.comb <- as.factor(
-        ifelse(luma_data_adult$intra.lit.rank == "single",
+      luma_data_adult$lit.size.comb <- as.factor(
+        ifelse(luma_data_adult$lit.size == "single",
                "single", "twin"))
       
     ## e)  Mehtylation by litter size
-      adult.intra.rank.mod2 <- glm(methylation ~ intra.lit.rank.comb  + sex + 
-                                   age.date,
+      adult.intra.rank.mod2 <- glm(methylation ~ lit.size.comb  + sex + 
+                                   age.mon,
                                  data = luma_data_adult)
       
       summary(adult.intra.rank.mod2)  # print model summary, effects and SE
@@ -1730,38 +1768,38 @@ Mehtylation by Human Population Size") +
   ### 9.3 Adult model: methylation by human population size     
     ## a) Check within strata descritpive stats
       luma_data_adult %>%
-        group_by (hum.pop) %>%
+        group_by (hum.distrb) %>%
         summarise (n.id = n(),
                    avg = round (mean(methylation, na.rm = T), 2),
                    median =  round (quantile(methylation, c(.5), na.rm = T), 2),
                    sd = round (sd(methylation, na.rm = T), 2))
       
     ## b) Mehtylation by intra litter rank
-      adult.hum.pop.mod <- glm(methylation ~ hum.pop + sex + 
-                               age.date, data = luma_data_adult)
+      adult.hum.distrb.mod <- glm(methylation ~ hum.distrb + sex + 
+                               age.mon, data = luma_data_adult)
     ## c) Parameter estimates
-      summary(adult.hum.pop.mod)  # print model summary, effects and SE
-      confint(adult.hum.pop.mod)  # print 95% CIs for parameter estimates  
+      summary(adult.hum.distrb.mod)  # print model summary, effects and SE
+      confint(adult.hum.distrb.mod)  # print 95% CIs for parameter estimates  
       
       
   ### 9.4 Adult model: methylation by prey density     
     ## a) Mehtylation by periconceptional prey density
       adult.peri.prey.mod <- glm(methylation ~ total.peri.concpt + sex + 
-                                 age.date, data = luma_data_adult)
+                                 age.mon, data = luma_data_adult)
     ## b) Parameter estimates
       summary(adult.peri.prey.mod)  # print model summary, effects and SE
       confint(adult.peri.prey.mod)  # print 95% CIs for parameter estimates
       
     ## c) Mehtylation by gestational prey density
       adult.gest.prey.mod <- glm(methylation ~ total.gest + total.peri.concpt +
-                                 sex +  age.date, data = luma_data_adult)
+                                 sex +  age.mon, data = luma_data_adult)
     ## d) Parameter estimates
       summary(adult.gest.prey.mod)  # print model summary, effects and SE
       confint(adult.gest.prey.mod)  # print 95% CIs for parameter estimates  
       
     ## e) Mehtylation by birth to 3 months prey density
       adult.birth.3.prey.mod <- glm(methylation ~ total.birth.3 + total.gest + 
-                                      total.peri.concpt + sex + age.date, 
+                                      total.peri.concpt + sex + age.mon, 
                                     data = luma_data_adult)
     ## f) Parameter estimates
       summary(adult.birth.3.prey.mod)  # print model summary, effects and SE
@@ -1770,7 +1808,7 @@ Mehtylation by Human Population Size") +
     ## g) Mehtylation by 3 to 6 months prey density
       adult.3.6.prey.mod <- glm(methylation ~ total.3.6 + total.birth.3 +
                                   total.gest + total.peri.concpt + 
-                                  sex + age.date, data = luma_data_adult)
+                                  sex + age.mon, data = luma_data_adult)
     ## h) Parameter estimates
       summary(adult.3.6.prey.mod)  # print model summary, effects and SE
       confint(adult.3.6.prey.mod)  # print 95% CIs for parameter estimates
@@ -1778,7 +1816,7 @@ Mehtylation by Human Population Size") +
     ## i) Mehtylation by 3 to 6 months prey density
       adult.6.9.prey.mod <- glm(methylation ~ total.6.9 + total.3.6 + 
                                 total.birth.3 + total.gest + total.peri.concpt 
-                                + sex + age.date, data = luma_data_adult)
+                                + sex + age.mon, data = luma_data_adult)
       
     ## j) Parameter estimates
       summary(adult.6.9.prey.mod)  # print model summary, effects and SE
@@ -1791,7 +1829,7 @@ Mehtylation by Human Population Size") +
       adult.peri.x.mom.rank.mod <- glm(methylation ~ 
                                        mom.strank.quart.comb * 
                                        total.peri.concpt + 
-                                       sex + age.date, data = luma_data_adult)
+                                       sex + age.mon, data = luma_data_adult)
       # Parameter estimates
       summary(adult.peri.x.mom.rank.mod)# print model summary, effects and SE
       confint(adult.peri.x.mom.rank.mod)# print 95% CIs for parameter estimates
@@ -1800,7 +1838,7 @@ Mehtylation by Human Population Size") +
       adult.gest.x.mom.rank.mod <- glm(methylation ~ 
                                        mom.strank.quart.comb * 
                                        total.gest + total.peri.concpt +
-                                       sex + age.date, data = luma_data_adult)
+                                       sex + age.mon, data = luma_data_adult)
       # Parameter estimates
       summary(adult.gest.x.mom.rank.mod)  # print model summary, effects and SE
       confint(adult.gest.x.mom.rank.mod)  # print 95% CIs for parameter estimates
@@ -1810,7 +1848,7 @@ Mehtylation by Human Population Size") +
                                           mom.strank.quart.comb * 
                                           total.birth.3 + total.peri.concpt + 
                                           total.gest +
-                                          sex + age.date, data = luma_data_adult)
+                                          sex + age.mon, data = luma_data_adult)
       # Parameter estimates
       summary(adult.birth.3.x.mom.rank.mod) 
       confint(adult.birth.3.x.mom.rank.mod)
@@ -1820,7 +1858,7 @@ Mehtylation by Human Population Size") +
                                       mom.strank.quart.comb * 
                                       total.3.6 + total.peri.concpt + 
                                       total.gest + total.birth.3 +
-                                      sex + age.date, data = luma_data_adult)
+                                      sex + age.mon, data = luma_data_adult)
       # Parameter estimates
       summary(adult.3.6.x.mom.rank.mod) # print model summary, effects and SE
       confint(adult.3.6.x.mom.rank.mod) # print 95% CIs for parameter estimates
@@ -1830,19 +1868,19 @@ Mehtylation by Human Population Size") +
                                       mom.strank.quart.comb * 
                                       total.6.9 + total.peri.concpt + 
                                       total.gest + total.birth.3 + total.3.6 +
-                                      sex + age.date, data = luma_data_adult)
+                                      sex + age.mon, data = luma_data_adult)
       # Parameter estimates
       summary(adult.6.9.x.mom.rank.mod) # print model summary, effects and SE
       confint(adult.6.9.x.mom.rank.mod) # print 95% CIs for parameter estimates
       
   ### 9.6 adult model: litter size by human pop   
     ## a) Mehtylation by periconceptional prey density
-      hum.pop.x.mom.rank.mod <- glm(methylation ~ 
-                                      mom.strank.quart.comb * hum.pop + 
-                                      sex + age.date, data = luma_data_adult)
+      hum.distrb.x.mom.rank.mod <- glm(methylation ~ 
+                                      mom.strank.quart.comb * hum.distrb + 
+                                      sex + age.mon, data = luma_data_adult)
       # Parameter estimates
-      summary(hum.pop.x.mom.rank.mod)  # print model summary, effects and SE
-      confint(hum.pop.x.mom.rank.mod)  # print 95% CIs for parameter estimates
+      summary(hum.distrb.x.mom.rank.mod)  # print model summary, effects and SE
+      confint(hum.distrb.x.mom.rank.mod)  # print 95% CIs for parameter estimates
 
            
 

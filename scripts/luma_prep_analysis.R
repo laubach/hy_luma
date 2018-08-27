@@ -2,7 +2,7 @@
 ##############       Spotted Hyena Global DNA Methylation        ##############
 ##############               LUMA Data Preparation               ##############
 ##############                 By: Zach Laubach                  ##############
-##############            last updated: 25 July 2018             ##############
+##############             last updated: 27 Aug 2018             ##############
 ###############################################################################
 
 ### PURPOSE: This code is desingned to clean and prepare LUMA data for 
@@ -148,8 +148,19 @@
       
   ### 2.3 Import Access fisi backend
     # read in tidy Access fisi backend tables and save as data frames
-      source(paste0("/Volumes/Holekamp/code_repository/R/1_output_tidy_tbls/",
-                    "load_tidy_tbls.R"))
+    #  source(paste0("/Volumes/Holekamp/code_repository/R/1_output_tidy_tbls/",
+     #              "load_tidy_tbls.R"))
+      
+    ## a) manually load tblHyenas 
+      tblHyenas <- read.csv(paste0("/Volumes/Holekamp/code_repository/R",
+                                   "/1_output_tidy_tbls/tblHyenas.csv"),
+                            header = T)
+    ## b) manually load tblDarting 
+      tblDarting <- read.csv(paste0("/Volumes/Holekamp/code_repository/R",
+                                   "/1_output_tidy_tbls/tblDarting.csv"),
+                            header = T)
+      
+      
 
             
   
@@ -277,7 +288,7 @@
     ## a) Graph Controls Across Plates 
       # Graph the controls on each reaction plate to assess for any plate drift
       # least squares regression is used for the fit function 
-        ggplot(luma_cntrl, aes (x = well, y = methylation,
+        ggplot(luma_cntrl, aes (x = plate_pos_seq, y = methylation,
                                 color = sample_ID, group = sample_ID)) +
           geom_point(size = 1) +
           geom_smooth(method = lm, se = F) +
@@ -342,19 +353,53 @@
                             ON luma_data.plate_rxn_ID = 
                             drift_coef.plate_rxn_ID")
         
-    ## b) Weigthed Plate Calibration
+    ## b) Weigthed Plate Calibrations
       # Use dplyr to calculate a weighted plate calibration, with the result of 
       # shrinking drift towards the plate center (hy_pool control mean); 
-      # a symmetrical shrinkage.
-        calibration <- luma_data %>%
+      # a symmetrical shrinkage. 
+        # NOTE: samples added here with single channel pipette well by well
+        # so plate_pos_seq is count from 1-48
+        calibration_sing <- luma_data %>%
+          filter(plate_rxn_ID == "p1r1" | plate_rxn_ID == "p1r2" |
+                   plate_rxn_ID == "p2r3" |  plate_rxn_ID == "p2r4" |
+                   plate_rxn_ID == "p3r5" | plate_rxn_ID == "p3r6" |
+                   plate_rxn_ID == "p4r7" | plate_rxn_ID == "p4r8" |
+                   plate_rxn_ID == "p7r13_15" | plate_rxn_ID == "p6.2r14") %>%
           group_by (plate_rxn_ID, sample_ID) %>%
           summarize(meth_adjust = ifelse(plate_pos_factor == 1,
-                                         (((1-(plate_pos_seq/24))*estimate) +
+                                         (((1-(plate_pos_seq/30))*estimate) +
                                             methylation),
-                                         (methylation - ((plate_pos_seq/24)-1)
+                                         (methylation - ((plate_pos_seq/30)-1)
                                           * estimate))) 
+        
+        # NOTE: samples added here with single and multi channel pipette 
+        # so plate_pos_seq is count from 1-17
+        calibration_mult1 <- luma_data %>%
+          filter(plate_rxn_ID == "p5r9") %>%
+          group_by (plate_rxn_ID, sample_ID) %>%
+          summarize(meth_adjust = ifelse(plate_pos_factor == 1,
+                                         (((1-(plate_pos_seq/14))*estimate) +
+                                            methylation),
+                                         (methylation - ((plate_pos_seq/14)-1)
+                                          * estimate))) 
+        
+        # NOTE: samples added here with multi channel pipette 
+        # so plate_pos_seq is count from 1-9
+        calibration_mult2 <- luma_data %>%
+          filter(plate_rxn_ID == "p5r10" | plate_rxn_ID == "p6r11" |
+                   plate_rxn_ID == "p6r12") %>%
+          group_by (plate_rxn_ID, sample_ID) %>%
+          summarize(meth_adjust = ifelse(plate_pos_factor == 1,
+                                         (((1-(plate_pos_seq/6))*estimate) +
+                                            methylation),
+                                         (methylation - ((plate_pos_seq/6)-1)
+                                          * estimate))) 
+        
+    ## c) Combine calibration data frames (row by row)
+        calibration <- rbind(calibration_sing, calibration_mult1, 
+                             calibration_mult2)
       
-    ## c) Join calibrated methylation to luma_data
+    ## d) Join calibrated methylation to luma_data
       # A Left join of 'luma_data' with 'calibration', making an updated
       # 'luma_data' dataframe which includes the drift slope, 'slope,'.
       # parent table. Parent tables are linked on 'sample_ID.'
@@ -364,9 +409,37 @@
                            FROM luma_data      
                            LEFT JOIN calibration       
                            ON luma_data.sample_ID = 
-                           calibration.sample_ID")    
+                           calibration.sample_ID AND
+                           luma_data.plate_rxn_ID = 
+                           calibration.plate_rxn_ID")    
 
-                
+        
+  ### 5.1 Need to remove the duplicates that were run twice on accident
+        # see rxn notes
+    ## a) make a list of duplicates    
+        luma_data %>%
+          filter(duplicated(.[["sample_ID"]]))
+    ## b) Group rows with same sample_id to reduce duplicate
+        luma_data <- luma_data %>% 
+          group_by (sample_ID) %>% # set grouping same ID within same cat age
+          summarise (plate_rxn_ID = first(plate_rxn_ID),
+                     plate_pos_seq = first(plate_pos_seq),
+                     plate_pos_factor = first(plate_pos_factor),
+                     well = first(well),
+                     methylation = mean(methylation),
+                     analysis_status = first(analysis_status),
+                     assay_notes = first(assay_notes),
+                     dup1 = mean(dup1),
+                     dup2 = mean(dup2),
+                     stdev = mean(stdev),
+                     cv = mean(cv),
+                     stock_notes = first(stock_notes),
+                     cc_notes = first(cc_notes),
+                     rxn_notes = first(rxn_notes),
+                     drift_est = mean(estimate), # update variable name here
+                     meth_adjust = mean(meth_adjust))
+
+        
   ### 5.2 Link Samples to Hyena ID
     # Join the luma_data back to samp_record so that methylation values can
     # be linked to hyena ID and kay code by the sample ID
@@ -378,7 +451,7 @@
                            luma_data. plate_rxn_ID, plate_pos_seq, 
                             plate_pos_factor, well, methylation,
                             analysis_status, assay_notes, dup1, dup2, stdev, cv,
-                            estimate, meth_adjust, stock_notes, cc_notes, 
+                            drift_est, meth_adjust, stock_notes, cc_notes, 
                             rxn_notes,           
                             samp_record.*  
                            FROM luma_data      
@@ -404,7 +477,10 @@
                                        litrank, mortality.source, death.date,
                                        weaned, clan, park)), by = "id")
         
-    ## d) Join luma_data to tbl_Darting
+    ## d) convert darting.date to Date format
+        tbl_dart_hy$darting.date <- as.Date(tbl_dart_hy$darting.date)
+        
+    ## e) Join luma_data to tbl_dart_hy
         # A Left join of 'luma_data' with 'tbl_dart_hy', making an updated
         # 'luma_data' dataframe. Parent tables are linked on 'kay.code' and 
         # 'darting.date'  
@@ -412,21 +488,16 @@
           left_join(select(tbl_dart_hy, -one_of("id")),
             by = c("kay.code", "darting.date"))
 
-    ## e) Reorder Age variable for graphing
+    ## f) Reorder Age variable for graphing
         luma_data$age <- factor(luma_data$Age, levels = c("cub", "subadult",
                                 "adult"))
     
-    ## f) Manual data clean up
+    ## g) Manual data clean up
         # cash is in tblHyenas twice so need to remove erroroneous entry
         luma_data <- luma_data %>%
           filter (!grepl("cash", id) | !grepl("14-apr-08", first.seen))
    
-        # Need to remove the duplicates that were run twice on accident
-        # see rxn notes
-        ## find duplicates    
-        test <- luma_data %>%
-          filter(duplicated(.[["sample_id"]]))
-        
+    
   
  
 ###############################################################################
