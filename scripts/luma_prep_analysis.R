@@ -156,9 +156,8 @@
                                    "/1_output_tidy_tbls/tblHyenas.csv"),
                             header = T)
     ## b) manually load tblDarting 
-      tblDarting <- read.csv(paste0("/Volumes/Holekamp/code_repository/R",
-                                   "/1_output_tidy_tbls/tblDarting.csv"),
-                            header = T)
+      tblDarting <- read_csv(paste0("/Volumes/Holekamp/code_repository/R",
+                                   "/1_output_tidy_tbls/tblDarting.csv"))
       
       
 
@@ -469,14 +468,23 @@
     ## c) Join tblHyenas to tblDarting
         # A Left join of 'tblDarting' with select columns from 'tblHyenas', 
         # making a new dataframe, 'tbl_dart_hy'. 
-        # Parent tables are linked on 'id'.   
-        tbl_dart_hy <- tblDarting %>%
-          select(-one_of("clan")) %>%
-          left_join(select(tblHyenas, c(id, first.seen, den.grad, disappeared, 
-                                       mom, birthdate, number.littermates,
-                                       litrank, mortality.source, death.date,
-                                       weaned, clan, park)), by = "id")
+        # Parent tables are linked on 'id'. 
+        tblDarting <- tblDarting %>%
+          select(-c(clan))
+      
+#************************ fix table darting hack *****************************
+# replaces full name with abbreviated name
+        tblDarting$id <- ifelse((nchar(tblDarting$id) >= 4 & 
+                                   nchar(tblDarting$hyena) <= 4), 
+                                 tblDarting$hyena,
+                                 tblDarting$id)
         
+      tbl_dart_hy <- tblDarting %>%
+        left_join(select(tblHyenas, c(id, first.seen, den.grad, disappeared, 
+                                      mom, birthdate, number.littermates,
+                                      litrank, mortality.source, death.date,
+                                      weaned, clan, park)), by = "id")
+       
     ## d) convert darting.date to Date format
         tbl_dart_hy$darting.date <- as.Date(tbl_dart_hy$darting.date)
         

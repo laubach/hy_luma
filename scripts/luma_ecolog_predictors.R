@@ -319,18 +319,27 @@
                                           format="%Y-%m-%d"))
       
     ## j) Make a new variable hum.distrb
-      # create a two-level ordinal factor indicating human population size 
-      # (hi - talek hyena born after 2006 and lo - all other hynes for which 
-      # clan is known)
-      luma_data$hum.distrb <- ifelse(((luma_data$clan %in% c("talek",
-                                                            "fig.tree")) & 
-                                     luma_data$rank_year > 2000),
-                                  "large", "small")
-
+      # create a 3-level ordinal factor indicating human population size 
+      # (hi - talek hyena born after 2000, med - fig tree born after 2000,
+      # and lo - all other hynenas for which clan is known and birthdate)
+      luma_data <- luma_data  %>%
+        mutate(hum.disturb = case_when(luma_data$clan %in% c("talek") &
+                                         luma_data$rank_year > 2000 ~ c("hi"),
+                                       (luma_data$clan %in% c("fig.tree") &
+                                          luma_data$rank_year > 2000 ~ 
+                                          c("med")),
+                                       luma_data$clan %in% c("talek", 
+                                                             "fig.tree") &
+                                         luma_data$rank_year <= 2000 |
+                                         luma_data$clan %in% c("serena","happy", 
+                                                               "mara")
+                                       ~ c("low")))
+                                    
+                                    
     ## j) Re-order hum.distrb levels and re-code variable as categorical
       luma_data <- transform(luma_data,
                              hum.distrb = factor(hum.distrb,
-                                              levels = c("small", "large")))
+                                              levels = c("low", "med", "hi")))
       
 
   
