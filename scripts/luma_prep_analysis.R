@@ -356,7 +356,6 @@
       # Use dplyr to calculate a weighted plate calibration, with the result of 
       # shrinking drift towards the plate center (hy_pool control mean); 
       # a symmetrical shrinkage. 
-<<<<<<< HEAD
         # NOTE: samples added here with single channel pipette well by well
         # so plate_pos_seq is count from 1-48
         calibration_sing <- luma_data %>%
@@ -388,34 +387,17 @@
         calibration_mult2 <- luma_data %>%
           filter(plate_rxn_ID == "p5r10" | plate_rxn_ID == "p6r11" |
                    plate_rxn_ID == "p6r12") %>%
-=======
-        # NOTE: samples added here with single channel pippet well by well
-        # so plate_pos_seq is count from 1-48
-        calibration <- luma_data %>%
-          #******************************************filter by here
->>>>>>> bcc99c27b6282d228a325396aaae17b00cac78d0
           group_by (plate_rxn_ID, sample_ID) %>%
           summarize(meth_adjust = ifelse(plate_pos_factor == 1,
                                          (((1-(plate_pos_seq/6))*estimate) +
                                             methylation),
                                          (methylation - ((plate_pos_seq/6)-1)
                                           * estimate))) 
-<<<<<<< HEAD
+
         
     ## c) Combine calibration data frames (row by row)
         calibration <- rbind(calibration_sing, calibration_mult1, 
                              calibration_mult2)
-=======
-        # NOTE: samples added here with single channel pippet well by well
-        # so plate_pos_seq is count from 1-48
-        calibration2 <- luma_data %>%
-          group_by (plate_rxn_ID, sample_ID) %>%
-          summarize(meth_adjust = ifelse(plate_pos_factor == 1,
-                                         (((1-(plate_pos_seq/2))*estimate) +
-                                            methylation),
-                                         (methylation - ((plate_pos_seq/2)-1)
-                                          * estimate))) 
->>>>>>> bcc99c27b6282d228a325396aaae17b00cac78d0
       
     ## d) Join calibrated methylation to luma_data
       # A Left join of 'luma_data' with 'calibration', making an updated
@@ -487,7 +469,6 @@
     ## c) Join tblHyenas to tblDarting
         # A Left join of 'tblDarting' with select columns from 'tblHyenas', 
         # making a new dataframe, 'tbl_dart_hy'. 
-<<<<<<< HEAD
         # Parent tables are linked on 'id'. 
         tblDarting <- tblDarting %>%
           select(-c(clan))
@@ -509,17 +490,6 @@
         tbl_dart_hy$darting.date <- as.Date(tbl_dart_hy$darting.date)
         
     ## e) Join luma_data to tbl_dart_hy
-=======
-        # Parent tables are linked on 'id'.   
-        tbl_dart_hy <- tblDarting %>%
-          select(-one_of("clan")) %>%
-          left_join(select(tblHyenas, c(id, first.seen, den.grad, disappeared, 
-                                       mom, birthdate, number.littermates,
-                                       litrank, mortality.source, death.date,
-                                       weaned, clan, park)), by = "id")
-        
-    ## d) Join luma_data to tbl_dart_hy
->>>>>>> bcc99c27b6282d228a325396aaae17b00cac78d0
         # A Left join of 'luma_data' with 'tbl_dart_hy', making an updated
         # 'luma_data' dataframe. Parent tables are linked on 'kay.code' and 
         # 'darting.date'  
