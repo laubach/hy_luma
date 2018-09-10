@@ -2,7 +2,7 @@
 ##############       Spotted Hyena Global DNA Methylation        ##############
 ##############             LUMA Ecological Predictors            ##############
 ##############                 By: Zach Laubach                  ##############
-##############             last updated: 5 Sept 2018             ##############
+##############            last updated: 10 Sept 2018             ##############
 ###############################################################################
 
 
@@ -201,8 +201,8 @@
        
   ### 2.3 Import Access fisi backend #TEMPORARILY NOT WORKING
     ## a) read in tidy Access fisi backend tables and save as data frames
-      source(paste0("/Volumes/Holekamp/code_repository/R/1_output_tidy_tbls/",
-                   "load_tidy_tbls.R"))
+#      source(paste0("/Volumes/Holekamp/code_repository/R/1_output_tidy_tbls/",
+#                   "load_tidy_tbls.R"))
       
     ## b) manually load tblFemalerank  
     tblFemalerank <- read_csv(paste0("/Volumes/Holekamp/code_repository/R",
@@ -481,28 +481,15 @@
     ## a) Select a subset of the prey_density data by column names
           
           prey_density <- prey_density %>%
-            select(grep("thomsons", names(prey_density)), # contains 'thomsons'
-                   grep("topi", names(prey_density)), # contains 'topi'
-                   grep("gnu", names(prey_density)), # contains 'gnu'
-                   grep("zebra", names(prey_density)), # contains 'zebra'
+            select(grep("prim", names(prey_density)), # contains 'thomsons'
+                   #grep("topi", names(prey_density)), # contains 'topi'
+                   #grep("gnu", names(prey_density)), # contains 'gnu'
+                   #grep("zebra", names(prey_density)), # contains 'zebra'
                    grep("num", names(prey_density)), # contains 'num'
                    grep("^id$", names(prey_density))) %>% # exact match 'id'
-            select (-c(number.littermates)) %>%
-            select (-starts_with("thom.topi.")) %>%
-            select (-starts_with("gnu.zebra."))
-          
-#        prey_density <- prey_density %>%
-#          select(grep("tot", names(prey_density)), # contains 'tot'
-#                 grep("thomsons", names(prey_density)), # contains 'thomsons'
-#                 grep("topi", names(prey_density)), # contains 'topi'
-#                 grep("gnu", names(prey_density)), # contains 'gnu'
-#                 grep("zebra", names(prey_density)), # contains 'zebra'
-#                 grep("num", names(prey_density)), # contains 'num'
-#                 grep("^id$", names(prey_density))) %>% # exact match 'ID'
-#          select (-c(number.littermates)) %>%
-#          rename ("total.birth.3" = "total.birth-3") %>%
-#          rename ("total.3.6" = "total.3-6") %>%
-#          rename ("total.6.9" = "total.6-9")
+            select (-c(number.littermates)) #%>%
+            #select (-starts_with("thom.topi.")) %>%
+            #select (-starts_with("gnu.zebra."))
           
     ## b) Left join prey_density to luma_data   
         luma_data <- left_join(luma_data,
@@ -667,7 +654,7 @@
         summarise(n = sum(!is.na(lit.size))) %>%
         mutate(freq = n / sum(n))
       
-      ## b) save the data frame of summary stats out as a pdf into output file
+    ## b) save the data frame of summary stats out as a pdf into output file
       pdf(paste0(here(),"/output/output_luma_ecolog/",
                  "intra_lit_rank_summary.pdf"), 
           height = 3, width = 5)
@@ -676,14 +663,14 @@
    
         
   ### 4.6 Descriptive stats human presence
-      ## a) Human presence (proxy) summary 
+    ## a) Human presence (proxy) summary 
       hum_pres_summary <- luma_data_group %>%
         #group_by (id) %>%
         group_by (hum.pres) %>%
         summarise(n  =sum(!is.na(hum.pres))) %>%
         mutate(freq = n / sum(n))
       
-      ## b) save the data frame of summary stats out as a pdf into output file
+    ## b) save the data frame of summary stats out as a pdf into output file
       pdf(paste0(here(),"/output/output_luma_ecolog/",
                  "hum_pres_summary.pdf"), 
           height = 3, width = 5)
@@ -695,103 +682,43 @@
     ## a) Prey density summary 
       prey_peri_summary <- luma_data_group %>%
         summarise (dev.period = print("peri.concpt"),
-                   n.prey = sum(!is.na(thomsons.peri.concpt)),
-                   avg.thomsons = round (mean(thomsons.peri.concpt, 
+                   n.prey = sum(!is.na(prim.prey.peri.concpt)),
+                   avg.prim.prey = round (mean(prim.prey.peri.concpt, 
                                                na.rm = T),2),
-                   stdev.thomsons = round (sd(thomsons.peri.concpt, 
-                                               na.rm = T), 2),
-                   avg.topi = round (mean(topi.peri.concpt, 
-                                         na.rm = T),2),
-                   stdev.topi = round (sd(topi.peri.concpt, 
-                                         na.rm = T), 2),
-                   avg.gnu = round (mean(gnu.peri.concpt, 
-                                          na.rm = T),2),
-                   stdev.gnu = round (sd(gnu.peri.concpt, 
-                                          na.rm = T), 2),
-                   avg.zebra = round (mean(zebra.peri.concpt, 
-                                         na.rm = T),2),
-                   stdev.zebra = round (sd(zebra.peri.concpt, 
-                                         na.rm = T), 2))
+                   stdev.prim.prey = round (sd(prim.prey.peri.concpt, 
+                                               na.rm = T), 2))
                    
       prey_gest_summary <-  luma_data_group %>%
         summarise (dev.period = print("gest"),
-                   n.prey = sum(!is.na(thomsons.gest)),
-                   avg.thomsons = round (mean(thomsons.gest, 
+                   n.prey = sum(!is.na(prim.prey.gest)),
+                   avg.prim.prey = round (mean(prim.prey.gest, 
                                               na.rm = T),2),
-                   stdev.thomsons = round (sd(thomsons.gest, 
-                                              na.rm = T), 2),
-                   avg.topi = round (mean(topi.gest, 
-                                          na.rm = T),2),
-                   stdev.topi = round (sd(topi.gest, 
-                                          na.rm = T), 2),
-                   avg.gnu = round (mean(gnu.gest, 
-                                         na.rm = T),2),
-                   stdev.gnu = round (sd(gnu.gest, 
-                                         na.rm = T), 2),
-                   avg.zebra = round (mean(zebra.gest, 
-                                           na.rm = T),2),
-                   stdev.zebra = round (sd(zebra.gest, 
-                                           na.rm = T), 2))
+                   stdev.prim.prey = round (sd(prim.prey.gest, 
+                                              na.rm = T), 2))
       
       prey_birth.3_summary <- luma_data_group %>%
         summarise (dev.period = print("birth.3"),
-                   n.prey = sum(!is.na(thomsons.birth.3)),
-                   avg.thomsons = round (mean(thomsons.birth.3, 
+                   n.prey = sum(!is.na(prim.prey.birth.3)),
+                   avg.prim.prey = round (mean(prim.prey.birth.3, 
                                               na.rm = T),2),
-                   stdev.thomsons = round (sd(thomsons.birth.3, 
-                                              na.rm = T), 2),
-                   avg.topi = round (mean(topi.birth.3, 
-                                          na.rm = T),2),
-                   stdev.topi = round (sd(topi.birth.3, 
-                                          na.rm = T), 2),
-                   avg.gnu = round (mean(gnu.birth.3, 
-                                         na.rm = T),2),
-                   stdev.gnu = round (sd(gnu.birth.3, 
-                                         na.rm = T), 2),
-                   avg.zebra = round (mean(zebra.birth.3, 
-                                           na.rm = T),2),
-                   stdev.zebra = round (sd(zebra.birth.3, 
-                                           na.rm = T), 2))
+                   stdev.prim.prey = round (sd(prim.prey.birth.3, 
+                                              na.rm = T), 2))
                    
       prey_3.6_summary <- luma_data_group %>%
         summarise (dev.period = print("3.6"),
-                   n.prey = sum(!is.na(thomsons.3.6)),
-                   avg.thomsons = round (mean(thomsons.3.6, 
+                   n.prey = sum(!is.na(prim.prey.3.6)),
+                   avg.prim.prey = round (mean(prim.prey.3.6, 
                                               na.rm = T),2),
-                   stdev.thomsons = round (sd(thomsons.3.6, 
-                                              na.rm = T), 2),
-                   avg.topi = round (mean(topi.3.6, 
-                                          na.rm = T),2),
-                   stdev.topi = round (sd(topi.3.6, 
-                                          na.rm = T), 2),
-                   avg.gnu = round (mean(gnu.3.6, 
-                                         na.rm = T),2),
-                   stdev.gnu = round (sd(gnu.3.6, 
-                                         na.rm = T), 2),
-                   avg.zebra = round (mean(zebra.3.6, 
-                                           na.rm = T),2),
-                   stdev.zebra = round (sd(zebra.3.6, 
-                                           na.rm = T), 2))
+                   stdev.prim.prey = round (sd(prim.prey.3.6, 
+                                              na.rm = T), 2))
                    
       prey_6.9_summary <- luma_data_group %>%
         summarise (dev.period = print("6.9"),
-                   n.prey = sum(!is.na(thomsons.6.9)),
-                   avg.thomsons = round (mean(thomsons.6.9, 
+                   n.prey = sum(!is.na(prim.prey.6.9)),
+                   avg.prim.prey = round (mean(prim.prey.6.9, 
                                               na.rm = T),2),
-                   stdev.thomsons = round (sd(thomsons.6.9, 
-                                              na.rm = T), 2),
-                   avg.topi = round (mean(topi.6.9, 
-                                          na.rm = T),2),
-                   stdev.topi = round (sd(topi.6.9, 
-                                          na.rm = T), 2),
-                   avg.gnu = round (mean(gnu.6.9, 
-                                         na.rm = T),2),
-                   stdev.gnu = round (sd(gnu.6.9, 
-                                         na.rm = T), 2),
-                   avg.zebra = round (mean(zebra.6.9, 
-                                           na.rm = T),2),
-                   stdev.zebra = round (sd(zebra.6.9, 
-                                           na.rm = T), 2))
+                   stdev.prim.prey = round (sd(prim.prey.6.9, 
+                                              na.rm = T), 2))
       
     ## b) combine the prey density descriptive stats into a single data frame
       prey_var_summary <- rbind(prey_peri_summary, prey_gest_summary,
@@ -828,7 +755,8 @@
 
     ## c) make a list of variable names to center, value = T is necessary
         # or column positions will be returned
-        var_names <- c("total","thomsons", "topi", "gnu", "zebra")
+        #var_names <- c("total","thomsons", "topi", "gnu", "zebra")
+        var_names <- c("prim.prey")
         vars_to_center <- grep(paste(var_names, collapse = "|"), 
                                names(luma_data_group), value = T)
         
@@ -861,9 +789,9 @@
       samp.year.lme <- lme(methylation ~ samp_year_cnt, random =~1|id, 
                             subset(luma_data_group,!is.na(x = samp_year_cnt)))
         
-      summary(samp.year.lme)    #  print model summary, effects and SE
+      summary(samp.year.lme)        # model summary
       intervals(samp.year.lme, 
-                  which = "fixed")  # print 95% CIs for parameter estimates
+                  which = "fixed")  # 95% CIs 
       
       
   ### 6.2 Bivariate statistics methylation by sex
@@ -927,8 +855,8 @@ Mehtylation by Sex") +
       #sex.lmer <- lme4::lmer(methylation ~ sex + (1|id),
       #                 data = subset(luma_data_group, !is.na(x = sex)))
    
-      #summary(sex.lm)     # print model summary, effects and SE
-      #confint(sex.lm)     # print 95% CIs for parameter estimates 
+      #summary(sex.lm)     # model summary
+      #confint(sex.lm)     # 95% CIs
       #summary(sex.glm) 
       #confint(sex.glm)
       summary(sex.lme) 
@@ -947,7 +875,8 @@ Mehtylation by Sex") +
         group_by (age.cat) %>%
         summarise (n.id = n(),
                    avg = round (mean(methylation, na.rm = T), 2),
-                   median =  round (quantile(methylation, c(.5), na.rm = T), 2),
+                   median =  round (quantile(methylation, c(.5), 
+                                             na.rm = T), 2),
                    sd = round (sd(methylation, na.rm = T), 2))
       
       
@@ -977,25 +906,24 @@ Mehtylation by Age") +
              scale = 1, width = 7, height = 5, 
              units = c("in"), dpi = 300, limitsize = TRUE)  
   
-    ## e) Bivariate Regression Methylatino by Age
+    ## e) Bivariate regression methylatino by age.cat
       # uses 'nmle' package, which will provided p-value estimates
       age.lme <- lme(methylation ~ age.cat, random =~1|id, 
                      subset(luma_data_group,!is.na(x = age.cat)))
       
-      summary(age.lme)            #  print model summary, effects and SE
+      summary(age.lme)            # model summary
       intervals(age.lme, 
-                which = "fixed")  # print 95% CIs for parameter estimates
+                which = "fixed")  # 95% CIs 
       anova.lme(age.lme)          # generate p-value from Wald test
      
-      # Satterthwaite approximation of DF using lmerTest 
-      #age.lmer <- lmer(methylation ~ Age + (1|ID), 
-      #              data = subset(luma_data_group, !is.na(x = Age)))
-   
-      #summary(age.sat)  # print model summary, effects and SE
-      #confint(age.sat)  # print 95% CIs for parameter estimates
-      #anova(age.sat) # type 3 ANOVA with Satterthwaite DF
-      #means.age.sat <- Effect("Age", age.mod) # use Effects to see group means
-
+    ## f) Bivariate regression methylatino by age.mon
+      # uses 'nmle' package, which will provided p-value estimates
+      age.mon.lme <- lme(methylation ~ age.mon, random =~1|id, 
+                     subset(luma_data_group,!is.na(x = age.mon)))
+      
+      summary(age.mon.lme)        # model estimates
+      intervals(age.mon.lme, 
+                which = "fixed")  # 95% CIs 
 
   ### 6.3 Bivariate Statistics Methylation by Rank
     ## a) Graph of the raw data for percent global DNA methylaiton by maternal 
@@ -1087,12 +1015,11 @@ Mehtylation by Maternal Rank") +
       mom.rank.lme <- lme(methylation ~ mom.strank.quart, random =~1|id, 
                      subset(luma_data_group,!is.na(x = mom.strank.quart)))
       
-      summary(mom.rank.lme)       #  print model summary, effects and SE
+      summary(mom.rank.lme)       # model summary
       intervals(mom.rank.lme, 
-                which = "fixed")  # print 95% CIs for parameter estimates
+                which = "fixed")  # 95% CIs
       anova(mom.rank.lme)         # generate p-value from Wald test
   
-
 
   ### 6.4 Bivariate statistics methylation by litter size
     ## a) Summary stats methylation by lit.size 
@@ -1139,9 +1066,9 @@ Mehtylation by Litter Size") +
       lit.size.lme <- lme(methylation ~ lit.size, random =~1|id, 
                           subset(luma_data_group,!is.na(x = lit.size)))
       
-      summary(lit.size.lme)   #  print model summary, effects and SE
+      summary(lit.size.lme)         # model summary
       intervals(lit.size.lme, 
-                which = "fixed")    # print 95% CIs for parameter estimates
+                which = "fixed")    # 95% CIs 
       anova(lit.size.lme)     # generate p-value from Wald test
       
       
@@ -1190,9 +1117,9 @@ Mehtylation by Human Population Size") +
       hum.pres.lme <- lme(methylation ~ hum.pres, random =~1|id, 
                                 subset(luma_data_group,!is.na(x = hum.pres)))
       
-      summary(hum.pres.lme)        #  print model summary, effects and SE
+      summary(hum.pres.lme)        # model summary
       intervals(hum.pres.lme, 
-                which = "fixed")  # print 95% CIs for parameter estimates
+                which = "fixed")   # 95% CIs 
       anova(hum.pres.lme)          # generate p-value from Wald test
       
     
@@ -1200,203 +1127,73 @@ Mehtylation by Human Population Size") +
       # NOTE: uses luma_data_group; first average over ID within age cat. 
       # and then take avg 
       # uses 'nmle' package, which will provided p-value estimates
-      thomsons.peri.concpt.lme <- lme(methylation ~ thomsons.peri.concpt, 
-                                      random =~1|id, 
-                               subset(luma_data_group,
-                                      !is.na(x = thomsons.peri.concpt)))
       
-      summary(thomsons.peri.concpt.lme)   # print model summary
-      intervals(thomsons.peri.concpt.lme, 
-                which = "fixed")  # print 95% CIs
-      
-      topi.peri.concpt.lme <- lme(methylation ~ topi.peri.concpt, 
+      prim.peri.concpt.lme <- lme(methylation ~ prim.prey.peri.concpt, 
                                       random =~1|id, 
                                       subset(luma_data_group,
-                                             !is.na(x = topi.peri.concpt)))
+                                             !is.na(x = prim.prey.peri.concpt)))
       
-      summary(topi.peri.concpt.lme)   # print model summary
-      intervals(topi.peri.concpt.lme, 
-                which = "fixed")  # print 95% CIs
-      
-      gnu.peri.concpt.lme <- lme(methylation ~ gnu.peri.concpt, 
-                                      random =~1|id, 
-                                      subset(luma_data_group,
-                                             !is.na(x = gnu.peri.concpt)))
-      
-      summary(gnu.peri.concpt.lme)   # print model summary
-      intervals(gnu.peri.concpt.lme, 
-                which = "fixed")  # print 95% CIs
-      
-      zebra.peri.concpt.lme <- lme(methylation ~ zebra.peri.concpt, 
-                                      random =~1|id, 
-                                      subset(luma_data_group,
-                                             !is.na(x = zebra.peri.concpt)))
-      
-      summary(zebra.peri.concpt.lme)   # print model summary
-      intervals(zebra.peri.concpt.lme, 
-                which = "fixed")  # print 95% CIs
+      summary(prim.peri.concpt.lme)   # model summary
+      intervals(prim.peri.concpt.lme, 
+                which = "fixed")      # 95% CIs
+
     
   ### 6.7 Bivariate statistics methylation by gestational prey density
       # NOTE: uses luma_data_group; first average over ID within age cat. 
       # and then take avg 
       # uses 'nmle' package, which will provided p-value estimates
-      thomsons.gest.lme <- lme(methylation ~ thomsons.gest, 
+      prim.gest.lme <- lme(methylation ~ prim.prey.gest, 
                                       random =~1|id, 
                                       subset(luma_data_group,
-                                             !is.na(x = thomsons.gest)))
+                                             !is.na(x = prim.prey.gest)))
       
-      summary(thomsons.gest.lme)   # print model summary
-      intervals(thomsons.gest.lme, 
-                which = "fixed")  # print 95% CIs
-      
-      topi.gest.lme <- lme(methylation ~ topi.gest, 
-                                  random =~1|id, 
-                                  subset(luma_data_group,
-                                         !is.na(x = topi.gest)))
-      
-      summary(topi.gest.lme)   # print model summary
-      intervals(topi.gest.lme, 
-                which = "fixed")  # print 95% CIs
-      
-      gnu.gest.lme <- lme(methylation ~ gnu.gest, 
-                                 random =~1|id, 
-                                 subset(luma_data_group,
-                                        !is.na(x = gnu.gest)))
-      
-      summary(gnu.gest.lme)   # print model summary
-      intervals(gnu.gest.lme, 
-                which = "fixed")  # print 95% CIs
-      
-      zebra.gest.lme <- lme(methylation ~ zebra.gest, 
-                                   random =~1|id, 
-                                   subset(luma_data_group,
-                                          !is.na(x = zebra.gest)))
-      
-      summary(zebra.gest.lme)   # print model summary
-      intervals(zebra.gest.lme, 
-                which = "fixed")  # print 95% CIs
+      summary(prim.gest.lme)      # model summary
+      intervals(prim.gest.lme, 
+                which = "fixed")  # 95% CIs
       
       
   ### 6.8 Bivariate statistics methylation by birth to 3 months prey density
       # NOTE: uses luma_data_group; first average over ID within age cat. 
       # and then take avg
-      thomsons.birth.3.lme <- lme(methylation ~ thomsons.birth.3, 
+      prim.birth.3.lme <- lme(methylation ~ prim.prey.birth.3, 
                                       random =~1|id, 
                                       subset(luma_data_group,
-                                             !is.na(x = thomsons.birth.3)))
+                                             !is.na(x = prim.prey.birth.3)))
       
-      summary(thomsons.birth.3.lme)   # print model summary
-      intervals(thomsons.birth.3.lme, 
-                which = "fixed")  # print 95% CIs
-      
-      topi.birth.3.lme <- lme(methylation ~ topi.birth.3, 
-                                  random =~1|id, 
-                                  subset(luma_data_group,
-                                         !is.na(x = topi.birth.3)))
-      
-      summary(topi.birth.3.lme)   # print model summary
-      intervals(topi.birth.3.lme, 
-                which = "fixed")  # print 95% CIs
-      
-      gnu.birth.3.lme <- lme(methylation ~ gnu.birth.3, 
-                                 random =~1|id, 
-                                 subset(luma_data_group,
-                                        !is.na(x = gnu.birth.3)))
-      
-      summary(gnu.birth.3.lme)   # print model summary
-      intervals(gnu.birth.3.lme, 
-                which = "fixed")  # print 95% CIs
-      
-      zebra.birth.3.lme <- lme(methylation ~ zebra.birth.3, 
-                                   random =~1|id, 
-                                   subset(luma_data_group,
-                                          !is.na(x = zebra.birth.3)))
-      
-      summary(zebra.birth.3.lme)   # print model summary
-      intervals(zebra.birth.3.lme, 
-                which = "fixed")  # print 95% CIs
+      summary(prim.birth.3.lme)   # model summary
+      intervals(prim.birth.3.lme, 
+                which = "fixed")  # 95% CIs
       
   
   ### 6.9 Bivariate statistics methylation by 3 to 6 months prey density
       # NOTE: uses luma_data_group; first average over ID within age cat. 
       # and then take avg 
       # uses 'nmle' package, which will provided p-value estimates
-      thomsons.3.6.lme <- lme(methylation ~ thomsons.3.6, 
+      prim.3.6.lme <- lme(methylation ~ prim.prey.3.6, 
                                         random =~1|id, 
                                         subset(luma_data_group,
-                                               !is.na(x = thomsons.3.6)))
+                                               !is.na(x = prim.prey.3.6)))
       
-      summary(thomsons.3.6.lme)   # print model summary
-      intervals(thomsons.3.6.lme, 
-                which = "fixed")  # print 95% CIs
+      summary(prim.3.6.lme)         # model summary
+      intervals(prim.3.6.lme, 
+                which = "fixed")    # 95% CIs
       
-      topi.3.6.lme <- lme(methylation ~ topi.3.6, 
-                                  random =~1|id, 
-                                  subset(luma_data_group,
-                                         !is.na(x = topi.3.6)))
-      
-      summary(topi.3.6.lme)   # print model summary
-      intervals(topi.3.6.lme, 
-                which = "fixed")  # print 95% CIs
-      
-      gnu.3.6.lme <- lme(methylation ~ gnu.3.6, 
-                                 random =~1|id, 
-                                 subset(luma_data_group,
-                                        !is.na(x = gnu.3.6)))
-      
-      summary(gnu.3.6.lme)   # print model summary
-      intervals(gnu.3.6.lme, 
-                which = "fixed")  # print 95% CIs
-      
-      zebra.3.6.lme <- lme(methylation ~ zebra.3.6, 
-                                   random =~1|id, 
-                                   subset(luma_data_group,
-                                          !is.na(x = zebra.3.6)))
-      
-      summary(zebra.3.6.lme)   # print model summary
-      intervals(zebra.3.6.lme, 
-                which = "fixed")  # print 95% CIs
+    
       
   ### 6.10 Bivariate statistics methylation by 6 to 9 months prey density
       # NOTE: uses luma_data_group; first average over ID within age cat. 
       # and then take avg 
       # uses 'nmle' package, which will provided p-value estimates
-      thomsons.6.9.lme <- lme(methylation ~ thomsons.6.9, 
+      prim.6.9.lme <- lme(methylation ~ prim.prey.6.9, 
                                       random =~1|id, 
                                       subset(luma_data_group,
-                                             !is.na(x = thomsons.6.9)))
+                                             !is.na(x = prim.prey.6.9)))
       
-      summary(thomsons.6.9.lme)   # print model summary
-      intervals(thomsons.6.9.lme, 
-                which = "fixed")  # print 95% CIs
+      summary(prim.6.9.lme)       # model summary
+      intervals(prim.6.9.lme, 
+                which = "fixed")  # 95% CIs
       
-      topi.6.9.lme <- lme(methylation ~ topi.6.9, 
-                                  random =~1|id, 
-                                  subset(luma_data_group,
-                                         !is.na(x = topi.6.9)))
-      
-      summary(topi.6.9.lme)   # print model summary
-      intervals(topi.6.9.lme, 
-                which = "fixed")  # print 95% CIs
-      
-      gnu.6.9.lme <- lme(methylation ~ gnu.6.9, 
-                                 random =~1|id, 
-                                 subset(luma_data_group,
-                                        !is.na(x = gnu.6.9)))
-      
-      summary(gnu.6.9.lme)   # print model summary
-      intervals(gnu.6.9.lme, 
-                which = "fixed")  # print 95% CIs
-      
-      zebra.6.9.lme <- lme(methylation ~ zebra.6.9, 
-                                   random =~1|id, 
-                                   subset(luma_data_group,
-                                          !is.na(x = zebra.6.9)))
-      
-      summary(zebra.6.9.lme)   # print model summary
-      intervals(zebra.6.9.lme, 
-                which = "fixed")  # print 95% CIs
- 
+     
       
       
 ###############################################################################
@@ -1658,7 +1455,7 @@ Mehtylation by Human Population Size") +
       
       
   ### 8.5 Cub model: methylation by human presence proxy
-      ## a) Check within strata descritpive stats
+    ## a) Check within strata descritpive stats
       luma_data_cub %>%
         group_by (hum.pres) %>%
         summarise (n.id = sum(!is.na(lit.size)),
@@ -1667,396 +1464,130 @@ Mehtylation by Human Population Size") +
                                              c(.5), na.rm = T), 2),
                    sd = round (sd(methylation, na.rm = T), 2))
       
-      ## b) Unadjusted: methlyation by age.mon
+    ## b) Unadjusted: methlyation by age.mon
       cub.hum.pres.unadj <- glm(methylation ~  hum.pres, data = luma_data_cub)
       
-      ## c) Parameter estimates
+    ## c) Parameter estimates
       summary(cub.hum.pres.unadj)  # model parameter estimates
       confint(cub.hum.pres.unadj)  # 95% CIs
       Anova(cub.hum.pres.unadj, Type ="II", test = "Wald") # Wald test p
       
-      ## d) Adjusted: methlyation by age.mon
+    ## d) Adjusted: methlyation by age.mon
       cub.hum.pres.adj <- glm(methylation ~  hum.pres + age.mon + sex +
                                 samp_year_cnt,
                               data = luma_data_cub)
       
-      ## e) Parameter estimates
+    ## e) Parameter estimates
       summary(cub.hum.pres.adj)  # model parameter estimates
       confint(cub.hum.pres.adj)  # 95% CIs 
       Anova(cub.hum.pres.adj, Type ="II", test = "Wald") # Wald test p
     
 
   ### 8.6 Cub model: methylation by periconceptional prey density     
-    ## a) Unadjusted: methlyation by periconceptional thomsons density
-      cub.peri.thomsons.unadj <- glm(methylation ~ thomsons.peri.concpt, 
+    ## a) Unadjusted: methlyation by periconceptional prim.prey density
+      cub.peri.prim.prey.unadj <- glm(methylation ~ prim.prey.peri.concpt, 
                                data = luma_data_cub)
       
     ## b) Parameter estimates
-      summary(cub.peri.thomsons.unadj)  # model parameter estimates
-      confint(cub.peri.thomsons.unadj)  # 95% CIs 
+      summary(cub.peri.prim.prey.unadj)  # model parameter estimates
+      confint(cub.peri.prim.prey.unadj)  # 95% CIs 
       
-    ## c) Adjusted: methlyation by periconceptional thomsons density
-      cub.peri.thomsons.adj <- glm(methylation ~ thomsons.peri.concpt + sex + 
+    ## c) Adjusted: methlyation by periconceptional prim.prey density
+      cub.peri.prim.prey.adj <- glm(methylation ~ prim.prey.peri.concpt + sex + 
                                       age.mon + samp_year_cnt, 
                                     data = luma_data_cub)
       
     ## d) Parameter estimates
-      summary(cub.peri.thomsons.adj)  # model parameter estimates
-      confint(cub.peri.thomsons.adj)  # 95% CIs 
+      summary(cub.peri.prim.prey.adj)  # model parameter estimates
+      confint(cub.peri.prim.prey.adj)  # 95% CIs 
       
-    ## e) Unadjusted: methlyation by periconceptional topi density
-      cub.peri.topi.unadj <- glm(methylation ~ topi.peri.concpt, 
-                                     data = luma_data_cub)
-      
-    ## f) Parameter estimates
-      summary(cub.peri.topi.unadj)  # model parameter estimates
-      confint(cub.peri.topi.unadj)  # 95% CIs 
-      
-    ## g) Adjusted: methlyation by periconceptional topi density
-      cub.peri.topi.adj <- glm(methylation ~ topi.peri.concpt + sex + 
-                                     age.mon + samp_year_cnt, 
-                                   data = luma_data_cub)
-      
-    ## h) Parameter estimates
-      summary(cub.peri.topi.adj)  # model parameter estimates
-      confint(cub.peri.topi.adj)  # 95% CIs 
-      
-    ## i) Unadjusted: methlyation by periconceptional gnu density
-      cub.peri.gnu.unadj <- glm(methylation ~ gnu.peri.concpt, 
-                                     data = luma_data_cub)
-      
-    ## j) Parameter estimates
-      summary(cub.peri.gnu.unadj)  # model parameter estimates
-      confint(cub.peri.gnu.unadj)  # 95% CIs 
-      
-    ## k) Adjusted: methlyation by periconceptional gnu density
-      cub.peri.gnu.adj <- glm(methylation ~ gnu.peri.concpt + sex + 
-                                     age.mon + samp_year_cnt, 
-                                   data = luma_data_cub)
-      
-    ## l) Parameter estimates
-      summary(cub.peri.gnu.adj)  # model parameter estimates
-      confint(cub.peri.gnu.adj)  # 95% CIs 
-      
-    ## m) Unadjusted: methlyation by periconceptional zebra density
-      cub.peri.zebra.unadj <- glm(methylation ~ zebra.peri.concpt, 
-                                     data = luma_data_cub)
-      
-    ## n) Parameter estimates
-      summary(cub.peri.zebra.unadj)  # model parameter estimates
-      confint(cub.peri.zebra.unadj)  # 95% CIs 
-      
-    ## o) Adjusted: methlyation by periconceptional zebra density
-      cub.peri.zebra.adj <- glm(methylation ~ zebra.peri.concpt + sex + 
-                                     age.mon + samp_year_cnt, 
-                                   data = luma_data_cub)
-      
-    ## p) Parameter estimates
-      summary(cub.peri.zebra.adj)  # model parameter estimates
-      confint(cub.peri.zebra.adj)  # 95% CIs 
-  
       
   ### 8.7 Cub model: methylation by gestational prey density     
-    ## a) Unadjusted: methlyation by gestational thomsons density
-      cub.gest.thomsons.unadj <- glm(methylation ~ thomsons.gest, 
+    ## a) Unadjusted: methlyation by gestational prim.prey density
+      cub.gest.prim.prey.unadj <- glm(methylation ~ prim.prey.gest, 
                                      data = luma_data_cub)
       
     ## b) Parameter estimates
-      summary(cub.gest.thomsons.unadj)  # model parameter estimates
-      confint(cub.gest.thomsons.unadj)  # 95% CIs 
+      summary(cub.gest.prim.prey.unadj)  # model parameter estimates
+      confint(cub.gest.prim.prey.unadj)  # 95% CIs 
       
-    ## c) Adjusted: methlyation by gestational thomsons density
-      cub.gest.thomsons.adj <- glm(methylation ~ thomsons.gest + 
-                                     thomsons.peri.concpt + sex + 
+    ## c) Adjusted: methlyation by gestational prim.prey density
+      cub.gest.prim.prey.adj <- glm(methylation ~ prim.prey.gest + 
+                                     prim.prey.peri.concpt + sex + 
                                      age.mon + samp_year_cnt, 
                                    data = luma_data_cub)
       
     ## d) Parameter estimates
-      summary(cub.gest.thomsons.adj)  # model parameter estimates
-      confint(cub.gest.thomsons.adj)  # 95% CIs 
-      
-    ## e) Unadjusted: methlyation by gestational topi density
-      cub.gest.topi.unadj <- glm(methylation ~ topi.peri.concpt, 
-                                 data = luma_data_cub)
-      
-    ## f) Parameter estimates
-      summary(cub.gest.topi.unadj)  # model parameter estimates
-      confint(cub.gest.topi.unadj)  # 95% CIs 
-      
-    ## g) Adjusted: methlyation by gestational topi density
-      cub.gest.topi.adj <- glm(methylation ~ topi.gest + topi.peri.concpt + sex + 
-                                 age.mon + samp_year_cnt, 
-                               data = luma_data_cub)
-      
-    ## h) Parameter estimates
-      summary(cub.gest.topi.adj)  # model parameter estimates
-      confint(cub.gest.topi.adj)  # 95% CIs 
-      
-    ## i) Unadjusted: methlyation by gestational gnu density
-      cub.gest.gnu.unadj <- glm(methylation ~ gnu.gest, 
-                                data = luma_data_cub)
-      
-    ## j) Parameter estimates
-      summary(cub.gest.gnu.unadj)  # model parameter estimates
-      confint(cub.gest.gnu.unadj)  # 95% CIs 
-      
-    ## k) Adjusted: methlyation by gestational gnu density
-      cub.gest.gnu.adj <- glm(methylation ~ gnu.gest + gnu.peri.concpt + sex + 
-                                age.mon + samp_year_cnt, 
-                              data = luma_data_cub)
-      
-      ## l) Parameter estimates
-      summary(cub.gest.gnu.adj)  # model parameter estimates
-      confint(cub.gest.gnu.adj)  # 95% CIs 
-      
-    ## m) Unadjusted: methlyation by gestational zebra density
-      cub.gest.zebra.unadj <- glm(methylation ~ zebra.gest,
-                                  data = luma_data_cub)
-      
-    ## n) Parameter estimates
-      summary(cub.gest.zebra.unadj)  # model parameter estimates
-      confint(cub.gest.zebra.unadj)  # 95% CIs 
-      
-    ## o) Adjusted: methlyation by gestational zebra density
-      cub.gest.zebra.adj <- glm(methylation ~ zebra.gest + 
-                                  zebra.peri.concpt + sex + 
-                                  age.mon + samp_year_cnt, 
-                                data = luma_data_cub)
-      
-    ## p) Parameter estimates
-      summary(cub.gest.zebra.adj)  # model parameter estimates
-      confint(cub.gest.zebra.adj)  # 95% CIs 
-      
+      summary(cub.gest.prim.prey.adj)  # model parameter estimates
+      confint(cub.gest.prim.prey.adj)  # 95% CIs 
+  
       
   ### 8.8 Cub model: methylation by birth to 3 months prey density     
-    ## a) Unadjusted: methlyation by birth to 3 months thomsons density
-      cub.birth.3.thomsons.unadj <- glm(methylation ~ thomsons.birth.3, 
+    ## a) Unadjusted: methlyation by birth to 3 months prim.prey density
+      cub.birth.3.prim.prey.unadj <- glm(methylation ~ prim.prey.birth.3, 
                                      data = luma_data_cub)
       
     ## b) Parameter estimates
-      summary(cub.birth.3.thomsons.unadj)  # model parameter estimates
-      confint(cub.birth.3.thomsons.unadj)  # 95% CIs 
+      summary(cub.birth.3.prim.prey.unadj)  # model parameter estimates
+      confint(cub.birth.3.prim.prey.unadj)  # 95% CIs 
       
-    ## c) Adjusted: methlyation by birth to 3 months thomsons density
-      cub.birth.3.thomsons.adj <- glm(methylation ~ thomsons.3.6 + 
-                                        thomsons.gest + thomsons.peri.concpt + 
+    ## c) Adjusted: methlyation by birth to 3 months prim.prey density
+      cub.birth.3.prim.prey.adj <- glm(methylation ~ prim.prey.birth.3 + 
+                                        prim.prey.gest + prim.prey.peri.concpt + 
                                         sex + age.mon + samp_year_cnt, 
                                    data = luma_data_cub)
       
     ## d) Parameter estimates
-      summary(cub.birth.3.thomsons.adj)  # model parameter estimates
-      confint(cub.birth.3.thomsons.adj)  # 95% CIs 
-      
-    ## e) Unadjusted: methlyation by birth to 3 months topi density
-      cub.birth.3.topi.unadj <- glm(methylation ~ topi.birth.3, 
-                                 data = luma_data_cub)
-      
-    ## f) Parameter estimates
-      summary(cub.birth.3.topi.unadj)  # model parameter estimates
-      confint(cub.birth.3.topi.unadj)  # 95% CIs 
-      
-    ## g) Adjusted: methlyation by birth to 3 months topi density
-      cub.birth.3.topi.adj <- glm(methylation ~ topi.birth.3 + topi.gest + 
-                                    topi.peri.concpt + sex + 
-                                 age.mon + samp_year_cnt, 
-                               data = luma_data_cub)
-      
-    ## h) Parameter estimates
-      summary(cub.birth.3.topi.adj)  # model parameter estimates
-      confint(cub.birth.3.topi.adj)  # 95% CIs 
-      
-    ## i) Unadjusted: methlyation by birth to 3 months gnu density
-      cub.birth.3.gnu.unadj <- glm(methylation ~ gnu.birth.3, 
-                                data = luma_data_cub)
-      
-    ## j) Parameter estimates
-      summary(cub.birth.3.gnu.unadj)  # model parameter estimates
-      confint(cub.birth.3.gnu.unadj)  # 95% CIs 
-      
-    ## k) Adjusted: methlyation by birth to 3 months gnu density
-      cub.birth.3.gnu.adj <- glm(methylation ~ gnu.birth.3 + gnu.gest + 
-                                   gnu.peri.concpt + sex + 
-                                age.mon + samp_year_cnt, 
-                              data = luma_data_cub)
-      
-    ## l) Parameter estimates
-      summary(cub.birth.3.gnu.adj)  # model parameter estimates
-      confint(cub.birth.3.gnu.adj)  # 95% CIs 
-      
-    ## m) Unadjusted: methlyation by birth to 3 months zebra density
-      cub.birth.3.zebra.unadj <- glm(methylation ~ zebra.birth.3, 
-                                  data = luma_data_cub)
-      
-    ## n) Parameter estimates
-      summary(cub.birth.3.zebra.unadj)  # model parameter estimates
-      confint(cub.birth.3.zebra.unadj)  # 95% CIs 
-      
-    ## o) Adjusted: methlyation by birth to 3 months zebra density
-      cub.birth.3.zebra.adj <- glm(methylation ~ zebra.birth.3 + zebra.gest + 
-                                     zebra.peri.concpt + sex + 
-                                  age.mon + samp_year_cnt, 
-                                data = luma_data_cub)
-      
-    ## p) Parameter estimates
-      summary(cub.birth.3.zebra.adj)  # model parameter estimates
-      confint(cub.birth.3.zebra.adj)  # 95% CIs 
+      summary(cub.birth.3.prim.prey.adj)  # model parameter estimates
+      confint(cub.birth.3.prim.prey.adj)  # 95% CIs 
       
       
   ### 8.9 Cub model: methylation by 3 to 6 months prey density     
-    ## a) Unadjusted: methlyation by 3 to 6 months thomsons density
-      cub.3.6.thomsons.unadj <- glm(methylation ~ thomsons.3.6, 
+    ## a) Unadjusted: methlyation by 3 to 6 months prim.prey density
+      cub.3.6.prim.prey.unadj <- glm(methylation ~ prim.prey.3.6, 
                                      data = luma_data_cub)
       
     ## b) Parameter estimates
-      summary(cub.3.6.thomsons.unadj)  # model parameter estimates
-      confint(cub.3.6.thomsons.unadj)  # 95% CIs 
+      summary(cub.3.6.prim.prey.unadj)  # model parameter estimates
+      confint(cub.3.6.prim.prey.unadj)  # 95% CIs 
       
-    ## c) Adjusted: methlyation by 3 to 6 months thomsons density
-      cub.3.6.thomsons.adj <- glm(methylation ~ thomsons.3.6 + 
-                                    thomsons.birth.3 + thomsons.gest + 
-                                    thomsons.peri.concpt + sex + 
+    ## c) Adjusted: methlyation by 3 to 6 months prim.prey density
+      cub.3.6.prim.prey.adj <- glm(methylation ~ prim.prey.3.6 + 
+                                    prim.prey.birth.3 + prim.prey.gest + 
+                                    prim.prey.peri.concpt + sex + 
                                      age.mon + samp_year_cnt, 
                                    data = luma_data_cub)
       
     ## d) Parameter estimates
-      summary(cub.3.6.thomsons.adj)  # model parameter estimates
-      confint(cub.3.6.thomsons.adj)  # 95% CIs 
-      
-    ## e) Unadjusted: methlyation by 3 to 6 months topi density
-      cub.3.6.topi.unadj <- glm(methylation ~ topi.3.6, 
-                                 data = luma_data_cub)
-      
-    ## f) Parameter estimates
-      summary(cub.3.6.topi.unadj)  # model parameter estimates
-      confint(cub.3.6.topi.unadj)  # 95% CIs 
-      
-    ## g) Adjusted: methlyation by 3 to 6 months topi density
-      cub.3.6.topi.adj <- glm(methylation ~ topi.3.6 + topi.birth.3 + 
-                                topi.gest + topi.peri.concpt + sex + 
-                                 age.mon + samp_year_cnt, 
-                               data = luma_data_cub)
-      
-    ## h) Parameter estimates
-      summary(cub.3.6.topi.adj)  # model parameter estimates
-      confint(cub.3.6.topi.adj)  # 95% CIs 
-      
-    ## i) Unadjusted: methlyation by 3 to 6 months gnu density
-      cub.3.6.gnu.unadj <- glm(methylation ~ gnu.3.6, 
-                                data = luma_data_cub)
-      
-    ## j) Parameter estimates
-      summary(cub.3.6.gnu.unadj)  # model parameter estimates
-      confint(cub.3.6.gnu.unadj)  # 95% CIs 
-      
-    ## k) Adjusted: methlyation by 3 to 6 months gnu density
-      cub.3.6.gnu.adj <- glm(methylation ~ gnu.3.6 + gnu.birth.3 + 
-                               gnu.gest + gnu.peri.concpt + sex + 
-                                age.mon + samp_year_cnt, 
-                              data = luma_data_cub)
-      
-    ## l) Parameter estimates
-      summary(cub.3.6.gnu.adj)  # model parameter estimates
-      confint(cub.3.6.gnu.adj)  # 95% CIs 
-      
-    ## m) Unadjusted: methlyation by 3 to 6 months zebra density
-      cub.3.6.zebra.unadj <- glm(methylation ~ zebra.3.6, 
-                                  data = luma_data_cub)
-      
-    ## n) Parameter estimates
-      summary(cub.3.6.zebra.unadj)  # model parameter estimates
-      confint(cub.3.6.zebra.unadj)  # 95% CIs 
-      
-    ## o) Adjusted: methlyation by 3 to 6 months zebra density
-      cub.3.6.zebra.adj <- glm(methylation ~ zebra.3.6 + zebra.birth.3 + 
-                                 zebra.gest + zebra.peri.concpt + sex + 
-                                  age.mon + samp_year_cnt, 
-                                data = luma_data_cub)
-      
-    ## p) Parameter estimates
-      summary(cub.3.6.zebra.adj)  # model parameter estimates
-      confint(cub.3.6.zebra.adj)  # 95% CIs 
+      summary(cub.3.6.prim.prey.adj)  # model parameter estimates
+      confint(cub.3.6.prim.prey.adj)  # 95% CIs 
       
       
   ### 8.10 Cub model: methylation by 6 to 9 months prey density     
-    ## a) Unadjusted: methlyation by 6 to 9 months thomsons density
-      cub.6.9.thomsons.unadj <- glm(methylation ~ thomsons.6.9, 
+    ## a) Unadjusted: methlyation by 6 to 9 months prim.prey density
+      cub.6.9.prim.prey.unadj <- glm(methylation ~ prim.prey.6.9, 
                                      data = luma_data_cub)
       
     ## b) Parameter estimates
-      summary(cub.6.9.thomsons.unadj)  # model parameter estimates
-      confint(cub.6.9.thomsons.unadj)  # 95% CIs 
+      summary(cub.6.9.prim.prey.unadj)  # model parameter estimates
+      confint(cub.6.9.prim.prey.unadj)  # 95% CIs 
       
-    ## c) Adjusted: methlyation by 6 to 9 months thomsons density
-      cub.6.9.thomsons.adj <- glm(methylation ~ thomsons.6.9 + 
-                                    thomsons.3.6 + thomsons.birth.3 + 
-                                    thomsons.gest + thomsons.peri.concpt + 
+    ## c) Adjusted: methlyation by 6 to 9 months prim.prey density
+      cub.6.9.prim.prey.adj <- glm(methylation ~ prim.prey.6.9 + 
+                                    prim.prey.3.6 + prim.prey.birth.3 + 
+                                    prim.prey.gest + prim.prey.peri.concpt + 
                                     sex + age.mon + samp_year_cnt, 
                                    data = luma_data_cub)
       
     ## d) Parameter estimates
-      summary(cub.6.9.thomsons.adj)  # model parameter estimates
-      confint(cub.6.9.thomsons.adj)  # 95% CIs 
-      
-    ## e) Unadjusted: methlyation by 6 to 9 months topi density
-      cub.6.9.topi.unadj <- glm(methylation ~ topi.6.9, 
-                                 data = luma_data_cub)
-      
-    ## f) Parameter estimates
-      summary(cub.6.9.topi.unadj)  # model parameter estimates
-      confint(cub.6.9.topi.unadj)  # 95% CIs 
-      
-    ## g) Adjusted: methlyation by 6 to 9 months topi density
-      cub.6.9.topi.adj <- glm(methylation ~ topi.6.9 + topi.3.6 + 
-                                topi.birth.3 + topi.gest + topi.peri.concpt + 
-                                sex + age.mon + samp_year_cnt, 
-                               data = luma_data_cub)
-      
-    ## h) Parameter estimates
-      summary(cub.6.9.topi.adj)  # model parameter estimates
-      confint(cub.6.9.topi.adj)  # 95% CIs 
-      
-    ## i) Unadjusted: methlyation by 6 to 9 months gnu density
-      cub.6.9.gnu.unadj <- glm(methylation ~ gnu.6.9, 
-                                data = luma_data_cub)
-      
-    ## j) Parameter estimates
-      summary(cub.6.9.gnu.unadj)  # model parameter estimates
-      confint(cub.6.9.gnu.unadj)  # 95% CIs 
-      
-    ## k) Adjusted: methlyation by 6 to 9 months gnu density
-      cub.6.9.gnu.adj <- glm(methylation ~ gnu.6.9 + gnu.3.6 + 
-                               gnu.birth.3 + gnu.gest + gnu.peri.concpt + 
-                               sex + age.mon + samp_year_cnt, 
-                              data = luma_data_cub)
-      
-    ## l) Parameter estimates
-      summary(cub.6.9.gnu.adj)  # model parameter estimates
-      confint(cub.6.9.gnu.adj)  # 95% CIs 
-      
-    ## m) Unadjusted: methlyation by 6 to 9 months zebra density
-      cub.6.9.zebra.unadj <- glm(methylation ~ zebra.6.9, 
-                                  data = luma_data_cub)
-      
-    ## n) Parameter estimates
-      summary(cub.6.9.zebra.unadj)  # model parameter estimates
-      confint(cub.6.9.zebra.unadj)  # 95% CIs 
-      
-    ## o) Adjusted: methlyation by 6 to 9 months zebra density
-      cub.6.9.zebra.adj <- glm(methylation ~ zebra.6.9 + zebra.3.6 + 
-                                 zebra.birth.3 + zebra.gest + 
-                                 zebra.peri.concpt + sex + 
-                                  age.mon + samp_year_cnt, 
-                                data = luma_data_cub)
-      
-    ## p) Parameter estimates
-      summary(cub.6.9.zebra.adj)  # model parameter estimates
-      confint(cub.6.9.zebra.adj)  # 95% CIs 
+      summary(cub.6.9.prim.prey.adj)  # model parameter estimates
+      confint(cub.6.9.prim.prey.adj)  # 95% CIs 
 
       
   ### 8.11 Cub model: mutual adjustment by significatn predictors 
-    ## a) Adjusted: methlyation by mom rank and birth to 3 months gnu density
-      cub.mutual.adj <- glm(methylation ~ mom.strank.quart + gnu.birth.3 + 
-                               gnu.gest + gnu.peri.concpt + sex + 
+    ## a) Adjusted: methlyation by mom rank and birth to 3 months prey density
+      cub.mutual.adj <- glm(methylation ~ mom.strank.quart + prim.prey.birth.3 + 
+                               prim.prey.gest + prim.prey.peri.concpt + sex + 
                                    age.mon + samp_year_cnt, 
                                  data = luma_data_cub)
       
@@ -2269,375 +1800,106 @@ Mehtylation by Human Population Size") +
     
       
   ### 9.6 sub model: methylation by periconceptional prey density     
-    ## a) Unadjusted: methlyation by periconceptional thomsons density
-      sub.peri.thomsons.unadj <- glm(methylation ~ thomsons.peri.concpt, 
+    ## a) Unadjusted: methlyation by periconceptional prim.prey density
+      sub.peri.prim.unadj <- glm(methylation ~ prim.prey.peri.concpt, 
                                      data = luma_data_sub)
       
     ## b) Parameter estimates
-      summary(sub.peri.thomsons.unadj)  # model parameter estimates
-      confint(sub.peri.thomsons.unadj)  # 95% CIs 
+      summary(sub.peri.prim.unadj)  # model parameter estimates
+      confint(sub.peri.prim.unadj)  # 95% CIs 
       
-    ## c) Adjusted: methlyation by periconceptional thomsons density
-      sub.peri.thomsons.adj <- glm(methylation ~ thomsons.peri.concpt + sex + 
+    ## c) Adjusted: methlyation by periconceptional prim.prey density
+      sub.peri.prim.adj <- glm(methylation ~ prim.prey.peri.concpt + sex + 
                                      age.mon + samp_year_cnt, 
                                    data = luma_data_sub)
       
     ## d) Parameter estimates
-      summary(sub.peri.thomsons.adj)  # model parameter estimates
-      confint(sub.peri.thomsons.adj)  # 95% CIs 
-      
-    ## e) Unadjusted: methlyation by periconceptional topi density
-      sub.peri.topi.unadj <- glm(methylation ~ topi.peri.concpt, 
-                                 data = luma_data_sub)
-      
-    ## f) Parameter estimates
-      summary(sub.peri.topi.unadj)  # model parameter estimates
-      confint(sub.peri.topi.unadj)  # 95% CIs 
-      
-    ## g) Adjusted: methlyation by periconceptional topi density
-      sub.peri.topi.adj <- glm(methylation ~ topi.peri.concpt + sex + 
-                                 age.mon + samp_year_cnt, 
-                               data = luma_data_sub)
-      
-    ## h) Parameter estimates
-      summary(sub.peri.topi.adj)  # model parameter estimates
-      confint(sub.peri.topi.adj)  # 95% CIs 
-      
-    ## i) Unadjusted: methlyation by periconceptional gnu density
-      sub.peri.gnu.unadj <- glm(methylation ~ gnu.peri.concpt, 
-                                data = luma_data_sub)
-      
-    ## j) Parameter estimates
-      summary(sub.peri.gnu.unadj)  # model parameter estimates
-      confint(sub.peri.gnu.unadj)  # 95% CIs 
-      
-    ## k) Adjusted: methlyation by periconceptional gnu density
-      sub.peri.gnu.adj <- glm(methylation ~ gnu.peri.concpt + sex + 
-                                age.mon + samp_year_cnt, 
-                              data = luma_data_sub)
-      
-    ## l) Parameter estimates
-      summary(sub.peri.gnu.adj)  # model parameter estimates
-      confint(sub.peri.gnu.adj)  # 95% CIs 
-      
-    ## m) Unadjusted: methlyation by periconceptional zebra density
-      sub.peri.zebra.unadj <- glm(methylation ~ zebra.peri.concpt, 
-                                  data = luma_data_sub)
-      
-    ## n) Parameter estimates
-      summary(sub.peri.zebra.unadj)  # model parameter estimates
-      confint(sub.peri.zebra.unadj)  # 95% CIs 
-      
-    ## o) Adjusted: methlyation by periconceptional zebra density
-      sub.peri.zebra.adj <- glm(methylation ~ zebra.peri.concpt + sex + 
-                                  age.mon + samp_year_cnt, 
-                                data = luma_data_sub)
-      
-    ## p) Parameter estimates
-      summary(sub.peri.zebra.adj)  # model parameter estimates
-      confint(sub.peri.zebra.adj)  # 95% CIs 
-      
+      summary(sub.peri.prim.adj)  # model parameter estimates
+      confint(sub.peri.prim.adj)  # 95% CIs 
       
       
   ### 9.7 sub model: methylation by gestational prey density     
-    ## a) Unadjusted: methlyation by gestational thomsons density
-      sub.gest.thomsons.unadj <- glm(methylation ~ thomsons.gest, 
+    ## a) Unadjusted: methlyation by gestational prim.prey density
+      sub.gest.prim.unadj <- glm(methylation ~ prim.prey.gest, 
                                      data = luma_data_sub)
       
     ## b) Parameter estimates
-      summary(sub.gest.thomsons.unadj)  # model parameter estimates
-      confint(sub.gest.thomsons.unadj)  # 95% CIs 
+      summary(sub.gest.prim.unadj)  # model parameter estimates
+      confint(sub.gest.prim.unadj)  # 95% CIs 
       
-    ## c) Adjusted: methlyation by gestational thomsons density
-      sub.gest.thomsons.adj <- glm(methylation ~ thomsons.gest + 
-                                     thomsons.peri.concpt + sex + 
+    ## c) Adjusted: methlyation by gestational prim.prey density
+      sub.gest.prim.adj <- glm(methylation ~ prim.prey.gest + 
+                                     prim.prey.peri.concpt + sex + 
                                      age.mon + samp_year_cnt, 
                                    data = luma_data_sub)
       
     ## d) Parameter estimates
-      summary(sub.gest.thomsons.adj)  # model parameter estimates
-      confint(sub.gest.thomsons.adj)  # 95% CIs 
-      
-    ## e) Unadjusted: methlyation by gestational topi density
-      sub.gest.topi.unadj <- glm(methylation ~ topi.peri.concpt, 
-                                 data = luma_data_sub)
-      
-    ## f) Parameter estimates
-      summary(sub.gest.topi.unadj)  # model parameter estimates
-      confint(sub.gest.topi.unadj)  # 95% CIs 
-      
-    ## g) Adjusted: methlyation by gestational topi density
-      sub.gest.topi.adj <- glm(methylation ~ topi.gest + topi.peri.concpt + sex + 
-                                 age.mon + samp_year_cnt, 
-                               data = luma_data_sub)
-    ## h) Parameter estimates
-      summary(sub.gest.topi.adj)  # model parameter estimates
-      confint(sub.gest.topi.adj)  # 95% CIs 
-      
-    ## i) Unadjusted: methlyation by gestational gnu density
-      sub.gest.gnu.unadj <- glm(methylation ~ gnu.gest, 
-                                data = luma_data_sub)
-      
-    ## j) Parameter estimates
-      summary(sub.gest.gnu.unadj)  # model parameter estimates
-      confint(sub.gest.gnu.unadj)  # 95% CIs 
-      
-
-    ## k) Adjusted: methlyation by gestational gnu density
-      sub.gest.gnu.adj <- glm(methylation ~ gnu.gest + gnu.peri.concpt + sex + 
-                                age.mon + samp_year_cnt, 
-                              data = luma_data_sub)
-      
-    ## l) Parameter estimates
-      summary(sub.gest.gnu.adj)  # model parameter estimates
-      confint(sub.gest.gnu.adj)  # 95% CIs 
-      
-    ## m) Unadjusted: methlyation by gestational zebra density
-      sub.gest.zebra.unadj <- glm(methylation ~ zebra.gest,
-                                  data = luma_data_sub)
-      
-    ## n) Parameter estimates
-      summary(sub.gest.zebra.unadj)  # model parameter estimates
-      confint(sub.gest.zebra.unadj)  # 95% CIs 
-      
-    ## o) Adjusted: methlyation by gestational zebra density
-      sub.gest.zebra.adj <- glm(methylation ~ zebra.gest + 
-                                  zebra.peri.concpt + sex + 
-                                  age.mon + samp_year_cnt, 
-                                data = luma_data_sub)
-      
-    ## p) Parameter estimates
-      summary(sub.gest.zebra.adj)  # model parameter estimates
-      confint(sub.gest.zebra.adj)  # 95% CIs 
+      summary(sub.gest.prim.adj)  # model parameter estimates
+      confint(sub.gest.prim.adj)  # 95% CIs 
       
       
   ### 9.8 sub model: methylation by birth to 3 months prey density     
-    ## a) Unadjusted: methlyation by birth to 3 months thomsons density
-      sub.birth.3.thomsons.unadj <- glm(methylation ~ thomsons.birth.3, 
+    ## a) Unadjusted: methlyation by birth to 3 months prim.prey density
+      sub.birth.3.prim.unadj <- glm(methylation ~ prim.prey.birth.3, 
                                         data = luma_data_sub)
       
     ## b) Parameter estimates
-      summary(sub.birth.3.thomsons.unadj)  # model parameter estimates
-      confint(sub.birth.3.thomsons.unadj)  # 95% CIs 
+      summary(sub.birth.3.prim.unadj)  # model parameter estimates
+      confint(sub.birth.3.prim.unadj)  # 95% CIs 
       
-    ## c) Adjusted: methlyation by birth to 3 months thomsons density
-      sub.birth.3.thomsons.adj <- glm(methylation ~ thomsons.3.6 + 
-                                        thomsons.gest + thomsons.peri.concpt + 
+    ## c) Adjusted: methlyation by birth to 3 months prim.prey density
+      sub.birth.3.prim.adj <- glm(methylation ~ prim.prey.birth.3 + 
+                                        prim.prey.gest + prim.prey.peri.concpt + 
                                         sex + age.mon + samp_year_cnt, 
                                       data = luma_data_sub)
       
     ## d) Parameter estimates
-      summary(sub.birth.3.thomsons.adj)  # model parameter estimates
-      confint(sub.birth.3.thomsons.adj)  # 95% CIs 
+      summary(sub.birth.3.prim.adj)  # model parameter estimates
+      confint(sub.birth.3.prim.adj)  # 95% CIs 
       
-    ## e) Unadjusted: methlyation by birth to 3 months topi density
-      sub.birth.3.topi.unadj <- glm(methylation ~ topi.birth.3, 
-                                    data = luma_data_sub)
-      
-    ## f) Parameter estimates
-      summary(sub.birth.3.topi.unadj)  # model parameter estimates
-      confint(sub.birth.3.topi.unadj)  # 95% CIs 
-      
-    ## g) Adjusted: methlyation by birth to 3 months topi density
-      sub.birth.3.topi.adj <- glm(methylation ~ topi.birth.3 + topi.gest + 
-                                    topi.peri.concpt + sex + 
-                                    age.mon + samp_year_cnt, 
-                                  data = luma_data_sub)
-      
-    ## h) Parameter estimates
-      summary(sub.birth.3.topi.adj)  # model parameter estimates
-      confint(sub.birth.3.topi.adj)  # 95% CIs 
-      
-    ## i) Unadjusted: methlyation by birth to 3 months gnu density
-      sub.birth.3.gnu.unadj <- glm(methylation ~ gnu.birth.3, 
-                                   data = luma_data_sub)
-      
-    ## j) Parameter estimates
-      summary(sub.birth.3.gnu.unadj)  # model parameter estimates
-      confint(sub.birth.3.gnu.unadj)  # 95% CIs 
-      
-    ## k) Adjusted: methlyation by birth to 3 months gnu density
-      sub.birth.3.gnu.adj <- glm(methylation ~ gnu.birth.3 + gnu.gest + 
-                                   gnu.peri.concpt + sex + 
-                                   age.mon + samp_year_cnt, 
-                                 data = luma_data_sub)
-      
-    ## l) Parameter estimates
-      summary(sub.birth.3.gnu.adj)  # model parameter estimates
-      confint(sub.birth.3.gnu.adj)  # 95% CIs 
-      
-    ## m) Unadjusted: methlyation by birth to 3 months zebra density
-      sub.birth.3.zebra.unadj <- glm(methylation ~ zebra.birth.3, 
-                                     data = luma_data_sub)
-      
-    ## n) Parameter estimates
-      summary(sub.birth.3.zebra.unadj)  # model parameter estimates
-      confint(sub.birth.3.zebra.unadj)  # 95% CIs 
-      
-    ## o) Adjusted: methlyation by birth to 3 months zebra density
-      sub.birth.3.zebra.adj <- glm(methylation ~ zebra.birth.3 + zebra.gest + 
-                                     zebra.peri.concpt + sex + 
-                                     age.mon + samp_year_cnt, 
-                                   data = luma_data_sub)
-      
-    ## p) Parameter estimates
-      summary(sub.birth.3.zebra.adj)  # model parameter estimates
-      confint(sub.birth.3.zebra.adj)  # 95% CIs 
-      
-      
-      
+   
   ### 8.9 sub model: methylation by 3 to 6 months prey density     
-    ## a) Unadjusted: methlyation by 3 to 6 months thomsons density
-      sub.3.6.thomsons.unadj <- glm(methylation ~ thomsons.3.6, 
+    ## a) Unadjusted: methlyation by 3 to 6 months prim.prey density
+      sub.3.6.prim.unadj <- glm(methylation ~ prim.prey.3.6, 
                                     data = luma_data_sub)
       
     ## b) Parameter estimates
-      summary(sub.3.6.thomsons.unadj)  # model parameter estimates
-      confint(sub.3.6.thomsons.unadj)  # 95% CIs 
+      summary(sub.3.6.prim.unadj)  # model parameter estimates
+      confint(sub.3.6.prim.unadj)  # 95% CIs 
       
-    ## c) Adjusted: methlyation by 3 to 6 months thomsons density
-      sub.3.6.thomsons.adj <- glm(methylation ~ thomsons.3.6 + 
-                                    thomsons.birth.3 + thomsons.gest + 
-                                    thomsons.peri.concpt + sex + 
+    ## c) Adjusted: methlyation by 3 to 6 months prim.prey density
+      sub.3.6.prim.adj <- glm(methylation ~ prim.prey.3.6 + 
+                                    prim.prey.birth.3 + prim.prey.gest + 
+                                    prim.prey.peri.concpt + sex + 
                                     age.mon + samp_year_cnt, 
                                   data = luma_data_sub)
       
     ## d) Parameter estimates
-      summary(sub.3.6.thomsons.adj)  # model parameter estimates
-      confint(sub.3.6.thomsons.adj)  # 95% CIs 
+      summary(sub.3.6.prim.adj)  # model parameter estimates
+      confint(sub.3.6.prim.adj)  # 95% CIs 
       
-    ## e) Unadjusted: methlyation by 3 to 6 months topi density
-      sub.3.6.topi.unadj <- glm(methylation ~ topi.3.6, 
-                                data = luma_data_sub)
-      
-    ## f) Parameter estimates
-      summary(sub.3.6.topi.unadj)  # model parameter estimates
-      confint(sub.3.6.topi.unadj)  # 95% CIs 
-      
-    ## g) Adjusted: methlyation by 3 to 6 months topi density
-      sub.3.6.topi.adj <- glm(methylation ~ topi.3.6 + topi.birth.3 + 
-                                topi.gest + topi.peri.concpt + sex + 
-                                age.mon + samp_year_cnt, 
-                              data = luma_data_sub)
-      
-    ## h) Parameter estimates
-      summary(sub.3.6.topi.adj)  # model parameter estimates
-      confint(sub.3.6.topi.adj)  # 95% CIs 
-      
-    ## i) Unadjusted: methlyation by 3 to 6 months gnu density
-      sub.3.6.gnu.unadj <- glm(methylation ~ gnu.3.6, 
-                               data = luma_data_sub)
-      
-    ## j) Parameter estimates
-      summary(sub.3.6.gnu.unadj)  # model parameter estimates
-      confint(sub.3.6.gnu.unadj)  # 95% CIs 
-      
-    ## k) Adjusted: methlyation by 3 to 6 months gnu density
-      sub.3.6.gnu.adj <- glm(methylation ~ gnu.3.6 + gnu.birth.3 + 
-                               gnu.gest + gnu.peri.concpt + sex + 
-                               age.mon + samp_year_cnt, 
-                             data = luma_data_sub)
-      
-    ## l) Parameter estimates
-      summary(sub.3.6.gnu.adj)  # model parameter estimates
-      confint(sub.3.6.gnu.adj)  # 95% CIs 
-      
-    ## m) Unadjusted: methlyation by 3 to 6 months zebra density
-      sub.3.6.zebra.unadj <- glm(methylation ~ zebra.3.6, 
-                                 data = luma_data_sub)
-      
-    ## n) Parameter estimates
-      summary(sub.3.6.zebra.unadj)  # model parameter estimates
-      confint(sub.3.6.zebra.unadj)  # 95% CIs 
-      
-    ## o) Adjusted: methlyation by 3 to 6 months zebra density
-      sub.3.6.zebra.adj <- glm(methylation ~ zebra.3.6 + zebra.birth.3 + 
-                                 zebra.gest + zebra.peri.concpt + sex + 
-                                 age.mon + samp_year_cnt, 
-                               data = luma_data_sub)
-      
-    ## p) Parameter estimates
-      summary(sub.3.6.zebra.adj)  # model parameter estimates
-      confint(sub.3.6.zebra.adj)  # 95% CIs 
-      
-      
-      
+   
   ### 9.10 sub model: methylation by 6 to 9 months prey density     
-    ## a) Unadjusted: methlyation by 6 to 9 months thomsons density
-      sub.6.9.thomsons.unadj <- glm(methylation ~ thomsons.6.9, 
+    ## a) Unadjusted: methlyation by 6 to 9 months prim.prey density
+      sub.6.9.prim.unadj <- glm(methylation ~ prim.prey.6.9, 
                                     data = luma_data_sub)
       
     ## b) Parameter estimates
-      summary(sub.6.9.thomsons.unadj)  # model parameter estimates
-      confint(sub.6.9.thomsons.unadj)  # 95% CIs 
+      summary(sub.6.9.prim.unadj)  # model parameter estimates
+      confint(sub.6.9.prim.unadj)  # 95% CIs 
       
-    ## c) Adjusted: methlyation by 6 to 9 months thomsons density
-      sub.6.9.thomsons.adj <- glm(methylation ~ thomsons.6.9 + 
-                                    thomsons.3.6 + thomsons.birth.3 + 
-                                    thomsons.gest + thomsons.peri.concpt + 
+    ## c) Adjusted: methlyation by 6 to 9 months prim.prey density
+      sub.6.9.prim.adj <- glm(methylation ~ prim.prey.6.9 + 
+                                    prim.prey.3.6 + prim.prey.birth.3 + 
+                                    prim.prey.gest + prim.prey.peri.concpt + 
                                     sex + age.mon + samp_year_cnt, 
                                   data = luma_data_sub)
       
     ## d) Parameter estimates
-      summary(sub.6.9.thomsons.adj)  # model parameter estimates
-      confint(sub.6.9.thomsons.adj)  # 95% CIs 
+      summary(sub.6.9.prim.adj)  # model parameter estimates
+      confint(sub.6.9.prim.adj)  # 95% CIs 
       
-    ## e) Unadjusted: methlyation by 6 to 9 months topi density
-      sub.6.9.topi.unadj <- glm(methylation ~ topi.6.9, 
-                                data = luma_data_sub)
-      
-    ## f) Parameter estimates
-      summary(sub.6.9.topi.unadj)  # model parameter estimates
-      confint(sub.6.9.topi.unadj)  # 95% CIs 
-      
-    ## g) Adjusted: methlyation by 6 to 9 months topi density
-      sub.6.9.topi.adj <- glm(methylation ~ topi.6.9 + topi.3.6 + 
-                                topi.birth.3 + topi.gest + topi.peri.concpt + 
-                                sex + age.mon + samp_year_cnt, 
-                              data = luma_data_sub)
-      
-    ## h) Parameter estimates
-      summary(sub.6.9.topi.adj)  # model parameter estimates
-      confint(sub.6.9.topi.adj)  # 95% CIs 
-      
-    ## i) Unadjusted: methlyation by 6 to 9 months gnu density
-      sub.6.9.gnu.unadj <- glm(methylation ~ gnu.6.9, 
-                               data = luma_data_sub)
-      
-    ## j) Parameter estimates
-      summary(sub.6.9.gnu.unadj)  # model parameter estimates
-      confint(sub.6.9.gnu.unadj)  # 95% CIs 
-      
-    ## k) Adjusted: methlyation by 6 to 9 months gnu density
-      sub.6.9.gnu.adj <- glm(methylation ~ gnu.6.9 + gnu.3.6 + 
-                               gnu.birth.3 + gnu.gest + gnu.peri.concpt + 
-                               sex + age.mon + samp_year_cnt, 
-                             data = luma_data_sub)
-      
-    ## l) Parameter estimates
-      summary(sub.6.9.gnu.adj)  # model parameter estimates
-      confint(sub.6.9.gnu.adj)  # 95% CIs 
-      
-    ## m) Unadjusted: methlyation by 6 to 9 months zebra density
-      sub.6.9.zebra.unadj <- glm(methylation ~ zebra.6.9, 
-                                 data = luma_data_sub)
-      
-    ## n) Parameter estimates
-      summary(sub.6.9.zebra.unadj)  # model parameter estimates
-      confint(sub.6.9.zebra.unadj)  # 95% CIs 
-      
-    ## o) Adjusted: methlyation by 6 to 9 months zebra density
-      sub.6.9.zebra.adj <- glm(methylation ~ zebra.6.9 + zebra.3.6 + 
-                                 zebra.birth.3 + zebra.gest + 
-                                 zebra.peri.concpt + sex + 
-                                 age.mon + samp_year_cnt, 
-                               data = luma_data_sub)
-      
-    ## p) Parameter estimates
-      summary(sub.6.9.zebra.adj)  # model parameter estimates
-      confint(sub.6.9.zebra.adj)  # 95% CIs 
-
-
+  
       
 ###############################################################################
 ##############                  10. Adult models                  ##############
@@ -2844,379 +2106,104 @@ Mehtylation by Human Population Size") +
       
       
   ### 10.6 adult model: methylation by periconceptional prey density     
-    ## a) Unadjusted: methlyation by periconceptional thomsons density
-      adult.peri.thomsons.unadj <- glm(methylation ~ thomsons.peri.concpt, 
+    ## a) Unadjusted: methlyation by periconceptional prim.prey density
+      adult.peri.prim.unadj <- glm(methylation ~ prim.prey.peri.concpt, 
                                      data = luma_data_adult)
       
     ## b) Parameter estimates
-      summary(adult.peri.thomsons.unadj)  # model parameter estimates
-      confint(adult.peri.thomsons.unadj)  # 95% CIs 
+      summary(adult.peri.prim.unadj)  # model parameter estimates
+      confint(adult.peri.prim.unadj)  # 95% CIs 
       
 
-    ## c) Adjusted: methlyation by periconceptional thomsons density
-      adult.peri.thomsons.adj <- glm(methylation ~ thomsons.peri.concpt + sex + 
+    ## c) Adjusted: methlyation by periconceptional prim.prey density
+      adult.peri.prim.adj <- glm(methylation ~ prim.prey.peri.concpt + sex + 
                                      age.mon + samp_year_cnt, 
                                    data = luma_data_adult)
 
     ## d) Parameter estimates
-      summary(adult.peri.thomsons.adj)  # model parameter estimates
-      confint(adult.peri.thomsons.adj)  # 95% CIs 
-      
-    ## e) Unadjusted: methlyation by periconceptional topi density
-      adult.peri.topi.unadj <- glm(methylation ~ topi.peri.concpt, 
-                                 data = luma_data_adult)
-      
-    ## f) Parameter estimates
-      summary(adult.peri.topi.unadj)  # model parameter estimates
-      confint(adult.peri.topi.unadj)  # 95% CIs 
-      
-    ## g) Adjusted: methlyation by periconceptional topi density
-      adult.peri.topi.adj <- glm(methylation ~ topi.peri.concpt + sex + 
-                                 age.mon + samp_year_cnt, 
-                               data = luma_data_adult)
-    ## h) Parameter estimates
-      summary(adult.peri.topi.adj)  # model parameter estimates
-      confint(adult.peri.topi.adj)  # 95% CIs 
-      
-    ## i) Unadjusted: methlyation by periconceptional gnu density
-      adult.peri.gnu.unadj <- glm(methylation ~ gnu.peri.concpt, 
-                                data = luma_data_adult)
-      
-    ## j) Parameter estimates
-      summary(adult.peri.gnu.unadj)  # model parameter estimates
-      confint(adult.peri.gnu.unadj)  # 95% CIs 
-      
-    ## k) Adjusted: methlyation by periconceptional gnu density
-      adult.peri.gnu.adj <- glm(methylation ~ gnu.peri.concpt + sex + 
-                                age.mon + samp_year_cnt, 
-                              data = luma_data_adult)
-      
-    ## l) Parameter estimates
-      summary(adult.peri.gnu.adj)  # model parameter estimates
-      confint(adult.peri.gnu.adj)  # 95% CIs 
-      
-    ## m) Unadjusted: methlyation by periconceptional zebra density
-      adult.peri.zebra.unadj <- glm(methylation ~ zebra.peri.concpt, 
-                                  data = luma_data_adult)
-      
-    ## n) Parameter estimates
-      summary(adult.peri.zebra.unadj)  # model parameter estimates
-      confint(adult.peri.zebra.unadj)  # 95% CIs 
-      
-    ## o) Adjusted: methlyation by periconceptional zebra density
-      adult.peri.zebra.adj <- glm(methylation ~ zebra.peri.concpt + sex + 
-                                  age.mon + samp_year_cnt, 
-                                data = luma_data_adult)
-      
-    ## p) Parameter estimates
-      summary(adult.peri.zebra.adj)  # model parameter estimates
-      confint(adult.peri.zebra.adj)  # 95% CIs 
-      
+      summary(adult.peri.prim.adj)  # model parameter estimates
+      confint(adult.peri.prim.adj)  # 95% CIs 
+   
       
   ### 10.7 adult model: methylation by gestational prey density     
-    ## a) Unadjusted: methlyation by gestational thomsons density
-      adult.gest.thomsons.unadj <- glm(methylation ~ thomsons.gest, 
+    ## a) Unadjusted: methlyation by gestational prim.prey density
+      adult.gest.prim.unadj <- glm(methylation ~ prim.prey.gest, 
                                      data = luma_data_adult)
       
     ## b) Parameter estimates
-      summary(adult.gest.thomsons.unadj)  # model parameter estimates
-      confint(adult.gest.thomsons.unadj)  # 95% CIs 
+      summary(adult.gest.prim.unadj)  # model parameter estimates
+      confint(adult.gest.prim.unadj)  # 95% CIs 
       
-    ## c) Adjusted: methlyation by gestational thomsons density
-      adult.gest.thomsons.adj <- glm(methylation ~ thomsons.gest + 
-                                     thomsons.peri.concpt + sex + 
+    ## c) Adjusted: methlyation by gestational prim.prey density
+      adult.gest.prim.adj <- glm(methylation ~ prim.prey.gest + 
+                                     prim.prey.peri.concpt + sex + 
                                      age.mon + samp_year_cnt, 
                                    data = luma_data_adult)
       
     ## d) Parameter estimates
-      summary(adult.gest.thomsons.adj)  # model parameter estimates
-      confint(adult.gest.thomsons.adj)  # 95% CIs 
-      
-    ## e) Unadjusted: methlyation by gestational topi density
-      adult.gest.topi.unadj <- glm(methylation ~ topi.peri.concpt, 
-                                 data = luma_data_adult)
-      
-    ## f) Parameter estimates
-      summary(adult.gest.topi.unadj)  # model parameter estimates
-      confint(adult.gest.topi.unadj)  # 95% CIs 
-      
-    ## g) Adjusted: methlyation by gestational topi density
-      adult.gest.topi.adj <- glm(methylation ~ topi.gest + topi.peri.concpt + 
-                                   sex + age.mon + samp_year_cnt, 
-                               data = luma_data_adult)
-    ## h) Parameter estimates
-      summary(adult.gest.topi.adj)  # model parameter estimates
-      confint(adult.gest.topi.adj)  # 95% CIs 
-      
-    ## i) Unadjusted: methlyation by gestational gnu density
-      adult.gest.gnu.unadj <- glm(methylation ~ gnu.gest, 
-                                data = luma_data_adult)
-      
-    ## j) Parameter estimates
-      summary(adult.gest.gnu.unadj)  # model parameter estimates
-      confint(adult.gest.gnu.unadj)  # 95% CIs 
-      
-    ## k) Adjusted: methlyation by gestational gnu density
-      adult.gest.gnu.adj <- glm(methylation ~ gnu.gest + gnu.peri.concpt + 
-                                  sex + age.mon + samp_year_cnt, 
-                              data = luma_data_adult)
-      
-    ## l) Parameter estimates
-      summary(adult.gest.gnu.adj)  # model parameter estimates
-      confint(adult.gest.gnu.adj)  # 95% CIs 
-      
-    ## m) Unadjusted: methlyation by gestational zebra density
-      adult.gest.zebra.unadj <- glm(methylation ~ zebra.gest,
-                                  data = luma_data_adult)
-      
-    ## n) Parameter estimates
-      summary(adult.gest.zebra.unadj)  # model parameter estimates
-      confint(adult.gest.zebra.unadj)  # 95% CIs 
-      
-    ## o) Adjusted: methlyation by gestational zebra density
-      adult.gest.zebra.adj <- glm(methylation ~ zebra.gest + 
-                                  zebra.peri.concpt + sex + 
-                                  age.mon + samp_year_cnt, 
-                                data = luma_data_adult)
-      
-    ## p) Parameter estimates
-      summary(adult.gest.zebra.adj)  # model parameter estimates
-      confint(adult.gest.zebra.adj)  # 95% CIs 
+      summary(adult.gest.prim.adj)  # model parameter estimates
+      confint(adult.gest.prim.adj)  # 95% CIs 
       
       
   ### 10.8 adult model: methylation by birth to 3 months prey density     
-    ## a) Unadjusted: methlyation by birth to 3 months thomsons density
-      adult.birth.3.thomsons.unadj <- glm(methylation ~ thomsons.birth.3, 
+    ## a) Unadjusted: methlyation by birth to 3 months prim.prey density
+      adult.birth.3.prim.unadj <- glm(methylation ~ prim.prey.birth.3, 
                                         data = luma_data_adult)
       
     ## b) Parameter estimates
-      summary(adult.birth.3.thomsons.unadj)  # model parameter estimates
-      confint(adult.birth.3.thomsons.unadj)  # 95% CIs 
+      summary(adult.birth.3.prim.unadj)  # model parameter estimates
+      confint(adult.birth.3.prim.unadj)  # 95% CIs 
       
-    ## c) Adjusted: methlyation by birth to 3 months thomsons density
-      adult.birth.3.thomsons.adj <- glm(methylation ~ thomsons.3.6 + 
-                                        thomsons.gest + thomsons.peri.concpt + 
+    ## c) Adjusted: methlyation by birth to 3 months prim.prey density
+      adult.birth.3.prim.adj <- glm(methylation ~ prim.prey.birth.3 + 
+                                        prim.prey.gest + prim.prey.peri.concpt + 
                                         sex + age.mon + samp_year_cnt, 
                                       data = luma_data_adult)
       
     ## d) Parameter estimates
-      summary(adult.birth.3.thomsons.adj)  # model parameter estimates
-      confint(adult.birth.3.thomsons.adj)  # 95% CIs 
-      
-    ## e) Unadjusted: methlyation by birth to 3 months topi density
-      adult.birth.3.topi.unadj <- glm(methylation ~ topi.birth.3, 
-                                    data = luma_data_adult)
-      
-    ## f) Parameter estimates
-      summary(adult.birth.3.topi.unadj)  # model parameter estimates
-      confint(adult.birth.3.topi.unadj)  # 95% CIs 
-      
-    ## g) Adjusted: methlyation by birth to 3 months topi density
-      adult.birth.3.topi.adj <- glm(methylation ~ topi.birth.3 + topi.gest + 
-                                    topi.peri.concpt + sex + 
-                                    age.mon + samp_year_cnt, 
-                                  data = luma_data_adult)
-      
-    ## h) Parameter estimates
-      summary(adult.birth.3.topi.adj)  # model parameter estimates
-      confint(adult.birth.3.topi.adj)  # 95% CIs 
-      
-    ## i) Unadjusted: methlyation by birth to 3 months gnu density
-      adult.birth.3.gnu.unadj <- glm(methylation ~ gnu.birth.3, 
-                                   data = luma_data_adult)
-      
-    ## j) Parameter estimates
-      summary(adult.birth.3.gnu.unadj)  # model parameter estimates
-      confint(adult.birth.3.gnu.unadj)  # 95% CIs 
-      
-    ## k) Adjusted: methlyation by birth to 3 months gnu density
-      adult.birth.3.gnu.adj <- glm(methylation ~ gnu.birth.3 + gnu.gest + 
-                                   gnu.peri.concpt + sex + 
-                                   age.mon + samp_year_cnt, 
-                                 data = luma_data_adult)
-      
-    ## l) Parameter estimates
-      summary(adult.birth.3.gnu.adj)  # model parameter estimates
-      confint(adult.birth.3.gnu.adj)  # 95% CIs 
-      
-    ## m) Unadjusted: methlyation by birth to 3 months zebra density
-      adult.birth.3.zebra.unadj <- glm(methylation ~ zebra.birth.3, 
-                                     data = luma_data_adult)
-      
-    ## n) Parameter estimates
-      summary(adult.birth.3.zebra.unadj)  # model parameter estimates
-      confint(adult.birth.3.zebra.unadj)  # 95% CIs 
-      
-    ## o) Adjusted: methlyation by birth to 3 months zebra density
-      adult.birth.3.zebra.adj <- glm(methylation ~ zebra.birth.3 + zebra.gest + 
-                                     zebra.peri.concpt + sex + 
-                                     age.mon + samp_year_cnt, 
-                                   data = luma_data_adult)
-      
-    ## p) Parameter estimates
-      summary(adult.birth.3.zebra.adj)  # model parameter estimates
-      confint(adult.birth.3.zebra.adj)  # 95% CIs 
-      
+      summary(adult.birth.3.prim.adj)  # model parameter estimates
+      confint(adult.birth.3.prim.adj)  # 95% CIs 
       
       
   ### 10.9 adult model: methylation by 3 to 6 months prey density     
-    ## a) Unadjusted: methlyation by 3 to 6 months thomsons density
-      adult.3.6.thomsons.unadj <- glm(methylation ~ thomsons.3.6, 
+    ## a) Unadjusted: methlyation by 3 to 6 months prim.prey density
+      adult.3.6.prim.unadj <- glm(methylation ~ prim.prey.3.6, 
                                     data = luma_data_adult)
       
     ## b) Parameter estimates
-      summary(adult.3.6.thomsons.unadj)  # model parameter estimates
-      confint(adult.3.6.thomsons.unadj)  # 95% CIs 
+      summary(adult.3.6.prim.unadj)  # model parameter estimates
+      confint(adult.3.6.prim.unadj)  # 95% CIs 
       
-    ## c) Adjusted: methlyation by 3 to 6 months thomsons density
-      adult.3.6.thomsons.adj <- glm(methylation ~ thomsons.3.6 + 
-                                    thomsons.birth.3 + thomsons.gest + 
-                                    thomsons.peri.concpt + sex + 
+    ## c) Adjusted: methlyation by 3 to 6 months prim.prey density
+      adult.3.6.prim.adj <- glm(methylation ~ prim.prey.3.6 + 
+                                    prim.prey.birth.3 + prim.prey.gest + 
+                                    prim.prey.peri.concpt + sex + 
                                     age.mon + samp_year_cnt, 
                                   data = luma_data_adult)
       
     ## d) Parameter estimates
-      summary(adult.3.6.thomsons.adj)  # model parameter estimates
-      confint(adult.3.6.thomsons.adj)  # 95% CIs 
-      
-    ## e) Unadjusted: methlyation by 3 to 6 months topi density
-      adult.3.6.topi.unadj <- glm(methylation ~ topi.3.6, 
-                                data = luma_data_adult)
-      
-    ## f) Parameter estimates
-      summary(adult.3.6.topi.unadj)  # model parameter estimates
-      confint(adult.3.6.topi.unadj)  # 95% CIs 
-      
-    ## g) Adjusted: methlyation by 3 to 6 months topi density
-      adult.3.6.topi.adj <- glm(methylation ~ topi.3.6 + topi.birth.3 + 
-                                topi.gest + topi.peri.concpt + sex + 
-                                age.mon + samp_year_cnt, 
-                              data = luma_data_adult)
-      
-    ## h) Parameter estimates
-      summary(adult.3.6.topi.adj)  # model parameter estimates
-      confint(adult.3.6.topi.adj)  # 95% CIs 
-      
-    ## i) Unadjusted: methlyation by 3 to 6 months gnu density
-      adult.3.6.gnu.unadj <- glm(methylation ~ gnu.3.6, 
-                               data = luma_data_adult)
-      
-    ## j) Parameter estimates
-      summary(adult.3.6.gnu.unadj)  # model parameter estimates
-      confint(adult.3.6.gnu.unadj)  # 95% CIs 
-      
-    ## k) Adjusted: methlyation by 3 to 6 months gnu density
-      adult.3.6.gnu.adj <- glm(methylation ~ gnu.3.6 + gnu.birth.3 + 
-                               gnu.gest + gnu.peri.concpt + sex + 
-                               age.mon + samp_year_cnt, 
-                             data = luma_data_adult)
-      
-    ## l) Parameter estimates
-      summary(adult.3.6.gnu.adj)  # model parameter estimates
-      confint(adult.3.6.gnu.adj)  # 95% CIs 
-      
-    ## m) Unadjusted: methlyation by 3 to 6 months zebra density
-      adult.3.6.zebra.unadj <- glm(methylation ~ zebra.3.6, 
-                                 data = luma_data_adult)
-      
-    ## n) Parameter estimates
-      summary(adult.3.6.zebra.unadj)  # model parameter estimates
-      confint(adult.3.6.zebra.unadj)  # 95% CIs 
-      
-    ## o) Adjusted: methlyation by 3 to 6 months zebra density
-      adult.3.6.zebra.adj <- glm(methylation ~ zebra.3.6 + zebra.birth.3 + 
-                                 zebra.gest + zebra.peri.concpt + sex + 
-                                 age.mon + samp_year_cnt, 
-                               data = luma_data_adult)
-      
-    ## p) Parameter estimates
-      summary(adult.3.6.zebra.adj)  # model parameter estimates
-      confint(adult.3.6.zebra.adj)  # 95% CIs 
+      summary(adult.3.6.prim.adj)  # model parameter estimates
+      confint(adult.3.6.prim.adj)  # 95% CIs 
       
       
   ### 10.10 adult model: methylation by 6 to 9 months prey density     
-    ## a) Unadjusted: methlyation by 6 to 9 months thomsons density
-      adult.6.9.thomsons.unadj <- glm(methylation ~ thomsons.6.9, 
+    ## a) Unadjusted: methlyation by 6 to 9 months prim.prey density
+      adult.6.9.prim.unadj <- glm(methylation ~ prim.prey.6.9, 
                                     data = luma_data_adult)
       
     ## b) Parameter estimates
-      summary(adult.6.9.thomsons.unadj)  # model parameter estimates
-      confint(adult.6.9.thomsons.unadj)  # 95% CIs 
+      summary(adult.6.9.prim.unadj)  # model parameter estimates
+      confint(adult.6.9.prim.unadj)  # 95% CIs 
       
-    ## c) Adjusted: methlyation by 6 to 9 months thomsons density
-      adult.6.9.thomsons.adj <- glm(methylation ~ thomsons.6.9 + 
-                                    thomsons.3.6 + thomsons.birth.3 + 
-                                    thomsons.gest + thomsons.peri.concpt + 
+    ## c) Adjusted: methlyation by 6 to 9 months prim.prey density
+      adult.6.9.prim.adj <- glm(methylation ~ prim.prey.6.9 + 
+                                    prim.prey.3.6 + prim.prey.birth.3 + 
+                                    prim.prey.gest + prim.prey.peri.concpt + 
                                     sex + age.mon + samp_year_cnt, 
                                   data = luma_data_adult)
       
     ## d) Parameter estimates
-      summary(adult.6.9.thomsons.adj)  # model parameter estimates
-      confint(adult.6.9.thomsons.adj)  # 95% CIs 
-      
-    ## e) Unadjusted: methlyation by 6 to 9 months topi density
-      adult.6.9.topi.unadj <- glm(methylation ~ topi.6.9, 
-                                data = luma_data_adult)
-      
-    ## f) Parameter estimates
-      summary(adult.6.9.topi.unadj)  # model parameter estimates
-      confint(adult.6.9.topi.unadj)  # 95% CIs 
-      
-    ## g) Adjusted: methlyation by 6 to 9 months topi density
-      adult.6.9.topi.adj <- glm(methylation ~ topi.6.9 + topi.3.6 + 
-                                topi.birth.3 + topi.gest + topi.peri.concpt + 
-                                sex + age.mon + samp_year_cnt, 
-                              data = luma_data_adult)
-      
-    ## h) Parameter estimates
-      summary(adult.6.9.topi.adj)  # model parameter estimates
-      confint(adult.6.9.topi.adj)  # 95% CIs 
-      
-    ## i) Unadjusted: methlyation by 6 to 9 months gnu density
-      adult.6.9.gnu.unadj <- glm(methylation ~ gnu.6.9, 
-                               data = luma_data_adult)
-      
-    ## j) Parameter estimates
-      summary(adult.6.9.gnu.unadj)  # model parameter estimates
-      confint(adult.6.9.gnu.unadj)  # 95% CIs 
-      
-    ## k) Adjusted: methlyation by 6 to 9 months gnu density
-      adult.6.9.gnu.adj <- glm(methylation ~ gnu.6.9 + gnu.3.6 + 
-                               gnu.birth.3 + gnu.gest + gnu.peri.concpt + 
-                               sex + age.mon + samp_year_cnt, 
-                             data = luma_data_adult)
-      
-    ## l) Parameter estimates
-      summary(adult.6.9.gnu.adj)  # model parameter estimates
-      confint(adult.6.9.gnu.adj)  # 95% CIs 
-      
-    ## m) Unadjusted: methlyation by 6 to 9 months zebra density
-      adult.6.9.zebra.unadj <- glm(methylation ~ zebra.6.9, 
-                                 data = luma_data_adult)
-      
-    ## n) Parameter estimates
-      summary(adult.6.9.zebra.unadj)  # model parameter estimates
-      confint(adult.6.9.zebra.unadj)  # 95% CIs 
-      
-    ## o) Adjusted: methlyation by 6 to 9 months zebra density
-      adult.6.9.zebra.adj <- glm(methylation ~ zebra.6.9 + zebra.3.6 + 
-                                 zebra.birth.3 + zebra.gest + 
-                                 zebra.peri.concpt + sex + 
-                                 age.mon + samp_year_cnt, 
-                               data = luma_data_adult)
-      
-    ## p) Parameter estimates
-      summary(adult.6.9.zebra.adj)  # model parameter estimates
-      confint(adult.6.9.zebra.adj)  # 95% CIs 
-      
-
-
-
-
-
-      
-      
-      
-      
+      summary(adult.6.9.prim.adj)  # model parameter estimates
+      confint(adult.6.9.prim.adj)  # 95% CIs 
       
    
