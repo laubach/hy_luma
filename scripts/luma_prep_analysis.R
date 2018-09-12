@@ -419,6 +419,7 @@
     ## a) make a list of duplicates    
         luma_data %>%
           filter(duplicated(.[["sample_ID"]]))
+        
     ## b) Group rows with same sample_id to reduce duplicate
         luma_data <- luma_data %>% 
           group_by (sample_ID) %>% # set grouping same ID within same cat age
@@ -438,6 +439,84 @@
                      rxn_notes = first(rxn_notes),
                      drift_est = mean(estimate), # update variable name here
                      meth_adjust = mean(meth_adjust))
+        
+    ## c) Manual data clean up
+        # byte was run in duplicate (two samples from same date)
+        byte_data <- luma_data %>%
+          filter(sample_ID == 989 | sample_ID == 16555) %>%
+          summarise(sample_ID = first(sample_ID),
+                  plate_rxn_ID = first(plate_rxn_ID),
+                  plate_pos_seq = first(plate_pos_seq),
+                  plate_pos_factor = first(plate_pos_factor),
+                  well = first(well),
+                  methylation = mean(methylation),
+                  analysis_status = first(analysis_status),
+                  assay_notes = first(assay_notes),
+                  dup1 = mean(dup1),
+                  dup2 = mean(dup2),
+                  stdev = mean(stdev),
+                  cv = mean(cv),
+                  stock_notes = first(stock_notes),
+                  cc_notes = first(cc_notes),
+                  rxn_notes = first(rxn_notes),
+                  drift_est = mean(drift_est), # update variable name here
+                  meth_adjust = mean(meth_adjust))
+        
+    ## d) Manual data clean up
+      # birk was run in duplicate (two samples from same date)
+        birk_data <- luma_data %>%
+          filter(sample_ID == 1226 | sample_ID == 1160) %>%
+          summarise(sample_ID = first(sample_ID),
+                    plate_rxn_ID = first(plate_rxn_ID),
+                    plate_pos_seq = first(plate_pos_seq),
+                    plate_pos_factor = first(plate_pos_factor),
+                    well = first(well),
+                    methylation = mean(methylation),
+                    analysis_status = first(analysis_status),
+                    assay_notes = first(assay_notes),
+                    dup1 = mean(dup1),
+                    dup2 = mean(dup2),
+                    stdev = mean(stdev),
+                    cv = mean(cv),
+                    stock_notes = first(stock_notes),
+                    cc_notes = first(cc_notes),
+                    rxn_notes = first(rxn_notes),
+                    drift_est = mean(drift_est), # update variable name here
+                    meth_adjust = mean(meth_adjust)) 
+        
+    ## e) Manual data clean up
+      # jord was run in duplicate (two samples from same date)
+        jord_data <- luma_data %>%
+          filter(sample_ID == 258 | sample_ID == 687) %>%
+          summarise(sample_ID = first(sample_ID),
+                    plate_rxn_ID = first(plate_rxn_ID),
+                    plate_pos_seq = first(plate_pos_seq),
+                    plate_pos_factor = first(plate_pos_factor),
+                    well = first(well),
+                    methylation = mean(methylation),
+                    analysis_status = first(analysis_status),
+                    assay_notes = first(assay_notes),
+                    dup1 = mean(dup1),
+                    dup2 = mean(dup2),
+                    stdev = mean(stdev),
+                    cv = mean(cv),
+                    stock_notes = first(stock_notes),
+                    cc_notes = first(cc_notes),
+                    rxn_notes = first(rxn_notes),
+                    drift_est = mean(drift_est), # update variable name here
+                    meth_adjust = mean(meth_adjust))  
+       
+    ## d) remove 'byte', 'birk', and 'jord' from original luma_data
+        luma_data <- luma_data %>%
+          filter(sample_ID != 989) %>%
+          filter(sample_ID != 16555) %>%
+          filter(sample_ID != 1226) %>%
+          filter(sample_ID != 1160) %>%
+          filter(sample_ID != 258) %>%
+          filter(sample_ID != 687) 
+        
+    ## e) combine into single data frame    
+       luma_data <- rbind(luma_data, byte_data, birk_data, jord_data)
 
         
   ### 5.2 Link Samples to Hyena ID
@@ -461,6 +540,8 @@
                            GROUP BY plate_rxn_ID, well") # to get rid of dups 
                                                          # created in join
         
+        
+      
         
     ## b) Convert darting date to formatted date in luma_data 
         luma_data$darting.date <- fix.dates (luma_data$darting.date)
@@ -506,7 +587,12 @@
         luma_data <- luma_data %>%
           filter (!grepl("cash", id) | !grepl("14-apr-08", first.seen))
    
-    
+    ## g) Manual data clean up
+      # byte was run in duplicate (two samples from same date)
+        byte_data <- luma_data %>%
+          filter (!grepl("byte", id)) %>%
+          group_by(id)
+          summarise()
   
  
 ###############################################################################
@@ -626,7 +712,10 @@
       # re-run that failed QAQC or that were outliers
       re_runs <- anti_join(samp_record, luma_data_no_out, by = "sample_id")
         
-        
+    ## b) make a list of duplicates by darting date to check for repeats 
+      # check is done manually; somtimes different hy darted same date
+      repeats <- luma_data_no_out %>%
+        filter(duplicated(.[["darting.date"]]))       
         
 ###############################################################################
 ##############        7. Save Intermediate Tables as .csv        ##############

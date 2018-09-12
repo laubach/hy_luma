@@ -475,7 +475,13 @@
         # dplyr retains grouping after creation of data frame that uses 
         # group_by
           luma_data_group <- ungroup(luma_data_group)
-        
+      
+    ## c) Calculate the number of individual hyeans and repeat samples
+          luma_data_hy_id <- luma_data %>% 
+            filter (!is.na(methylation))%>% # check/remove rows where meth NA
+            group_by (id) %>% # set grouping same ID within same cat age
+            summarise (age.reps = sum(!is.na(methylation))) # n per ID w/in age 
+                       # class
     
   ### 3.6 Clean prey density data and combine with LUMA data
     ## a) Select a subset of the prey_density data by column names
