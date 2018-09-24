@@ -201,12 +201,13 @@
        
   ### 2.3 Import Access fisi backend #TEMPORARILY NOT WORKING
     ## a) read in tidy Access fisi backend tables and save as data frames
-#      source(paste0("/Volumes/Holekamp/code_repository/R/1_output_tidy_tbls/",
-#                   "load_tidy_tbls.R"))
+      source(paste0("/Volumes/Holekamp/code_repository/R/1_output_tidy_tbls/",
+                   "load_tidy_tbls.R"))
       
-    ## b) manually load tblFemalerank  
-    tblFemalerank <- read_csv(paste0("/Volumes/Holekamp/code_repository/R",
-                                    "/1_output_tidy_tbls/tblFemalerank.csv"))
+    ## b) manually load tblFemalerank; the one from merge_databases 
+#    tblFemalerank <- read_csv(paste0("/Volumes/Holekamp/CurrentCollaborations",
+#                                    "/merge_databases/tblFemaleRanks", 
+#                                    "/tblFemaleRanks.csv"))
     
 
     
@@ -242,26 +243,29 @@
     ## d) Create an estimated age in months by subtracting birthdate from
       # grad.date and weandate using lubridate
       luma_data <- luma_data %>%
-        mutate(grad.age.mon = interval(birthdate, den.grad) %/% months(1))
+        mutate(grad.age.mon = interval(birthdate, den.grad) %/% days(1))
       # and check what mean age at graduation
           luma_data %>%
-            summarise(avg.grad.age = round(mean (grad.age.mon,
-                                                  na.rm = T), 2),
-                      max.grad.age = max(grad.age.mon, na.rm = T))
+            summarise(avg.grad.age = round((mean (grad.age.mon,
+                                                  na.rm = T)/30.44), 1),
+                      max.grad.age = (max(grad.age.mon, na.rm = T)/30.44))
   
         luma_data <- luma_data %>%
-            mutate(wean.age.mon = interval(birthdate, weaned) %/% months(1))
+            mutate(wean.age.mon = interval(birthdate, weaned) %/% days(1))
       # and check what mean age at graduation
         luma_data %>%
-          summarise(avg.wean.age = round(mean(wean.age.mon,
-                                               na.rm = T), 2),
-                    max.wean.age = max(wean.age.mon, na.rm = T))    
-      
+          summarise(avg.wean.age = round((mean(wean.age.mon,
+                                               na.rm = T)/30.44), 1),
+                    max.wean.age = (max(wean.age.mon, na.rm = T)/30.44)) 
+        
+    ## NOTE: To convert from age in days to age in months divde by average 
+        # number of days per month  (30.44)  
         
     ## e) Create an estimated age in months by subtracting birthdate from
       # darting.date using lubridate
       luma_data <- luma_data %>%
-        mutate(age.mon = interval(birthdate, darting.date) %/% months(1))
+        mutate(age.mon = round((interval(birthdate, 
+                                         darting.date) %/% days(1)/ 30.44), 1))
       
     ## f) Cobmine age columns to fill in NA
       # replace NA in age.months column where there is a value in 
@@ -357,7 +361,13 @@
       luma_data$samp_year <- year(as.Date(luma_data$darting.date, 
                                           format="%Y-%m-%d"))
       
+    ## o) mark samples extracted via PAX-gene tubes those collected 2016 
+      # onwards
       
+      luma_data <- luma_data  %>%
+        mutate(dna_extrct_mth = case_when(samp_year >= 2016 ~ c("pax"),
+                                          samp_year < 2016 ~ c("old")))
+                        
   ### 3.2 Tidy tblFemalerank
     ## a) Pattern recognize numbers from Year variable and copy; gets rid of
       # unwanted text characters
@@ -405,10 +415,11 @@
                                             quantile(mom.strank, probs=0:4/4,
                                                      na.rm = T), 
                                             include.lowest = T)))
+      
       # NOTE: Could also use dplyr
       #  luma_data <- luma_data %>% 
       #    mutate(strank.quart.order = ntile(strank, 4))
-
+  
     ## e) Create a nominal factor and rename and re-order the levels to 
       # sets the reference level for lowest rank 
       luma_data <- transform (luma_data, 
@@ -418,7 +429,18 @@
                                        labels= c("Q1 (lowest)",
                                                  "Q2","Q3",
                                                  "Q4 (highest)")))
-  
+     
+    #**hack**# Fill in two missing maternal rank quartiles
+      # change mom.absrank to an integer
+      luma_data$mom.absrank <- as.integer(as.character
+                                          (luma_data$mom.absrank))
+      # fill in missing mom.strank.quart info based on mom.absrank for serena
+      # hyneas
+      luma_data$mom.strank.quart <- ifelse(
+        (is.na(luma_data$mom.strank.quart) & 
+           luma_data$mom.absrank > 18),
+        "Q1 (lowest)", as.character(luma_data$mom.strank.quart))  
+      
 
   ### 3.5 Reduce and group luma_data
     # Create new reduced and grouped data sets to be used in some downstream
@@ -467,7 +489,8 @@
                      age.mon = (mean(age.mon)),
                      rank_year = (first(rank_year)),
                      samp_year = (first(samp_year)),
-                     hum.pres = (first(hum.pres)))
+                     hum.pres = (first(hum.pres)),
+                     dna_extrct_mth = first(dna_extrct_mth))
                     
 
                      
@@ -542,11 +565,11 @@
         # NOTE: model output a p for trend; assumes linear monotonic association
         # estimates, which is a change y with respect to each unit change in x
         # is scaled to x and stored internally as numeric value
-        luma_data <- luma_data %>%
-          mutate(age.ordin = as.numeric(case_when(age.mon <= 12 ~ c(11.0),
-                                                  age.mon > 12 & 
-                                                    age.mon <=24 ~ c(17.5),
-                                                  age.mon > 24 ~ c(51.0))))
+#        luma_data <- luma_data %>%
+#          mutate(age.ordin = as.numeric(case_when(age.mon <= 12 ~ c(11.0),
+#                                                  age.mon > 12 & 
+#                                                    age.mon <=24 ~ c(17.5),
+#                                                  age.mon > 24 ~ c(51.0))))
         
     ## d) Re-code sex as a nominal factor  
         luma_data$sex <- as.factor(luma_data$sex)
@@ -572,8 +595,39 @@
                                lit.size = factor(lit.size, 
                                                  levels = c("single","twin")))
         
-             
+    ## f) Re-code mom.strank.quart as nominal factor and set level (order)
+      luma_data <- transform(luma_data,
+                             mom.strank.quart = factor(mom.strank.quart, 
+                                               levels = c("Q1 (lowest)",
+                                                          "Q2","Q3",
+                                                          "Q4 (highest)")))
         
+      luma_data_group <- transform(luma_data_group,
+                                   mom.strank.quart = factor(mom.strank.quart,
+                                                levels = c("Q1 (lowest)",
+                                                           "Q2","Q3",
+                                                           "Q4 (highest)")))
+        
+             
+  ### 4.7 Check the effect of extraction method...literature suggests this
+      # matters and looking at data there are striking difference amomg
+      # six samples extracted from Pax gene tubes
+    ## a) uses 'nmle' package, which will provided p-value estimates
+        dna.mtd.lme <- lme(methylation ~ dna_extrct_mth, random =~1|id, 
+                           subset(luma_data_group,!is.na(x = dna_extrct_mth)))
+        
+        summary( dna.mtd.lme)        # model summary
+        intervals( dna.mtd.lme, 
+                   which = "fixed")  # 95% CIs 
+        
+    ## b) remove PAX gene extractions from data
+        luma_data <- luma_data %>% 
+          filter (!grepl("pax", dna_extrct_mth))
+        
+        luma_data_group <- luma_data_group %>% 
+          filter (!grepl("pax", dna_extrct_mth))
+        
+      
 ###############################################################################
 ##############               4. UniVariate analyses              ##############
 ###############################################################################      
@@ -583,7 +637,8 @@
       # calculate the mean, median and standard deviation of % methylation
       # NOTE: uses luma_data_group data frame
         univar_meth <- luma_data_group %>%
-          summarize (n = sum(!is.na(methylation)),
+          summarize (n.id = n_distinct(id),
+                     n.samp = sum(!is.na(methylation)),
                      avg = round (mean (methylation, na.rm = T), 2),
                      median =  round (quantile (methylation, c(.5), na.rm = T),
                                       2),
@@ -680,7 +735,7 @@
       pdf(paste0(here(),"/output/output_luma_ecolog/",
                  "hum_pres_summary.pdf"), 
           height = 3, width = 5)
-      grid.table(hum_pop_summary)
+      grid.table(hum_pres_summary)
       dev.off() 
       
       
@@ -733,12 +788,13 @@
 
 
     ## c) save the data frame of summary stats out as a pdf into output file
-      pdf("output/output_luma_ecolog/prey_var_summary.pdf", height = 3, 
-          width = 5)
+      pdf(paste0(here(),"/output/output_luma_ecolog/",
+                 "hum_pres_summary.pdf"),
+      height = 3, width = 5)
       grid.table(prey_var_summary)
       dev.off()     
       
-     
+    
 
 ###############################################################################
 ##############             5.  Data transformations              ##############
@@ -798,6 +854,7 @@
       summary(samp.year.lme)        # model summary
       intervals(samp.year.lme, 
                   which = "fixed")  # 95% CIs 
+      
       
       
   ### 6.2 Bivariate statistics methylation by sex
@@ -1206,7 +1263,6 @@ Mehtylation by Human Population Size") +
 ##############            7. Re-tidy daa for analyses            ##############
 ###############################################################################       
       
-         
   ### 7.1 View methylation by rank within age strata
     ## a) Graph of the raw data for percent global DNA methylaiton by maternal rank
       # stratified by age
@@ -1259,23 +1315,6 @@ Mehtylation by Human Population Size") +
     ## a) Cub subset that includes both females and males
       luma_data_cub <- luma_data_group %>%
         filter(grepl('^cub$', age.cat))
-      
-      #**hack**# Fill in two missing maternal rank quartiles
-      # change mom.absrank to an integer
-      luma_data_cub$mom.absrank <- as.integer(as.character
-                                              (luma_data_cub$mom.absrank))
-      # fill in missing mom.strank.quart info based on mom.absrank
-      luma_data_cub$mom.strank.quart <- ifelse(
-        (is.na(luma_data_cub$mom.strank.quart) & 
-           luma_data_cub$mom.absrank > 18),
-        "Q1 (lowest)", as.character(luma_data_cub$mom.strank.quart))
-      
-      # re-order to sets the reference level for high
-      luma_data_cub <- transform (luma_data_cub, 
-                                  mom.strank.quart = factor(mom.strank.quart,
-                                              levels = c("Q1 (lowest)",
-                                                         "Q2","Q3",
-                                                         "Q4 (highest)")))
       
     ## b) Subadult subset that includes both females and males
       luma_data_sub <- luma_data_group %>%
@@ -1368,7 +1407,7 @@ Mehtylation by Human Population Size") +
       Anova(cub.mom.rank.unadj, Type ="II", test = "Wald") # Wald test p
       
     ## d) Adjusted: methlyation by mom.strank.quart
-      cub.mom.rank.mod.adj <- glm(methylation ~ mom.strank.quart + sex + 
+      cub.mom.rank.adj <- glm(methylation ~ mom.strank.quart + sex + 
                                     age.mon + samp_year_cnt,
                               data = luma_data_cub)
       
@@ -1405,7 +1444,8 @@ Mehtylation by Human Population Size") +
     ## h) Save Plot
       # use ggsave to save the linearization plot
       ggsave("mat_rank_cub_mod_beta.pdf", plot = last_plot(), device = NULL,
-             path = "./output/output_luma_ecolog", scale = 1, width = 7,
+             path = paste0(here(),"/output/output_luma_ecolog"), 
+                           scale = 1, width = 7,
              height = 5.5,
              units = c("in"), dpi = 300, limitsize = TRUE)
  
@@ -1427,8 +1467,8 @@ Mehtylation by Human Population Size") +
                          data = luma_data_cub)
       
       summary(cub.rank.adj2)  # print model summary, effects and SE
-      confint(cub.rank.mod2)  # print 95% CIs for parameter estimates
-      Anova(cub.mom.rank.adj2, Type ="II", test = "Wald") # Wald test p
+      confint(cub.rank.adj2)  # print 95% CIs for parameter estimates
+      Anova(cub.rank.adj2, Type ="II", test = "Wald") # Wald test p
     
       
   ### 8.4 Cub model: methylation by litter size
@@ -1720,7 +1760,8 @@ Mehtylation by Human Population Size") +
     ## h) Save Plot
       # use ggsave to save the linearization plot
       ggsave("mat_rank_sub_mod_beta.pdf", plot = last_plot(), device = NULL,
-             path = "./output/output_luma_ecolog", scale = 1, width = 7,
+             path = paste0(here(),("/output/output_luma_ecolog")),
+                           scale = 1, width = 7,
              height = 5.5,
              units = c("in"), dpi = 300, limitsize = TRUE)
       
@@ -1742,8 +1783,8 @@ Mehtylation by Human Population Size") +
                            data = luma_data_sub)
       
       summary(sub.rank.adj2)  # print model summary, effects and SE
-      confint(sub.rank.mod2)  # print 95% CIs for parameter estimates
-      Anova(sub.mom.rank.adj2, Type ="II", test = "Wald") # Wald test p
+      confint(sub.rank.adj2)  # print 95% CIs for parameter estimates
+      Anova(sub.rank.adj2, Type ="II", test = "Wald") # Wald test p
       
       
   ### 9.4 sub model: methylation by litter size
@@ -2025,7 +2066,8 @@ Mehtylation by Human Population Size") +
     ## h) Save Plot
       # use ggsave to save the linearization plot
       ggsave("mat_rank_adult_mod_beta.pdf", plot = last_plot(), device = NULL,
-             path = "./output/output_luma_ecolog", scale = 1, width = 7,
+             path = paste0(here(),"/output/output_luma_ecolog"), 
+             scale = 1, width = 7,
              height = 5.5,
              units = c("in"), dpi = 300, limitsize = TRUE)
       
