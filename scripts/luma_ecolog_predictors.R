@@ -21,6 +21,7 @@
     # 8: Cub models
     # 9: Subadult models
     # 10: Adult models
+    # 11: Save data tables as .csv
 
 
 
@@ -2326,7 +2327,7 @@ of %CCGG methylation in cubs") +
       
       
 ###############################################################################
-##############                  10. Adult models                  ##############
+##############                  10. Adult models                 ##############
 ############################################################################### 
       
   ### 10.1 adult model: methylation by sex
@@ -2732,5 +2733,46 @@ of %CCGG methylation in cubs") +
       summary(adult.6.9.prim.sens)  # model parameter estimates
       confint(adult.6.9.prim.sens)  # 95% CIs 
       
+
       
-   
+###############################################################################
+##############            11. Save data tables as .csv           ##############
+###############################################################################         
+
+  # Save intermediate tables as spreadsheets with a .cvs extension and today's
+  # date. Files are saved in the 'data' folder or the 'output' folder
+  # in the working directory.
+  
+  
+  ### 11.1 Set up date parameters
+    # print today's date
+    today <- Sys.Date()
+    date <- format(today, format="%d%b%Y")
+    
+  
+  ### 11.2 Generate File Names
+  # For each table that will be saved as a .csv file, first generate a file 
+  # name to save each table
+    
+    ## a) File name for luma_data table used in analysis of manuscript
+    csv.file.name.luma <- paste("~/R/R_wd/fisi/project/hy_GR_global_DNA_meth/",
+                                 "LUMA/soc_eco_detrmnts_ms/",
+                                 "luma_data",".csv", sep= "")   
+    
+    ## b) File name for luma_data_group table used in analysis of manuscript
+    csv.file.name.luma_data_group <- paste("~/R/R_wd/fisi/project/", 
+                                            "hy_GR_global_DNA_meth/",
+                                            "LUMA/soc_eco_detrmnts_ms/",
+                                            "luma_data_group",".csv", sep= "")   
+    
+    
+  ### 11.3 Save Tables 
+    # Save each data frame as a .csv file (a spreadsheet/table) into the 
+    # data folder in the working directory.
+    
+    ## a) Save luma_data_no_out table
+    write.csv (luma_data, file = csv.file.name.luma)
+    
+    ## b) Save re_runs table
+    write.csv (luma_data_group, file = csv.file.name.luma_data_group)
+       
