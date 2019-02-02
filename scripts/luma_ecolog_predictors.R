@@ -2839,6 +2839,7 @@ of %CCGG methylation in cubs") +
     
     ## b) File name for luma_data_group table used in analysis of manuscript
       csv.file.name.luma_data_group <- paste("~/R/R_wd/fisi/project/", 
+                                             "3_hy_GR_global_DNA_meth/",
                                               "LUMA/soc_eco_detrmnts_ms/",
                                               "luma_data_group",".csv", 
                                              sep= "")   
