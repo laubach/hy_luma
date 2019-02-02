@@ -2832,16 +2832,16 @@ of %CCGG methylation in cubs") +
   # name to save each table
     
     ## a) File name for luma_data table used in analysis of manuscript
-    csv.file.name.luma <- paste("~/R/R_wd/fisi/project/", 
-                                "3_hy_GR_global_DNA_meth/",
-                                "LUMA/soc_eco_detrmnts_ms/",
-                                "luma_data",".csv", sep= "")   
+      csv.file.name.luma <- paste("~/R/R_wd/fisi/project/", 
+                                  "3_hy_GR_global_DNA_meth/",
+                                  "LUMA/soc_eco_detrmnts_ms/",
+                                  "luma_data",".csv", sep= "")   
     
     ## b) File name for luma_data_group table used in analysis of manuscript
-    csv.file.name.luma_data_group <- paste("~/R/R_wd/fisi/project/", 
-                                            "3_hy_GR_global_DNA_meth/",
-                                            "LUMA/soc_eco_detrmnts_ms/",
-                                            "luma_data_group",".csv", sep= "")   
+      csv.file.name.luma_data_group <- paste("~/R/R_wd/fisi/project/", 
+                                              "LUMA/soc_eco_detrmnts_ms/",
+                                              "luma_data_group",".csv", 
+                                             sep= "")   
     
     
   ### 11.3 Save Tables 
