@@ -146,6 +146,21 @@
       # load car packages
         library ('car')
 
+      # Check for lmtest and install if not already installed
+        if (!'lmtest' %in% installed.packages()[,1]){
+          install.packages ('lmtest')
+        }
+      # load lmtest package (used to test heteroskedacity)
+        library ('lmtest')
+        
+      # Check for sandwich and install if not already installed
+        if (!'sandwich' %in% installed.packages()[,1]){
+          install.packages ('sandwich')
+        }
+      # load sandwich package (used generate Robust SE)
+        library ('sandwich')  
+      
+        
 
   ### 1.3 Get Version and Session Info
     R.Version()
@@ -1582,19 +1597,27 @@ Maternal Rank by Age",
       summary(cub.mom.rank.adj)  # print model summary, effects and SE
       confint(cub.mom.rank.adj)  # print 95% CIs for parameter estimates
       Anova(cub.mom.rank.adj, Type ="II", test = "Wald") # Wald test p
+    
+    ## f) Check for heteroskedacity, normality, and outliers    
+      plot(cub.mom.rank.adj) # view the residual and QQ plots
+      bptest(cub.mom.rank.adj) # heteroskedasticity using the Breusch-Pagan 
+                               # test; if significant, then generate test
+                               # Robust Standard Errors
+      # Robust Standard Errors (HC3 method)
+      coeftest(cub.mom.rank.adj, vcov = vcovHC(cub.mom.rank.adj)) 
       
-    ## f) Sensitivity: methlyation by mom.strank.quart
+    ## g) Sensitivity: methlyation by mom.strank.quart
 #      cub.mom.rank.sens <- glm(methylation ~ mom.strank.quart + sex + 
 #                                age.mon + samp_year_cnt,
 #                              data = luma_data_cub)
       
-    ## g) Parameter estimates
+    ## h) Parameter estimates
 #      summary(cub.mom.rank.sens)  # print model summary, effects and SE
 #      confint(cub.mom.rank.sens)  # print 95% CIs for parameter estimates
 #      Anova(cub.mom.rank.sens, Type ="II", test = "Wald") # Wald test p
       
       
-    ## f) Extract mom.strank.quart estimates and 
+    ## i) Extract mom.strank.quart estimates and 
       cub.rank.ef <- effect("mom.strank.quart", cub.mom.rank.adj)
       summary(cub.rank.ef)
       # Save effects as data frame
@@ -1606,7 +1629,7 @@ Maternal Rank by Age",
                                                               "Q2", "Q3", 
                                                               "Q4 (highest)")))
       
-    ## g) Graph cub.mom.rank effects
+    ## j) Graph cub.mom.rank effects
       ggplot(cub.rank.ef.table, aes(x = mom.strank.quart, y = fit)) +
         geom_point() +
         geom_errorbar(aes(ymin= fit-se, ymax= fit+se), width=0.4) +
@@ -1633,7 +1656,7 @@ by Maternal Rank") +
         ylab("%CCGG Methylation ± SE") +
         xlab("Maternal Rank")
     
-    ## h) Save Plot
+    ## k) Save Plot
       # use ggsave to save the linearization plot
       ggsave("mat_rank_cub_mod_beta.pdf", plot = last_plot(), device = NULL,
              path = paste0(here(),"/output/output_luma_ecolog"), 
@@ -1641,19 +1664,19 @@ by Maternal Rank") +
              height = 5.5,
              units = c("in"), dpi = 300, limitsize = TRUE)
  
-    ## i) Do a post-hoc test to determine if Q2, Q3, and Q4 differ
+    ## l) Do a post-hoc test to determine if Q2, Q3, and Q4 differ
       pairwise.t.test(luma_data_cub$methylation,
                       luma_data_cub$mom.strank.quart,
                       p.adj = "none")
       TukeyHSD(aov(methylation ~ mom.strank.quart + sex,
                    data = luma_data_cub))
     
-    ## j) Combine quartiles 2-4 into a single category
+    ## m) Combine quartiles 2-4 into a single category
       luma_data_cub$mom.strank.quart.comb <- as.factor(
       ifelse(luma_data_cub$mom.strank.quart ==  "Q1 (lowest)",
              "Q1 (lowest)", "Q2-Q4 (highest)"))
     
-    ## k)  Adjusted: methlyation by mom.strank.quart binned
+    ## n)  Adjusted: methlyation by mom.strank.quart binned
       cub.rank.adj2 <- glm(methylation ~ mom.strank.quart.comb + sex + 
                              age.mon,
                          data = luma_data_cub)
@@ -1691,13 +1714,21 @@ by Maternal Rank") +
       summary(cub.lit.size.adj)  # model parameter estimates
       confint(cub.lit.size.adj)  # 95% CIs 
       Anova(cub.lit.size.adj, Type ="II", test = "Wald") # Wald test p
+      
+    ## f) Check for heteroskedacity, normality, and outliers    
+      plot(cub.lit.size.adj) # view the residual and QQ plots
+      bptest(cub.lit.size.adj) # heteroskedasticity using the Breusch-Pagan 
+      # test; if significant, then generate test
+      # Robust Standard Errors
+      # Robust Standard Errors (HC3 method)
+      coeftest(cub.lit.size.adj, vcov = vcovHC(cub.lit.size.adj)) 
     
-    ## f) Sensitivity: methlyation by lit.size
+    ## g) Sensitivity: methlyation by lit.size
 #      cub.lit.size.sens <- glm(methylation ~  lit.size + age.mon + sex +
 #                                samp_year_cnt,
 #                              data = luma_data_cub)
       
-    ## g) Parameter estimates
+    ## h) Parameter estimates
 #      summary(cub.lit.size.sens)  # model parameter estimates
 #      confint(cub.lit.size.sens)  # 95% CIs 
 #      Anova(cub.lit.size.sens, Type ="II", test = "Wald") # Wald test p
@@ -1731,18 +1762,26 @@ by Maternal Rank") +
       summary(cub.hum.pres.adj)  # model parameter estimates
       confint(cub.hum.pres.adj)  # 95% CIs 
       Anova(cub.hum.pres.adj, Type ="II", test = "Wald") # Wald test p
+      
+    ## f) Check for heteroskedacity, normality, and outliers    
+      plot(cub.hum.pres.adj) # view the residual and QQ plots
+      bptest(cub.hum.pres.adj) # heteroskedasticity using the Breusch-Pagan 
+      # test; if significant, then generate test
+      # Robust Standard Errors
+      # Robust Standard Errors (HC3 method)
+      coeftest(cub.lit.size.adj, vcov = vcovHC(cub.lit.size.adj)) 
     
-    ## f) Sensitivity: methlyation by hum.pres
+    ## g) Sensitivity: methlyation by hum.pres
       cub.hum.pres.sens <- glm(methylation ~  hum.pres + age.mon + sex +
                                 samp_year_cnt,
                               data = luma_data_cub)
       
-    ## g) Parameter estimates
+    ## h) Parameter estimates
       summary(cub.hum.pres.sens)  # model parameter estimates
       confint(cub.hum.pres.sens)  # 95% CIs 
       Anova(cub.hum.pres.sens, Type ="II", test = "Wald") # Wald test p
       
-    ## h) Calculate VIF
+    ## i) Calculate VIF
       vif(cub.hum.pres.sens)
       
 
@@ -1766,12 +1805,20 @@ by Maternal Rank") +
       summary(cub.peri.prim.prey.adj)  # model parameter estimates
       confint(cub.peri.prim.prey.adj)  # 95% CIs 
       
-    ## e) Adjusted: methlyation by periconceptional prim.prey density
+    ## e) Check for heteroskedacity, normality, and outliers    
+      plot(cub.peri.prim.prey.adj) # view the residual and QQ plots
+      bptest(cub.peri.prim.prey.adj) # heteroskedasticity using the 
+      # Breusch-Pagan test; if significant, then generate test
+      # Robust Standard Errors
+      # Robust Standard Errors (HC3 method)
+      coeftest(cub.peri.prim.prey.adj, vcov = vcovHC(cub.peri.prim.prey.adj))  
+      
+    ## f) Adjusted: methlyation by periconceptional prim.prey density
 #      cub.peri.prim.prey.sens <- glm(methylation ~ prim.prey.peri.concpt + sex + 
 #                                      age.mon + samp_year_cnt, 
 #                                    data = luma_data_cub)
       
-    ## f) Parameter estimates
+    ## g) Parameter estimates
 #      summary(cub.peri.prim.prey.sens)  # model parameter estimates
 #      confint(cub.peri.prim.prey.sens)  # 95% CIs 
       
@@ -1797,13 +1844,21 @@ by Maternal Rank") +
       summary(cub.gest.prim.prey.adj)  # model parameter estimates
       confint(cub.gest.prim.prey.adj)  # 95% CIs 
   
-    ## e) Sensitivity: methlyation by gestational prim.prey density
+    ## e) Check for heteroskedacity, normality, and outliers    
+      plot(cub.gest.prey.adj) # view the residual and QQ plots
+      bptest(cub.gest.prim.prey.adj) # heteroskedasticity using the 
+      # Breusch-Pagan test; if significant, then generate test
+      # Robust Standard Errors
+      # Robust Standard Errors (HC3 method)
+      coeftest(cub.gest.prim.prey.adj, vcov = vcovHC(cub.gest.prim.prey.adj))  
+      
+    ## f) Sensitivity: methlyation by gestational prim.prey density
 #      cub.gest.prim.prey.sens <- glm(methylation ~ prim.prey.gest + 
 #                                      prim.prey.peri.concpt + sex + 
 #                                      age.mon + samp_year_cnt, 
 #                                    data = luma_data_cub)
       
-    ## f) Parameter estimates
+    ## g) Parameter estimates
 #      summary(cub.gest.prim.prey.sens)  # model parameter estimates
 #      confint(cub.gest.prim.prey.sens)  # 95% CIs  
         
@@ -1829,13 +1884,22 @@ by Maternal Rank") +
       summary(cub.birth.3.prim.prey.adj)  # model parameter estimates
       confint(cub.birth.3.prim.prey.adj)  # 95% CIs 
       
-    ## e) Sensitivity: methlyation by birth to 3 months prim.prey density
+    ## e) Check for heteroskedacity, normality, and outliers    
+      plot(cub.birth.3.prey.adj) # view the residual and QQ plots
+      bptest(cub.birth.3.prim.prey.adj) # heteroskedasticity using the 
+      # Breusch-Pagan test; if significant, then generate test
+      # Robust Standard Errors
+      # Robust Standard Errors (HC3 method)
+      coeftest(cub.birth.3.prim.prey.adj, 
+               vcov = vcovHC(cub.birth.3.prim.prey.adj))
+      
+    ## f) Sensitivity: methlyation by birth to 3 months prim.prey density
 #      cub.birth.3.prim.prey.sens <- glm(methylation ~ prim.prey.birth.3 + 
 #                                         prim.prey.gest + prim.prey.peri.concpt + 
 #                                         sex + age.mon + samp_year_cnt, 
 #                                       data = luma_data_cub)
       
-    ## f) Parameter estimates
+    ## g) Parameter estimates
 #      summary(cub.birth.3.prim.prey.sens)  # model parameter estimates
 #      confint(cub.birth.3.prim.prey.sens)  # 95% CIs 
       
@@ -1861,15 +1925,23 @@ by Maternal Rank") +
     ## d) Parameter estimates
       summary(cub.3.6.prim.prey.adj)  # model parameter estimates
       confint(cub.3.6.prim.prey.adj)  # 95% CIs 
+      
+    ## e) Check for heteroskedacity, normality, and outliers    
+      plot(cub.3.6.prey.adj) # view the residual and QQ plots
+      bptest(cub.3.6.prim.prey.adj) # heteroskedasticity using the 
+      # Breusch-Pagan test; if significant, then generate test
+      # Robust Standard Errors
+      # Robust Standard Errors (HC3 method)
+      coeftest(cub.3.6.prim.prey.adj, vcov = vcovHC(cub.3.6.prim.prey.adj)) 
     
-    ## e) Sensitivity: methlyation by 3 to 6 months prim.prey density
+    ## f) Sensitivity: methlyation by 3 to 6 months prim.prey density
 #      cub.3.6.prim.prey.sens <- glm(methylation ~ prim.prey.3.6 + 
 #                                     prim.prey.birth.3 + prim.prey.gest + 
 #                                     prim.prey.peri.concpt + sex + 
 #                                     age.mon + samp_year_cnt, 
 #                                   data = luma_data_cub)
       
-    ## f) Parameter estimates
+    ## g) Parameter estimates
 #      summary(cub.3.6.prim.prey.sens)  # model parameter estimates
 #      confint(cub.3.6.prim.prey.sens)  # 95% CIs 
       
@@ -1895,15 +1967,23 @@ by Maternal Rank") +
     ## d) Parameter estimates
       summary(cub.6.9.prim.prey.adj)  # model parameter estimates
       confint(cub.6.9.prim.prey.adj)  # 95% CIs 
+      
+    ## e) Check for heteroskedacity, normality, and outliers    
+      plot(cub.6.9.prey.adj) # view the residual and QQ plots
+      bptest(cub.6.9.prim.prey.adj) # heteroskedasticity using the 
+      # Breusch-Pagan test; if significant, then generate test
+      # Robust Standard Errors
+      # Robust Standard Errors (HC3 method)
+      coeftest(cub.6.9.prim.prey.adj, vcov = vcovHC(cub.6.9.prim.prey.adj)) 
 
-    ## e) Sensitivity: methlyation by 6 to 9 months prim.prey density
+    ## f) Sensitivity: methlyation by 6 to 9 months prim.prey density
 #      cub.6.9.prim.prey.sens <- glm(methylation ~ prim.prey.6.9 + 
 #                                     prim.prey.3.6 + prim.prey.birth.3 + 
 #                                     prim.prey.gest + prim.prey.peri.concpt + 
 #                                     sex + age.mon + samp_year_cnt, 
 #                                   data = luma_data_cub)
       
-    ## f) Parameter estimates
+    ## g) Parameter estimates
 #      summary(cub.6.9.prim.prey.sens)  # model parameter estimates
 #      confint(cub.6.9.prim.prey.sens)  # 95% CIs 
         
@@ -2839,6 +2919,7 @@ of %CCGG methylation in cubs") +
     
     ## b) File name for luma_data_group table used in analysis of manuscript
       csv.file.name.luma_data_group <- paste("~/R/R_wd/fisi/project/", 
+                                             "3_hy_GR_global_DNA_meth/",
                                               "LUMA/soc_eco_detrmnts_ms/",
                                               "luma_data_group",".csv", 
                                              sep= "")   
