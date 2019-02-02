@@ -163,19 +163,19 @@
   
   ### 1.5 Set file paths for data importing and exporting
     ## a) The path to cleand LUMA data
-      luma_data_path <- paste("~/R/R_wd/fisi/project/hy_GR_global_DNA_meth/",
+      luma_data_path <- paste("~/R/R_wd/fisi/project/3_hy_GR_global_DNA_meth/",
                               "LUMA/output/", sep = '')
     
     ## b) The path to prey data
       prey_data_path <- paste("~/Git/fisi_lab/hy_prey_density/output/",
                               sep = '')
       
-    ## c) The path to maternal care data
-      fas_data_path <- paste("/Volumes/Holekamp/CurrentCollaborations/",
-                             "maternal_care/R_code/fas/data/",
-                             "final_data_with_variables/",
-                             sep = '')
-    
+    ## c) The path to static Access Fisi backend
+      acess_fisi_data_path <- paste("~/R/R_wd/fisi/project/", 
+                                    "3_hy_GR_global_DNA_meth/",
+                                    "LUMA/soc_eco_detrmnts_ms/", 
+                                    "1_output_tidy_tbls/",
+                                    sep = '')
 
     
 ###############################################################################
@@ -206,15 +206,15 @@
         reduce(rbind)
      
        
-  ### 2.3 Import Access fisi backend #TEMPORARILY NOT WORKING
+  ### 2.3 Import Access fisi backend # Live backend...swithc to static version
+          # after analyses finalized
     ## a) read in tidy Access fisi backend tables and save as data frames
-      source(paste0("/Volumes/Holekamp/code_repository/R/1_output_tidy_tbls/",
-                   "load_tidy_tbls.R"))
+#      source(paste0("/Volumes/Holekamp/code_repository/R/1_output_tidy_tbls/",
+#                   "load_tidy_tbls.R"))
       
     ## b) manually load tblFemalerank; the one from merge_databases 
-#    tblFemalerank <- read_csv(paste0("/Volumes/Holekamp/CurrentCollaborations",
-#                                    "/merge_databases/tblFemaleRanks", 
-#                                    "/tblFemaleRanks.csv"))
+      tblFemalerank <- read_csv(paste0(acess_fisi_data_path,
+                                        "tblFemalerank.csv", sep = ''))
     
 
     
@@ -564,7 +564,7 @@
   ## 3.8 Re-code variables to the appropriate class
     ## a) Re-code *nominal* factor (with ordered levels)  
         # Set levels (odering) age.cat variable and sets the reference level 
-        # to cub makes this
+        # to cub 
         # NOTE: model output is difference in means btwn reference and each 
         # level; factorial contrasts are differences in group level means
         # stored internally as 1, 2, 3 (equal spacing)
@@ -832,7 +832,7 @@
       grid.table(prey_var_summary)
       dev.off()     
       
-    
+ 
 
 ###############################################################################
 ##############             5.  Data transformations              ##############
@@ -892,7 +892,6 @@
       summary(samp.year.lme)        # model summary
       intervals(samp.year.lme, 
                   which = "fixed")  # 95% CIs 
-      
       
       
   ### 6.2 Bivariate statistics methylation by sex
@@ -1046,7 +1045,8 @@
       intervals(age.lme, 
                 which = "fixed")  # 95% CIs 
       anova.lme(age.lme)          # generate p-value from Wald test
-     
+      car::Anova(age.lme)         # generate p-value from type II Wald test
+      
     ## f) Bivariate regression methylatino by age.mon
       # uses 'nmle' package, which will provided p-value estimates
       age.mon.lme <- lme(methylation ~ age.mon, random =~1|id, 
@@ -1095,67 +1095,8 @@
              path = paste0(here(),"/output/output_luma_ecolog"), 
              scale = 1, width = 7, height = 5,
              units = c("in"), dpi = 300, limitsize = TRUE)
-    
-    ## c) Graph of the raw data for percent global DNA methylaiton by maternal 
-      # rank stratified by age because age seems to be important (see above)
-      ggplot(data = subset(luma_data_group, !is.na(x = mom.strank)),
-             aes(x = mom.strank, y = methylation, color = age.cat)) +
-        geom_point(shape = 1) +
-        theme(text = element_text(size=18))+
-        scale_colour_hue(l = 50) + # Use a slightly darker palette than normal
-        geom_smooth(method = loess, se = F) + # Add smooth curve best fit lines
-        labs(title = "%CCGG methylation by maternal rank 
-and stratified by age",
-             fill = "age") +
-        theme(plot.title = element_text(hjust = 0.5)) + # center title
-        theme(legend.position = c(0.007, 0.01),
-              legend.justification = c(0, 0), 
-              legend.background = element_rect(colour="grey80"),
-              legend.title = element_blank()) + # remove legend
-        theme(axis.ticks = element_blank()) + # remove axis ticks
-        # remove background color
-        theme(panel.background = element_rect(fill = "white")) +
-        # add major axes
-        #theme(axis.line = element_line(colour = "lightgrey", 
-        #                               size = 1, linetype = "solid")) + 
-        # change axes font style, color, size, angle, and margin
-        theme(axis.text.x = element_text(face="bold", color="black", 
-                                         size=18, angle=0,
-                                         margin = margin(t = 0, r = 0, 
-                                                         b = 10, l = 0)),
-              axis.text.y = element_text(face="bold", color="black", 
-                                         size=18, angle=0, 
-                                         margin = margin(t = 0, r = 0, 
-                                                         b = 0, l = 10))) +
-        ylab("%CCGG Methylation") +
-        xlab("Maternal Rank")
       
-      ## d) Save Plot
-      # use ggsave to save the linearization plot
-      ggsave("meth_by_rank_by_age_loess_plot.pdf", plot = last_plot(), 
-             device = NULL,
-             path = paste0(here(),"/output/output_luma_ecolog"), 
-             scale = 1, width = 7, height = 5,
-             units = c("in"), dpi = 300, limitsize = TRUE)
-      
-    ## e) Summary stats methylation by age 
-      # NOTE: uses luma_data_group; first average over ID within age cat. 
-      # and then take avg
-      meth_by_mom_rank <- luma_data_group %>%
-        group_by (mom.strank.quart) %>%
-        summarise (n.id = n(),
-                   avg = round (mean(methylation, na.rm = T), 2),
-                   median =  round (quantile(methylation, 
-                                             c(.5), na.rm = T), 2),
-                   sd = round (sd(methylation, na.rm = T), 2))
-
-    ## f) save the data frame of summary stats out as a pdf into output file
-      pdf(paste0(here(),"/output/output_luma_ecolog/meth_by_mom_rank.pdf"), 
-          height = 6, width = 7)
-      grid.table(meth_by_mom_rank)
-      dev.off()
-      
-    ## g) Bivariate Regression Methylatino by maternal rank 
+    ## c) Bivariate Regression Methylatino by maternal rank 
       # uses 'nmle' package, which will provided p-value estimates
       mom.rank.lme <- lme(methylation ~ mom.strank.quart, random =~1|id, 
                      subset(luma_data_group,!is.na(x = mom.strank.quart)))
@@ -1230,7 +1171,7 @@ and stratified by age",
       intervals(lit.size.lme, 
                 which = "fixed")    # 95% CIs 
       anova(lit.size.lme)     # generate p-value from Wald test
-      
+      car::Anova(lit.size.lme)      # generate p-value from type II Wald test
       
   ### 6.5 Bivariate Statistics Methylation by human population size
     ## a) Summary stats methylation by hum.pres
@@ -1297,7 +1238,7 @@ and stratified by age",
       intervals(hum.pres.lme, 
                 which = "fixed")   # 95% CIs 
       anova(hum.pres.lme)          # generate p-value from Wald test
-      
+      car::Anova(hum.pres.lme)      # generate p-value from type II Wald test
     
   ### 6.6 Bivariate statistics methylation by periconceptional prey density
       # NOTE: uses luma_data_group; first average over ID within age cat. 
@@ -1373,12 +1314,93 @@ and stratified by age",
       
       
 ###############################################################################
-##############            7. Re-tidy data for analyses            ##############
+##############  7. Test for effect modification and re-tidy data ##############
 ###############################################################################       
+    
+  ### 7.1 Test for effect modification of maternal rank and methylation by sex    
+    ## a) Model uses 'nmle' package, which will provided p-value estimates
+      rank_by_sex.lme <- lme(methylation ~ sex * mom.strank, random =~1|id, 
+                     subset(luma_data_group,!is.na(x = mom.strank)))
       
-  ### 7.1 View methylation by rank within age strata
-    ## a) Graph of the raw data for percent global DNA methylaiton by maternal rank
-      # stratified by age
+    ## b) Parameter estimates  
+      summary(rank_by_sex.lme) 
+      intervals(rank_by_sex.lme, which = "fixed")
+      
+      
+  ### 7.2 Test for effect modification of maternal rank and methylation by age    
+    ## a) Model uses 'nmle' package, which will provided p-value estimates
+      rank_by_age.lme <- lme(methylation ~ age.cat * mom.strank, random =~1|id, 
+                             subset(luma_data_group,!is.na(x = mom.strank)))
+      
+    ## b) Parameter estimates   
+      summary(rank_by_age.lme) 
+      intervals(rank_by_age.lme, which = "fixed")    
+      anova.lme(rank_by_age.lme)    # generate p-value from Wald test
+      car::Anova(rank_by_age.lme)     # generate p-value from type II Wald test
+
+  ### 7.3 View methylation by rank within age strata
+      
+    ## a) Graph of the raw data for percent global DNA methylaiton by maternal 
+      # rank stratified by age because age seems to be important (see above)
+      ggplot(data = subset(luma_data_group, !is.na(x = mom.strank)),
+             aes(x = mom.strank, y = methylation, color = age.cat)) +
+        geom_point(shape = 1) +
+        theme(text = element_text(size=18))+
+        scale_colour_hue(l = 50) + # Use a slightly darker palette than normal
+        geom_smooth(method = loess, se = F) + # Add smooth curve best fit lines
+        labs(title = "%CCGG methylation by maternal rank 
+             and stratified by age",
+             fill = "age") +
+        theme(plot.title = element_text(hjust = 0.5)) + # center title
+        theme(legend.position = c(0.007, 0.01),
+              legend.justification = c(0, 0), 
+              legend.background = element_rect(colour="grey80"),
+              legend.title = element_blank()) + # remove legend
+        theme(axis.ticks = element_blank()) + # remove axis ticks
+        # remove background color
+        theme(panel.background = element_rect(fill = "white")) +
+        # add major axes
+        #theme(axis.line = element_line(colour = "lightgrey", 
+        #                               size = 1, linetype = "solid")) + 
+        # change axes font style, color, size, angle, and margin
+        theme(axis.text.x = element_text(face="bold", color="black", 
+                                         size=18, angle=0,
+                                         margin = margin(t = 0, r = 0, 
+                                                         b = 10, l = 0)),
+              axis.text.y = element_text(face="bold", color="black", 
+                                         size=18, angle=0, 
+                                         margin = margin(t = 0, r = 0, 
+                                                         b = 0, l = 10))) +
+        ylab("%CCGG Methylation") +
+        xlab("Maternal Rank")
+      
+    ## b) Save Plot
+      # use ggsave to save the linearization plot
+      ggsave("meth_by_rank_by_age_loess_plot.pdf", plot = last_plot(), 
+             device = NULL,
+             path = paste0(here(),"/output/output_luma_ecolog"), 
+             scale = 1, width = 7, height = 5,
+             units = c("in"), dpi = 300, limitsize = TRUE)
+      
+    ## c) Summary stats methylation by age 
+      # NOTE: uses luma_data_group; first average over ID within age cat. 
+      # and then take avg
+      meth_by_mom_rank <- luma_data_group %>%
+        group_by (mom.strank.quart) %>%
+        summarise (n.id = n(),
+                   avg = round (mean(methylation, na.rm = T), 2),
+                   median =  round (quantile(methylation, 
+                                             c(.5), na.rm = T), 2),
+                   sd = round (sd(methylation, na.rm = T), 2))
+      
+    ## d) save the data frame of summary stats out as a pdf into output file
+      pdf(paste0(here(),"/output/output_luma_ecolog/meth_by_mom_rank.pdf"), 
+          height = 6, width = 7)
+      grid.table(meth_by_mom_rank)
+      dev.off()
+      
+    ## e) Graph of the raw data for percent global DNA methylaiton by maternal 
+      # rank stratified by age
       ggplot(subset(luma_data_group, !is.na(x = mom.strank)),
              aes(x = mom.strank.quart.order, y = methylation, 
                  color = age.cat )) +
@@ -1408,7 +1430,7 @@ Maternal Rank by Age",
         ylab("%CCGG Methylation") +
         xlab("Maternal Rank")
       
-    ## b) Save Plot
+    ## f) Save Plot
       # use ggsave to save the linearization plot
       ggsave("meth_by_rank_quart_by_age_loess_plot.pdf", plot = last_plot(), 
              device = NULL,
@@ -1416,7 +1438,7 @@ Maternal Rank by Age",
              scale = 1, width = 7, height = 5,
              units = c("in"), dpi = 300, limitsize = TRUE)
       
-    ## c) Box-plots of methylation by rank within age categories  
+    ## g) Box-plots of methylation by rank within age categories  
       ggplot(subset(luma_data_group, 
                     !is.na(x = mom.strank.quart)&!is.na(x=age.cat)),
              aes(y = methylation, x = factor(mom.strank.quart), 
@@ -1445,7 +1467,7 @@ Maternal Rank by Age",
         ylab("%CCGG Methylation") +
         xlab("Maternal Rank")
       
-    ## d) Save Plot
+    ## h) Save Plot
       # use ggsave to save the linearization plot
       ggsave("meth_by_rank_by_age_boxplot.pdf", plot = last_plot(), 
              device = NULL,
@@ -1454,7 +1476,7 @@ Maternal Rank by Age",
              units = c("in"), dpi = 300, limitsize = TRUE)
       
       
-  ### 7.2 Stratify data by life history variables
+  ### 7.4 Stratify data by life history variables
     ## a) Cub subset that includes both females and males
       luma_data_cub <- luma_data_group %>%
         filter(grepl('^cub$', age.cat))
@@ -1541,13 +1563,15 @@ Maternal Rank by Age",
     ## b) Unadjusted: methlyation by mom.strank.quart
       cub.mom.rank.unadj <- glm(methylation ~  mom.strank.quart, 
                                data = luma_data_cub)
-      
+   
     ## c) Parameter estimates
       summary(cub.mom.rank.unadj)  # model parameter estimates
       confint(cub.mom.rank.unadj)  # 95% CIs 
       # use 'car' package to extract a Wald Chi-Sq p-value; test for overall 
       # difference
       Anova(cub.mom.rank.unadj, Type ="II", test = "Wald") # Wald test p
+      
+      plot(cub.mom.rank.unadj) # view the residual and QQ plots
       
     ## d) Adjusted: methlyation by mom.strank.quart
       cub.mom.rank.adj <- glm(methylation ~ mom.strank.quart + sex + 
@@ -1560,14 +1584,14 @@ Maternal Rank by Age",
       Anova(cub.mom.rank.adj, Type ="II", test = "Wald") # Wald test p
       
     ## f) Sensitivity: methlyation by mom.strank.quart
-      cub.mom.rank.sens <- glm(methylation ~ mom.strank.quart + sex + 
-                                age.mon + samp_year_cnt,
-                              data = luma_data_cub)
+#      cub.mom.rank.sens <- glm(methylation ~ mom.strank.quart + sex + 
+#                                age.mon + samp_year_cnt,
+#                              data = luma_data_cub)
       
     ## g) Parameter estimates
-      summary(cub.mom.rank.sens)  # print model summary, effects and SE
-      confint(cub.mom.rank.sens)  # print 95% CIs for parameter estimates
-      Anova(cub.mom.rank.sens, Type ="II", test = "Wald") # Wald test p
+#      summary(cub.mom.rank.sens)  # print model summary, effects and SE
+#      confint(cub.mom.rank.sens)  # print 95% CIs for parameter estimates
+#      Anova(cub.mom.rank.sens, Type ="II", test = "Wald") # Wald test p
       
       
     ## f) Extract mom.strank.quart estimates and 
@@ -1657,6 +1681,8 @@ by Maternal Rank") +
       confint(cub.lit.size.unadj)  # 95% CIs
       Anova(cub.lit.size.unadj, Type ="II", test = "Wald") # Wald test p
       
+      plot(cub.lit.size.unadj) # view the residual and QQ plots
+      
     ## d) Adjusted: methlyation by lit.size
       cub.lit.size.adj <- glm(methylation ~  lit.size + age.mon + sex,
                              data = luma_data_cub)
@@ -1667,14 +1693,14 @@ by Maternal Rank") +
       Anova(cub.lit.size.adj, Type ="II", test = "Wald") # Wald test p
     
     ## f) Sensitivity: methlyation by lit.size
-      cub.lit.size.sens <- glm(methylation ~  lit.size + age.mon + sex +
-                                samp_year_cnt,
-                              data = luma_data_cub)
+#      cub.lit.size.sens <- glm(methylation ~  lit.size + age.mon + sex +
+#                                samp_year_cnt,
+#                              data = luma_data_cub)
       
     ## g) Parameter estimates
-      summary(cub.lit.size.sens)  # model parameter estimates
-      confint(cub.lit.size.sens)  # 95% CIs 
-      Anova(cub.lit.size.sens, Type ="II", test = "Wald") # Wald test p
+#      summary(cub.lit.size.sens)  # model parameter estimates
+#      confint(cub.lit.size.sens)  # 95% CIs 
+#      Anova(cub.lit.size.sens, Type ="II", test = "Wald") # Wald test p
     
         
   ### 8.5 Cub model: methylation by human presence proxy
@@ -1695,6 +1721,8 @@ by Maternal Rank") +
       confint(cub.hum.pres.unadj)  # 95% CIs
       Anova(cub.hum.pres.unadj, Type ="II", test = "Wald") # Wald test p
       
+      plot(cub.hum.pres.unadj) # view the residual and QQ plots
+      
     ## d) Adjusted: methlyation by hum.pres
       cub.hum.pres.adj <- glm(methylation ~  hum.pres + age.mon + sex,
                               data = luma_data_cub)
@@ -1714,6 +1742,8 @@ by Maternal Rank") +
       confint(cub.hum.pres.sens)  # 95% CIs 
       Anova(cub.hum.pres.sens, Type ="II", test = "Wald") # Wald test p
       
+    ## h) Calculate VIF
+      vif(cub.hum.pres.sens)
       
 
   ### 8.6 Cub model: methylation by periconceptional prey density     
@@ -1725,6 +1755,8 @@ by Maternal Rank") +
       summary(cub.peri.prim.prey.unadj)  # model parameter estimates
       confint(cub.peri.prim.prey.unadj)  # 95% CIs 
       
+      plot(cub.peri.prim.prey.unadj) # view the residual and QQ plots
+      
     ## c) Adjusted: methlyation by periconceptional prim.prey density
       cub.peri.prim.prey.adj <- glm(methylation ~ prim.prey.peri.concpt + sex + 
                                       age.mon, 
@@ -1735,13 +1767,13 @@ by Maternal Rank") +
       confint(cub.peri.prim.prey.adj)  # 95% CIs 
       
     ## e) Adjusted: methlyation by periconceptional prim.prey density
-      cub.peri.prim.prey.sens <- glm(methylation ~ prim.prey.peri.concpt + sex + 
-                                      age.mon + samp_year_cnt, 
-                                    data = luma_data_cub)
+#      cub.peri.prim.prey.sens <- glm(methylation ~ prim.prey.peri.concpt + sex + 
+#                                      age.mon + samp_year_cnt, 
+#                                    data = luma_data_cub)
       
     ## f) Parameter estimates
-      summary(cub.peri.prim.prey.sens)  # model parameter estimates
-      confint(cub.peri.prim.prey.sens)  # 95% CIs 
+#      summary(cub.peri.prim.prey.sens)  # model parameter estimates
+#      confint(cub.peri.prim.prey.sens)  # 95% CIs 
       
       
   ### 8.7 Cub model: methylation by gestational prey density     
@@ -1752,6 +1784,8 @@ by Maternal Rank") +
     ## b) Parameter estimates
       summary(cub.gest.prim.prey.unadj)  # model parameter estimates
       confint(cub.gest.prim.prey.unadj)  # 95% CIs 
+      
+      plot(cub.gest.prim.prey.unadj) # view the residual and QQ plots
       
     ## c) Adjusted: methlyation by gestational prim.prey density
       cub.gest.prim.prey.adj <- glm(methylation ~ prim.prey.gest + 
@@ -1764,14 +1798,14 @@ by Maternal Rank") +
       confint(cub.gest.prim.prey.adj)  # 95% CIs 
   
     ## e) Sensitivity: methlyation by gestational prim.prey density
-      cub.gest.prim.prey.sens <- glm(methylation ~ prim.prey.gest + 
-                                      prim.prey.peri.concpt + sex + 
-                                      age.mon + samp_year_cnt, 
-                                    data = luma_data_cub)
+#      cub.gest.prim.prey.sens <- glm(methylation ~ prim.prey.gest + 
+#                                      prim.prey.peri.concpt + sex + 
+#                                      age.mon + samp_year_cnt, 
+#                                    data = luma_data_cub)
       
     ## f) Parameter estimates
-      summary(cub.gest.prim.prey.sens)  # model parameter estimates
-      confint(cub.gest.prim.prey.sens)  # 95% CIs  
+#      summary(cub.gest.prim.prey.sens)  # model parameter estimates
+#      confint(cub.gest.prim.prey.sens)  # 95% CIs  
         
       
   ### 8.8 Cub model: methylation by birth to 3 months prey density     
@@ -1782,6 +1816,8 @@ by Maternal Rank") +
     ## b) Parameter estimates
       summary(cub.birth.3.prim.prey.unadj)  # model parameter estimates
       confint(cub.birth.3.prim.prey.unadj)  # 95% CIs 
+      
+      plot(cub.birth.3.prim.prey.unadj) # view the residual and QQ plots
       
     ## c) Adjusted: methlyation by birth to 3 months prim.prey density
       cub.birth.3.prim.prey.adj <- glm(methylation ~ prim.prey.birth.3 + 
@@ -1794,14 +1830,14 @@ by Maternal Rank") +
       confint(cub.birth.3.prim.prey.adj)  # 95% CIs 
       
     ## e) Sensitivity: methlyation by birth to 3 months prim.prey density
-      cub.birth.3.prim.prey.sens <- glm(methylation ~ prim.prey.birth.3 + 
-                                         prim.prey.gest + prim.prey.peri.concpt + 
-                                         sex + age.mon + samp_year_cnt, 
-                                       data = luma_data_cub)
+#      cub.birth.3.prim.prey.sens <- glm(methylation ~ prim.prey.birth.3 + 
+#                                         prim.prey.gest + prim.prey.peri.concpt + 
+#                                         sex + age.mon + samp_year_cnt, 
+#                                       data = luma_data_cub)
       
     ## f) Parameter estimates
-      summary(cub.birth.3.prim.prey.sens)  # model parameter estimates
-      confint(cub.birth.3.prim.prey.sens)  # 95% CIs 
+#      summary(cub.birth.3.prim.prey.sens)  # model parameter estimates
+#      confint(cub.birth.3.prim.prey.sens)  # 95% CIs 
       
       
   ### 8.9 Cub model: methylation by 3 to 6 months prey density     
@@ -1812,6 +1848,8 @@ by Maternal Rank") +
     ## b) Parameter estimates
       summary(cub.3.6.prim.prey.unadj)  # model parameter estimates
       confint(cub.3.6.prim.prey.unadj)  # 95% CIs 
+      
+      plot(cub.3.6.prim.prey.unadj) # view the residual and QQ plots
       
     ## c) Adjusted: methlyation by 3 to 6 months prim.prey density
       cub.3.6.prim.prey.adj <- glm(methylation ~ prim.prey.3.6 + 
@@ -1825,15 +1863,15 @@ by Maternal Rank") +
       confint(cub.3.6.prim.prey.adj)  # 95% CIs 
     
     ## e) Sensitivity: methlyation by 3 to 6 months prim.prey density
-      cub.3.6.prim.prey.sens <- glm(methylation ~ prim.prey.3.6 + 
-                                     prim.prey.birth.3 + prim.prey.gest + 
-                                     prim.prey.peri.concpt + sex + 
-                                     age.mon + samp_year_cnt, 
-                                   data = luma_data_cub)
+#      cub.3.6.prim.prey.sens <- glm(methylation ~ prim.prey.3.6 + 
+#                                     prim.prey.birth.3 + prim.prey.gest + 
+#                                     prim.prey.peri.concpt + sex + 
+#                                     age.mon + samp_year_cnt, 
+#                                   data = luma_data_cub)
       
     ## f) Parameter estimates
-      summary(cub.3.6.prim.prey.sens)  # model parameter estimates
-      confint(cub.3.6.prim.prey.sens)  # 95% CIs 
+#      summary(cub.3.6.prim.prey.sens)  # model parameter estimates
+#      confint(cub.3.6.prim.prey.sens)  # 95% CIs 
       
       
   ### 8.10 Cub model: methylation by 6 to 9 months prey density     
@@ -1844,6 +1882,8 @@ by Maternal Rank") +
     ## b) Parameter estimates
       summary(cub.6.9.prim.prey.unadj)  # model parameter estimates
       confint(cub.6.9.prim.prey.unadj)  # 95% CIs 
+      
+      plot(cub.6.9.prim.prey.unadj) # view the residual and QQ plots
       
     ## c) Adjusted: methlyation by 6 to 9 months prim.prey density
       cub.6.9.prim.prey.adj <- glm(methylation ~ prim.prey.6.9 + 
@@ -1857,15 +1897,15 @@ by Maternal Rank") +
       confint(cub.6.9.prim.prey.adj)  # 95% CIs 
 
     ## e) Sensitivity: methlyation by 6 to 9 months prim.prey density
-      cub.6.9.prim.prey.sens <- glm(methylation ~ prim.prey.6.9 + 
-                                     prim.prey.3.6 + prim.prey.birth.3 + 
-                                     prim.prey.gest + prim.prey.peri.concpt + 
-                                     sex + age.mon + samp_year_cnt, 
-                                   data = luma_data_cub)
+#      cub.6.9.prim.prey.sens <- glm(methylation ~ prim.prey.6.9 + 
+#                                     prim.prey.3.6 + prim.prey.birth.3 + 
+#                                     prim.prey.gest + prim.prey.peri.concpt + 
+#                                     sex + age.mon + samp_year_cnt, 
+#                                   data = luma_data_cub)
       
     ## f) Parameter estimates
-      summary(cub.6.9.prim.prey.sens)  # model parameter estimates
-      confint(cub.6.9.prim.prey.sens)  # 95% CIs 
+#      summary(cub.6.9.prim.prey.sens)  # model parameter estimates
+#      confint(cub.6.9.prim.prey.sens)  # 95% CIs 
         
       
   ### 8.11 Cub model: mutual adjustment by significatn predictors 
@@ -1881,7 +1921,7 @@ by Maternal Rank") +
     
       
 
-    ## c) make a tidy table of glm model parameter estimates
+    ## c) make a tidy table of glm model parameter estimates using broom pckg
       # terms, including intercept can be dropped from tidy table for graphing
       # purposes, and estimates can be re-labeled
       sig_pred_mut_adg <- tidy(cub.mutual.adj) %>%
@@ -2020,6 +2060,8 @@ of %CCGG methylation in cubs") +
       # difference
       Anova(sub.mom.rank.unadj, Type ="II", test = "Wald") # Wald test p
       
+      plot(sub.mom.rank.unadj) # view the residual and QQ plots
+      
     ## d) Adjusted: methlyation by mom.strank.quart
       sub.mom.rank.adj <- glm(methylation ~ mom.strank.quart + sex + 
                                     age.mon,
@@ -2031,14 +2073,14 @@ of %CCGG methylation in cubs") +
       Anova(sub.mom.rank.adj, Type ="II", test = "Wald") # Wald test p
       
     ## f) Sesnitivity: methlyation by mom.strank.quart
-      sub.mom.rank.sens <- glm(methylation ~ mom.strank.quart + sex + 
-                                age.mon + samp_year_cnt,
-                              data = luma_data_sub)
+#      sub.mom.rank.sens <- glm(methylation ~ mom.strank.quart + sex + 
+#                                age.mon + samp_year_cnt,
+#                              data = luma_data_sub)
       
     ## g) Parameter estimates
-      summary(sub.mom.rank.sens)  # print model summary, effects and SE
-      confint(sub.mom.rank.sens)  # print 95% CIs for parameter estimates
-      Anova(sub.mom.rank.sens, Type ="II", test = "Wald") # Wald test p
+#      summary(sub.mom.rank.sens)  # print model summary, effects and SE
+#      confint(sub.mom.rank.sens)  # print 95% CIs for parameter estimates
+#      Anova(sub.mom.rank.sens, Type ="II", test = "Wald") # Wald test p
 
     ## h) Extract mom.strank.quart estimates and 
       sub.rank.ef <- effect("mom.strank.quart", sub.mom.rank.adj)
@@ -2099,7 +2141,6 @@ of %CCGG methylation in cubs") +
     ## a) Check within strata descritpive stats
       luma_data_sub %>%
         group_by (lit.size) %>%
-
         summarise (n.id = sum(!is.na(lit.size)),
                    avg = round (mean(methylation, na.rm = T), 2),
                    median =  round (quantile(methylation, 
@@ -2114,6 +2155,8 @@ of %CCGG methylation in cubs") +
       confint(sub.lit.size.unadj)  # 95% CIs
       Anova(sub.lit.size.unadj, Type ="II", test = "Wald") # Wald test p
       
+      plot(sub.lit.size.unadj) # view the residual and QQ plots
+      
     ## d) Adjusted: methlyation by age.mon
       sub.lit.size.adj <- glm(methylation ~  lit.size + age.mon + sex,
                               data = luma_data_sub)
@@ -2124,16 +2167,15 @@ of %CCGG methylation in cubs") +
       Anova(sub.lit.size.adj, Type ="II", test = "Wald") # Wald test p
     
     ## f) Sensitivity: methlyation by age.mon
-      sub.lit.size.sens <- glm(methylation ~  lit.size + age.mon + sex +
-                                samp_year_cnt,
-                              data = luma_data_sub)
+#      sub.lit.size.sens <- glm(methylation ~  lit.size + age.mon + sex +
+#                                samp_year_cnt,
+#                              data = luma_data_sub)
       
     ## g) Parameter estimates
-      summary(sub.lit.size.sens)  # model parameter estimates
-      confint(sub.lit.size.sens)  # 95% CIs 
-      Anova(sub.lit.size.sens, Type ="II", test = "Wald") # Wald test p
+#      summary(sub.lit.size.sens)  # model parameter estimates
+#      confint(sub.lit.size.sens)  # 95% CIs 
+#      Anova(sub.lit.size.sens, Type ="II", test = "Wald") # Wald test p
         
-      
       
   ### 9.5 sub model: methylation by human presence proxy
     ## a) Check within strata descritpive stats
@@ -2153,6 +2195,8 @@ of %CCGG methylation in cubs") +
       confint(sub.hum.pres.unadj)  # 95% CIs
       Anova(sub.hum.pres.unadj, Type ="II", test = "Wald") # Wald test p
       
+      plot(sub.hum.pres.unadj) # view the residual and QQ plots
+      
     ## d) Adjusted: methlyation by age.mon
       sub.hum.pres.adj <- glm(methylation ~  hum.pres + age.mon + sex,
                               data = luma_data_sub)
@@ -2167,7 +2211,10 @@ of %CCGG methylation in cubs") +
                                 samp_year_cnt,
                               data = luma_data_sub)
       
-    ## g) Parameter estimates
+    ## g) Calculate VIF
+      vif(sub.hum.pres.sens)
+      
+    ## h) Parameter estimates
       summary(sub.hum.pres.sens)  # model parameter estimates
       confint(sub.hum.pres.sens)  # 95% CIs 
       Anova(sub.hum.pres.sens, Type ="II", test = "Wald") # Wald test p
@@ -2184,21 +2231,23 @@ of %CCGG methylation in cubs") +
       
     ## c) Adjusted: methlyation by periconceptional prim.prey density
       sub.peri.prim.adj <- glm(methylation ~ prim.prey.peri.concpt + sex + 
-                                     age.mon + samp_year_cnt, 
+                                     age.mon, 
                                    data = luma_data_sub)
       
     ## d) Parameter estimates
       summary(sub.peri.prim.adj)  # model parameter estimates
       confint(sub.peri.prim.adj)  # 95% CIs
       
+      plot(sub.peri.prim.unadj) # view the residual and QQ plots
+      
     ## e) Sensitivity: methlyation by periconceptional prim.prey density
-      sub.peri.prim.sens <- glm(methylation ~ prim.prey.peri.concpt + sex + 
-                                 age.mon + samp_year_cnt, 
-                               data = luma_data_sub)
+    #  sub.peri.prim.sens <- glm(methylation ~ prim.prey.peri.concpt + sex + 
+    #                             age.mon + samp_year_cnt, 
+    #                           data = luma_data_sub)
       
     ## f) Parameter estimates
-      summary(sub.peri.prim.sens)  # model parameter estimates
-      confint(sub.peri.prim.sens)  # 95% CIs   
+    #  summary(sub.peri.prim.sens)  # model parameter estimates
+    #  confint(sub.peri.prim.sens)  # 95% CIs   
       
       
   ### 9.7 sub model: methylation by gestational prey density     
@@ -2209,6 +2258,8 @@ of %CCGG methylation in cubs") +
     ## b) Parameter estimates
       summary(sub.gest.prim.unadj)  # model parameter estimates
       confint(sub.gest.prim.unadj)  # 95% CIs 
+      
+      plot(sub.gest.prim.unadj) # view the residual and QQ plots
       
     ## c) Adjusted: methlyation by gestational prim.prey density
       sub.gest.prim.adj <- glm(methylation ~ prim.prey.gest + 
@@ -2221,14 +2272,14 @@ of %CCGG methylation in cubs") +
       confint(sub.gest.prim.adj)  # 95% CIs 
     
     ## e) Sensitivity: methlyation by gestational prim.prey density
-      sub.gest.prim.sens <- glm(methylation ~ prim.prey.gest + 
-                                 prim.prey.peri.concpt + sex + 
-                                 age.mon + samp_year_cnt, 
-                               data = luma_data_sub)
+#      sub.gest.prim.sens <- glm(methylation ~ prim.prey.gest + 
+#                                 prim.prey.peri.concpt + sex + 
+#                                 age.mon + samp_year_cnt, 
+#                               data = luma_data_sub)
       
      ## f) Parameter estimates
-      summary(sub.gest.prim.sens)  # model parameter estimates
-      confint(sub.gest.prim.sens)  # 95% CIs  
+#      summary(sub.gest.prim.sens)  # model parameter estimates
+#      confint(sub.gest.prim.sens)  # 95% CIs  
        
       
   ### 9.8 sub model: methylation by birth to 3 months prey density     
@@ -2239,6 +2290,8 @@ of %CCGG methylation in cubs") +
     ## b) Parameter estimates
       summary(sub.birth.3.prim.unadj)  # model parameter estimates
       confint(sub.birth.3.prim.unadj)  # 95% CIs 
+      
+      plot(sub.birth.3.prim.unadj) # view the residual and QQ plots
       
     ## c) Adjusted: methlyation by birth to 3 months prim.prey density
       sub.birth.3.prim.adj <- glm(methylation ~ prim.prey.birth.3 + 
@@ -2251,14 +2304,14 @@ of %CCGG methylation in cubs") +
       confint(sub.birth.3.prim.adj)  # 95% CIs 
       
     ## e) Sensitivity: methlyation by birth to 3 months prim.prey density
-      sub.birth.3.prim.sens <- glm(methylation ~ prim.prey.birth.3 + 
-                                    prim.prey.gest + prim.prey.peri.concpt + 
-                                    sex + age.mon + samp_year_cnt, 
-                                  data = luma_data_sub)
+#      sub.birth.3.prim.sens <- glm(methylation ~ prim.prey.birth.3 + 
+#                                    prim.prey.gest + prim.prey.peri.concpt + 
+#                                    sex + age.mon + samp_year_cnt, 
+#                                  data = luma_data_sub)
       
     ## f) Parameter estimates
-      summary(sub.birth.3.prim.sens)  # model parameter estimates
-      confint(sub.birth.3.prim.sens)  # 95% CIs 
+#      summary(sub.birth.3.prim.sens)  # model parameter estimates
+#      confint(sub.birth.3.prim.sens)  # 95% CIs 
       
       
   ### 8.9 sub model: methylation by 3 to 6 months prey density     
@@ -2269,6 +2322,8 @@ of %CCGG methylation in cubs") +
     ## b) Parameter estimates
       summary(sub.3.6.prim.unadj)  # model parameter estimates
       confint(sub.3.6.prim.unadj)  # 95% CIs 
+      
+      plot(sub.3.6.prim.unadj) # view the residual and QQ plots
       
     ## c) Adjusted: methlyation by 3 to 6 months prim.prey density
       sub.3.6.prim.adj <- glm(methylation ~ prim.prey.3.6 + 
@@ -2282,15 +2337,15 @@ of %CCGG methylation in cubs") +
       confint(sub.3.6.prim.adj)  # 95% CIs 
       
     ## e) Sensitivity: methlyation by 3 to 6 months prim.prey density
-      sub.3.6.prim.sens <- glm(methylation ~ prim.prey.3.6 + 
-                                prim.prey.birth.3 + prim.prey.gest + 
-                                prim.prey.peri.concpt + sex + 
-                                age.mon + samp_year_cnt, 
-                              data = luma_data_sub)
+#      sub.3.6.prim.sens <- glm(methylation ~ prim.prey.3.6 + 
+#                                prim.prey.birth.3 + prim.prey.gest + 
+#                                prim.prey.peri.concpt + sex + 
+#                                age.mon + samp_year_cnt, 
+#                              data = luma_data_sub)
       
     ## f) Parameter estimates
-      summary(sub.3.6.prim.sens)  # model parameter estimates
-      confint(sub.3.6.prim.sens)  # 95% CIs   
+#      summary(sub.3.6.prim.sens)  # model parameter estimates
+#      confint(sub.3.6.prim.sens)  # 95% CIs   
       
    
   ### 9.10 sub model: methylation by 6 to 9 months prey density     
@@ -2301,6 +2356,8 @@ of %CCGG methylation in cubs") +
     ## b) Parameter estimates
       summary(sub.6.9.prim.unadj)  # model parameter estimates
       confint(sub.6.9.prim.unadj)  # 95% CIs 
+      
+      plot(sub.6.9.prim.unadj) # view the residual and QQ plots
       
     ## c) Adjusted: methlyation by 6 to 9 months prim.prey density
       sub.6.9.prim.adj <- glm(methylation ~ prim.prey.6.9 + 
@@ -2314,15 +2371,15 @@ of %CCGG methylation in cubs") +
       confint(sub.6.9.prim.adj)  # 95% CIs 
       
     ## e) Sensitivity: methlyation by 6 to 9 months prim.prey density
-      sub.6.9.prim.sens <- glm(methylation ~ prim.prey.6.9 + 
-                                prim.prey.3.6 + prim.prey.birth.3 + 
-                                prim.prey.gest + prim.prey.peri.concpt + 
-                                sex + age.mon + samp_year_cnt, 
-                              data = luma_data_sub)
+#      sub.6.9.prim.sens <- glm(methylation ~ prim.prey.6.9 + 
+#                                prim.prey.3.6 + prim.prey.birth.3 + 
+#                                prim.prey.gest + prim.prey.peri.concpt + 
+#                                sex + age.mon + samp_year_cnt, 
+#                              data = luma_data_sub)
       
     ## f) Parameter estimates
-      summary(sub.6.9.prim.sens)  # model parameter estimates
-      confint(sub.6.9.prim.sens)  # 95% CIs 
+#      summary(sub.6.9.prim.sens)  # model parameter estimates
+#      confint(sub.6.9.prim.sens)  # 95% CIs 
       
       
       
@@ -2406,6 +2463,8 @@ of %CCGG methylation in cubs") +
       # difference
       Anova(adult.mom.rank.unadj, Type ="II", test = "Wald") # Wald test p
       
+      plot(adult.mom.rank.unadj) # view the residual and QQ plots
+      
     ## d) Adjusted: methlyation by mom.strank.quart
       adult.mom.rank.adj <- glm(methylation ~ mom.strank.quart + sex + 
                                 age.mon,
@@ -2437,15 +2496,17 @@ of %CCGG methylation in cubs") +
       confint(adult.mom.own.rank.adj)  # print 95% CIs for parameter estimates
       Anova(adult.mom.own.rank.adj, Type ="II", test = "Wald") # Wald test p  
       
+      vif(adult.mom.own.rank.adj)
+      
     ## j) Sensitivity: methlyation by mom.strank.quart
-      adult.mom.rank.sens <- glm(methylation ~ mom.strank.quart + sex + 
-                                  age.mon + samp_year_cnt,
-                                data = luma_data_adult)
+#      adult.mom.rank.sens <- glm(methylation ~ mom.strank.quart + sex + 
+#                                  age.mon + samp_year_cnt,
+#                                data = luma_data_adult)
       
     ## k) Parameter estimates
-      summary(adult.mom.rank.sens)  # print model summary, effects and SE
-      confint(adult.mom.rank.sens)  # print 95% CIs for parameter estimates
-      Anova(adult.mom.rank.sens, Type ="II", test = "Wald") # Wald test p
+#      summary(adult.mom.rank.sens)  # print model summary, effects and SE
+#      confint(adult.mom.rank.sens)  # print 95% CIs for parameter estimates
+#      Anova(adult.mom.rank.sens, Type ="II", test = "Wald") # Wald test p
       
     ## l) Extract mom.strank.quart estimates and 
       adult.rank.ef <- effect("mom.strank.quart", adult.mom.rank.adj)
@@ -2520,6 +2581,8 @@ of %CCGG methylation in cubs") +
       summary(adult.lit.size.unadj)  # model parameter estimates
       confint(adult.lit.size.unadj)  # 95% CIs
       Anova(adult.lit.size.unadj, Type ="II", test = "Wald") # Wald test p
+      
+      plot(adult.lit.size.unadj) # view the residual and QQ plots
 
     ## d) Adjusted: methlyation by age.mon
       adult.lit.size.adj <- glm(methylation ~  lit.size + age.mon + sex,
@@ -2531,14 +2594,14 @@ of %CCGG methylation in cubs") +
       Anova(adult.lit.size.adj, Type ="II", test = "Wald") # Wald test p
       
     ## f) Sensitivity: methlyation by age.mon
-      adult.lit.size.sens <- glm(methylation ~  lit.size + age.mon + sex +
-                                  samp_year_cnt,
-                                data = luma_data_adult)
+#      adult.lit.size.sens <- glm(methylation ~  lit.size + age.mon + sex +
+#                                  samp_year_cnt,
+#                                data = luma_data_adult)
       
     ## g) Parameter estimates
-      summary(adult.lit.size.sens)  # model parameter estimates
-      confint(adult.lit.size.sens)  # 95% CIs 
-      Anova(adult.lit.size.sens, Type ="II", test = "Wald") # Wald test p  
+#      summary(adult.lit.size.sens)  # model parameter estimates
+#      confint(adult.lit.size.sens)  # 95% CIs 
+#      Anova(adult.lit.size.sens, Type ="II", test = "Wald") # Wald test p  
    
          
   ### 10.5 adult model: methylation by human presence proxy
@@ -2560,6 +2623,8 @@ of %CCGG methylation in cubs") +
       confint(adult.hum.pres.unadj)  # 95% CIs
       Anova(adult.hum.pres.unadj, Type ="II", test = "Wald") # Wald test p
       
+      plot(adult.hum.pres.unadj) # view the residual and QQ plots
+      
     ## d) Adjusted: methlyation by age.mon
       adult.hum.pres.adj <- glm(methylation ~  hum.pres + age.mon + sex,
                               data = luma_data_adult)
@@ -2573,6 +2638,9 @@ of %CCGG methylation in cubs") +
       adult.hum.pres.sens <- glm(methylation ~  hum.pres + age.mon + sex +
                                   samp_year_cnt,
                                 data = luma_data_adult)
+    
+    ## g) Calculate VIF
+        vif(adult.hum.pres.sens)
       
     ## g) Parameter estimates
       summary(adult.hum.pres.sens)  # model parameter estimates
@@ -2589,6 +2657,7 @@ of %CCGG methylation in cubs") +
       summary(adult.peri.prim.unadj)  # model parameter estimates
       confint(adult.peri.prim.unadj)  # 95% CIs 
       
+      plot(adult.peri.prim.unadj) # view the residual and QQ plots
 
     ## c) Adjusted: methlyation by periconceptional prim.prey density
       adult.peri.prim.adj <- glm(methylation ~ prim.prey.peri.concpt + sex + 
@@ -2601,13 +2670,13 @@ of %CCGG methylation in cubs") +
    
       
     ## c) Sensitivity: methlyation by periconceptional prim.prey density
-      adult.peri.prim.sens <- glm(methylation ~ prim.prey.peri.concpt + sex + 
-                                   age.mon + samp_year_cnt, 
-                                 data = luma_data_adult)
+#      adult.peri.prim.sens <- glm(methylation ~ prim.prey.peri.concpt + sex + 
+#                                   age.mon + samp_year_cnt, 
+#                                 data = luma_data_adult)
       
     ## d) Parameter estimates
-      summary(adult.peri.prim.sens)  # model parameter estimates
-      confint(adult.peri.prim.sens)  # 95% CIs 
+#      summary(adult.peri.prim.sens)  # model parameter estimates
+#      confint(adult.peri.prim.sens)  # 95% CIs 
       
         
   ### 10.7 adult model: methylation by gestational prey density     
@@ -2618,6 +2687,8 @@ of %CCGG methylation in cubs") +
     ## b) Parameter estimates
       summary(adult.gest.prim.unadj)  # model parameter estimates
       confint(adult.gest.prim.unadj)  # 95% CIs 
+      
+      plot(adult.gest.prim.unadj) # view the residual and QQ plots
       
     ## c) Adjusted: methlyation by gestational prim.prey density
       adult.gest.prim.adj <- glm(methylation ~ prim.prey.gest + 
@@ -2630,14 +2701,14 @@ of %CCGG methylation in cubs") +
       confint(adult.gest.prim.adj)  # 95% CIs 
       
     ## f) Sensitivity: methlyation by gestational prim.prey density
-      adult.gest.prim.sens <- glm(methylation ~ prim.prey.gest + 
-                                   prim.prey.peri.concpt + sex + 
-                                   age.mon + samp_year_cnt, 
-                                 data = luma_data_adult)
+#      adult.gest.prim.sens <- glm(methylation ~ prim.prey.gest + 
+#                                   prim.prey.peri.concpt + sex + 
+#                                   age.mon + samp_year_cnt, 
+#                                 data = luma_data_adult)
       
     ## g) Parameter estimates
-      summary(adult.gest.prim.sens)  # model parameter estimates
-      confint(adult.gest.prim.sens)  # 95% CIs   
+#      summary(adult.gest.prim.sens)  # model parameter estimates
+#      confint(adult.gest.prim.sens)  # 95% CIs   
       
       
   ### 10.8 adult model: methylation by birth to 3 months prey density     
@@ -2648,6 +2719,8 @@ of %CCGG methylation in cubs") +
     ## b) Parameter estimates
       summary(adult.birth.3.prim.unadj)  # model parameter estimates
       confint(adult.birth.3.prim.unadj)  # 95% CIs 
+      
+      plot(adult.birth.3.prim.unadj) # view the residual and QQ plots
       
     ## c) Adjusted: methlyation by birth to 3 months prim.prey density
       adult.birth.3.prim.adj <- glm(methylation ~ prim.prey.birth.3 + 
@@ -2660,14 +2733,14 @@ of %CCGG methylation in cubs") +
       confint(adult.birth.3.prim.adj)  # 95% CIs 
       
     ## f) Sensitivity: methlyation by birth to 3 months prim.prey density
-      adult.birth.3.prim.sens <- glm(methylation ~ prim.prey.birth.3 + 
-                                      prim.prey.gest + prim.prey.peri.concpt + 
-                                      sex + age.mon + samp_year_cnt, 
-                                    data = luma_data_adult)
+#      adult.birth.3.prim.sens <- glm(methylation ~ prim.prey.birth.3 + 
+#                                      prim.prey.gest + prim.prey.peri.concpt + 
+#                                      sex + age.mon + samp_year_cnt, 
+#                                    data = luma_data_adult)
       
     ## g) Parameter estimates
-      summary(adult.birth.3.prim.sens)  # model parameter estimates
-      confint(adult.birth.3.prim.sens)  # 95% CIs   
+#      summary(adult.birth.3.prim.sens)  # model parameter estimates
+#      confint(adult.birth.3.prim.sens)  # 95% CIs   
       
       
   ### 10.9 adult model: methylation by 3 to 6 months prey density     
@@ -2678,6 +2751,8 @@ of %CCGG methylation in cubs") +
     ## b) Parameter estimates
       summary(adult.3.6.prim.unadj)  # model parameter estimates
       confint(adult.3.6.prim.unadj)  # 95% CIs 
+      
+      plot(adult.3.6.prim.unadj) # view the residual and QQ plots
       
     ## c) Adjusted: methlyation by 3 to 6 months prim.prey density
       adult.3.6.prim.adj <- glm(methylation ~ prim.prey.3.6 + 
@@ -2691,15 +2766,15 @@ of %CCGG methylation in cubs") +
       confint(adult.3.6.prim.adj)  # 95% CIs 
       
     ## f) Sensitivity: methlyation by 3 to 6 months prim.prey density
-      adult.3.6.prim.sens <- glm(methylation ~ prim.prey.3.6 + 
-                                  prim.prey.birth.3 + prim.prey.gest + 
-                                  prim.prey.peri.concpt + sex + 
-                                  age.mon + samp_year_cnt, 
-                                data = luma_data_adult)
+#      adult.3.6.prim.sens <- glm(methylation ~ prim.prey.3.6 + 
+#                                  prim.prey.birth.3 + prim.prey.gest + 
+#                                  prim.prey.peri.concpt + sex + 
+#                                  age.mon + samp_year_cnt, 
+#                                data = luma_data_adult)
       
     ## g) Parameter estimates
-      summary(adult.3.6.prim.sens)  # model parameter estimates
-      confint(adult.3.6.prim.sens)  # 95% CIs   
+#      summary(adult.3.6.prim.sens)  # model parameter estimates
+#      confint(adult.3.6.prim.sens)  # 95% CIs   
       
       
   ### 10.10 adult model: methylation by 6 to 9 months prey density     
@@ -2710,6 +2785,8 @@ of %CCGG methylation in cubs") +
     ## b) Parameter estimates
       summary(adult.6.9.prim.unadj)  # model parameter estimates
       confint(adult.6.9.prim.unadj)  # 95% CIs 
+      
+      plot(adult.6.9.prim.unadj) # view the residual and QQ plots
       
     ## c) Adjusted: methlyation by 6 to 9 months prim.prey density
       adult.6.9.prim.adj <- glm(methylation ~ prim.prey.6.9 + 
@@ -2723,15 +2800,15 @@ of %CCGG methylation in cubs") +
       confint(adult.6.9.prim.adj)  # 95% CIs 
       
     ## f) Sensitivity: methlyation by 6 to 9 months prim.prey density
-      adult.6.9.prim.sens <- glm(methylation ~ prim.prey.6.9 + 
-                                  prim.prey.3.6 + prim.prey.birth.3 + 
-                                  prim.prey.gest + prim.prey.peri.concpt + 
-                                  sex + age.mon + samp_year_cnt, 
-                                data = luma_data_adult)
+#      adult.6.9.prim.sens <- glm(methylation ~ prim.prey.6.9 + 
+#                                  prim.prey.3.6 + prim.prey.birth.3 + 
+#                                  prim.prey.gest + prim.prey.peri.concpt + 
+#                                  sex + age.mon + samp_year_cnt, 
+#                                data = luma_data_adult)
       
     ## g) Parameter estimates
-      summary(adult.6.9.prim.sens)  # model parameter estimates
-      confint(adult.6.9.prim.sens)  # 95% CIs 
+#      summary(adult.6.9.prim.sens)  # model parameter estimates
+#      confint(adult.6.9.prim.sens)  # 95% CIs 
       
 
       
@@ -2755,13 +2832,14 @@ of %CCGG methylation in cubs") +
   # name to save each table
     
     ## a) File name for luma_data table used in analysis of manuscript
-    csv.file.name.luma <- paste("~/R/R_wd/fisi/project/hy_GR_global_DNA_meth/",
-                                 "LUMA/soc_eco_detrmnts_ms/",
-                                 "luma_data",".csv", sep= "")   
+    csv.file.name.luma <- paste("~/R/R_wd/fisi/project/", 
+                                "3_hy_GR_global_DNA_meth/",
+                                "LUMA/soc_eco_detrmnts_ms/",
+                                "luma_data",".csv", sep= "")   
     
     ## b) File name for luma_data_group table used in analysis of manuscript
     csv.file.name.luma_data_group <- paste("~/R/R_wd/fisi/project/", 
-                                            "hy_GR_global_DNA_meth/",
+                                            "3_hy_GR_global_DNA_meth/",
                                             "LUMA/soc_eco_detrmnts_ms/",
                                             "luma_data_group",".csv", sep= "")   
     

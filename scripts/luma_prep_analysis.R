@@ -704,6 +704,11 @@
       grid.table(univar_meth_no_out)
       dev.off()
       
+    ## k) Paired t-test to assess difference in raw vs adjusted meth
+      t.test(luma_data_no_out$methylation, 
+             luma_data$meth_adjust, 
+             paired=TRUE, 
+             conf.level=0.95)
 
   ### 6.2 Identify Sample Re-Runs                    
                                  
