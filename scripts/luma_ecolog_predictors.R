@@ -1059,8 +1059,9 @@
       summary(age.lme)            # model summary
       intervals(age.lme, 
                 which = "fixed")  # 95% CIs 
-      anova.lme(age.lme)          # generate p-value from Wald test
-      car::Anova(age.lme)         # generate p-value from type II Wald test
+      # generate p-value from type II Wald test
+      car::Anova(age.lme,Type ="II", test = "Wald") 
+      #anova.lme(age.lme)      # generate p-value from Wald test
       
     ## f) Bivariate regression methylatino by age.mon
       # uses 'nmle' package, which will provided p-value estimates
@@ -1119,7 +1120,8 @@
       summary(mom.rank.lme)       # model summary
       intervals(mom.rank.lme, 
                 which = "fixed")  # 95% CIs
-      anova(mom.rank.lme)         # generate p-value from Wald test
+      # generate p-value from type II Wald test
+      car::Anova(mom.rank.lme,Type ="II", test = "Wald") 
   
 
   ### 6.4 Bivariate statistics methylation by litter size
@@ -1185,8 +1187,8 @@
       summary(lit.size.lme)         # model summary
       intervals(lit.size.lme, 
                 which = "fixed")    # 95% CIs 
-      anova(lit.size.lme)     # generate p-value from Wald test
-      car::Anova(lit.size.lme)      # generate p-value from type II Wald test
+      # generate p-value from type II Wald test
+      car::Anova(lit.size.lme,Type ="II", test = "Wald") 
       
   ### 6.5 Bivariate Statistics Methylation by human population size
     ## a) Summary stats methylation by hum.pres
@@ -1253,7 +1255,8 @@
       intervals(hum.pres.lme, 
                 which = "fixed")   # 95% CIs 
       anova(hum.pres.lme)          # generate p-value from Wald test
-      car::Anova(hum.pres.lme)      # generate p-value from type II Wald test
+      # generate p-value from type II Wald test
+      car::Anova(hum.pres.lme,Type ="II", test = "Wald") 
     
   ### 6.6 Bivariate statistics methylation by periconceptional prey density
       # NOTE: uses luma_data_group; first average over ID within age cat. 
@@ -1350,8 +1353,8 @@
     ## b) Parameter estimates   
       summary(rank_by_age.lme) 
       intervals(rank_by_age.lme, which = "fixed")    
-      anova.lme(rank_by_age.lme)    # generate p-value from Wald test
-      car::Anova(rank_by_age.lme)     # generate p-value from type II Wald test
+      # generate p-value from type II Wald test
+      car::Anova(rank_by_age.lme,Type ="II", test = "Wald") 
 
   ### 7.3 View methylation by rank within age strata
       
@@ -1596,7 +1599,6 @@ Maternal Rank by Age",
     ## e) Parameter estimates
       summary(cub.mom.rank.adj)  # print model summary, effects and SE
       confint(cub.mom.rank.adj)  # print 95% CIs for parameter estimates
-      Anova(cub.mom.rank.adj, Type ="II", test = "Wald") # Wald test p
     
     ## f) Check for heteroskedacity, normality, and outliers    
       plot(cub.mom.rank.adj) # view the residual and QQ plots
@@ -1614,7 +1616,7 @@ Maternal Rank by Age",
     ## h) Parameter estimates
 #      summary(cub.mom.rank.sens)  # print model summary, effects and SE
 #      confint(cub.mom.rank.sens)  # print 95% CIs for parameter estimates
-#      Anova(cub.mom.rank.sens, Type ="II", test = "Wald") # Wald test p
+
       
       
     ## i) Extract mom.strank.quart estimates and 
@@ -1683,7 +1685,6 @@ by Maternal Rank") +
       
       summary(cub.rank.adj2)  # print model summary, effects and SE
       confint(cub.rank.adj2)  # print 95% CIs for parameter estimates
-      Anova(cub.rank.adj2, Type ="II", test = "Wald") # Wald test p
     
       
   ### 8.4 Cub model: methylation by litter size
@@ -1713,7 +1714,6 @@ by Maternal Rank") +
     ## e) Parameter estimates
       summary(cub.lit.size.adj)  # model parameter estimates
       confint(cub.lit.size.adj)  # 95% CIs 
-      Anova(cub.lit.size.adj, Type ="II", test = "Wald") # Wald test p
       
     ## f) Check for heteroskedacity, normality, and outliers    
       plot(cub.lit.size.adj) # view the residual and QQ plots
@@ -1731,9 +1731,8 @@ by Maternal Rank") +
     ## h) Parameter estimates
 #      summary(cub.lit.size.sens)  # model parameter estimates
 #      confint(cub.lit.size.sens)  # 95% CIs 
-#      Anova(cub.lit.size.sens, Type ="II", test = "Wald") # Wald test p
+
     
-        
   ### 8.5 Cub model: methylation by human presence proxy
     ## a) Check within strata descritpive stats
       luma_data_cub %>%
@@ -1761,7 +1760,6 @@ by Maternal Rank") +
     ## e) Parameter estimates
       summary(cub.hum.pres.adj)  # model parameter estimates
       confint(cub.hum.pres.adj)  # 95% CIs 
-      Anova(cub.hum.pres.adj, Type ="II", test = "Wald") # Wald test p
       
     ## f) Check for heteroskedacity, normality, and outliers    
       plot(cub.hum.pres.adj) # view the residual and QQ plots
@@ -1779,7 +1777,6 @@ by Maternal Rank") +
     ## h) Parameter estimates
       summary(cub.hum.pres.sens)  # model parameter estimates
       confint(cub.hum.pres.sens)  # 95% CIs 
-      Anova(cub.hum.pres.sens, Type ="II", test = "Wald") # Wald test p
       
     ## i) Calculate VIF
       vif(cub.hum.pres.sens)
@@ -2117,7 +2114,8 @@ of %CCGG methylation in cubs") +
     ## e) Parameter estimates
       summary(sub.age.mon.adj)  # model parameter estimates
       confint(sub.age.mon.adj)  # 95% CIs 
-      
+      # generate p-value from type II Wald test
+      car::Anova(sub.age.mon.adj,Type ="II", test = "Wald") 
       
   ### 9.3 sub model: methylation by mom rank quartiles    
     ## a) Check within strata descritpive stats
@@ -2150,7 +2148,6 @@ of %CCGG methylation in cubs") +
     ## e) Parameter estimates
       summary(sub.mom.rank.adj)  # print model summary, effects and SE
       confint(sub.mom.rank.adj)  # print 95% CIs for parameter estimates
-      Anova(sub.mom.rank.adj, Type ="II", test = "Wald") # Wald test p
       
     ## f) Check for heteroskedacity, normality, and outliers    
       plot(sub.mom.rank.adj) # view the residual and QQ plots
@@ -2168,7 +2165,7 @@ of %CCGG methylation in cubs") +
     ## h) Parameter estimates
 #      summary(sub.mom.rank.sens)  # print model summary, effects and SE
 #      confint(sub.mom.rank.sens)  # print 95% CIs for parameter estimates
-#      Anova(sub.mom.rank.sens, Type ="II", test = "Wald") # Wald test p
+
 
     ## i) Extract mom.strank.quart estimates and 
       sub.rank.ef <- effect("mom.strank.quart", sub.mom.rank.adj)
@@ -2222,7 +2219,7 @@ of %CCGG methylation in cubs") +
       
       summary(sub.rank.adj2)  # print model summary, effects and SE
       confint(sub.rank.adj2)  # print 95% CIs for parameter estimates
-      Anova(sub.rank.adj2, Type ="II", test = "Wald") # Wald test p
+
       
       
   ### 9.4 sub model: methylation by litter size
@@ -2252,7 +2249,7 @@ of %CCGG methylation in cubs") +
     ## e) Parameter estimates
       summary(sub.lit.size.adj)  # model parameter estimates
       confint(sub.lit.size.adj)  # 95% CIs 
-      Anova(sub.lit.size.adj, Type ="II", test = "Wald") # Wald test p
+
       
     ## f) Check for heteroskedacity, normality, and outliers    
       plot(sub.lit.size.adj) # view the residual and QQ plots
@@ -2270,7 +2267,7 @@ of %CCGG methylation in cubs") +
     ## h) Parameter estimates
 #      summary(sub.lit.size.sens)  # model parameter estimates
 #      confint(sub.lit.size.sens)  # 95% CIs 
-#      Anova(sub.lit.size.sens, Type ="II", test = "Wald") # Wald test p
+
         
       
   ### 9.5 sub model: methylation by human presence proxy
@@ -2300,7 +2297,6 @@ of %CCGG methylation in cubs") +
     ## e) Parameter estimates
       summary(sub.hum.pres.adj)  # model parameter estimates
       confint(sub.hum.pres.adj)  # 95% CIs 
-      Anova(sub.hum.pres.adj, Type ="II", test = "Wald") # Wald test p
       
     ## f) Check for heteroskedacity, normality, and outliers    
       plot(sub.hum.pres.adj) # view the residual and QQ plots
@@ -2321,7 +2317,6 @@ of %CCGG methylation in cubs") +
     ## i) Parameter estimates
       summary(sub.hum.pres.sens)  # model parameter estimates
       confint(sub.hum.pres.sens)  # 95% CIs 
-      Anova(sub.hum.pres.sens, Type ="II", test = "Wald") # Wald test p
       
       
   ### 9.6 sub model: methylation by periconceptional prey density     
@@ -2442,7 +2437,7 @@ of %CCGG methylation in cubs") +
 #      confint(sub.birth.3.prim.sens)  # 95% CIs 
       
       
-  ### 8.9 sub model: methylation by 3 to 6 months prey density     
+  ### 9.9 sub model: methylation by 3 to 6 months prey density     
     ## a) Unadjusted: methlyation by 3 to 6 months prim.prey density
       sub.3.6.prim.unadj <- glm(methylation ~ prim.prey.3.6, 
                                     data = luma_data_sub)
@@ -2617,7 +2612,6 @@ of %CCGG methylation in cubs") +
     ## e) Parameter estimates
       summary(adult.mom.rank.adj)  # print model summary, effects and SE
       confint(adult.mom.rank.adj)  # print 95% CIs for parameter estimates
-      Anova(adult.mom.rank.adj, Type ="II", test = "Wald") # Wald test p
       
     ## f) Check for heteroskedacity, normality, and outliers    
       plot(adult.mom.rank.adj) # view the residual and QQ plots
@@ -2635,9 +2629,7 @@ of %CCGG methylation in cubs") +
     ## h) Parameter estimates
 #      summary(adult.own.rank.adj)  # print model summary, effects and SE
 #      confint(adult.own.rank.adj)  # print 95% CIs for parameter estimates
-#      Anova(adult.own.rank.adj, Type ="II", test = "Wald") # Wald test p  
       
-        
     ## i) Adjusted mom and own rank: methlyation by mom.strank.quart own strank
       adult.mom.own.rank.adj <- glm(methylation ~ mom.strank.quart + 
                                       strank.quart + age.mon,
@@ -2658,7 +2650,6 @@ of %CCGG methylation in cubs") +
     ## l) Parameter estimates
 #      summary(adult.mom.rank.sens)  # print model summary, effects and SE
 #      confint(adult.mom.rank.sens)  # print 95% CIs for parameter estimates
-#      Anova(adult.mom.rank.sens, Type ="II", test = "Wald") # Wald test p
       
     ## m) Extract mom.strank.quart estimates and 
       adult.rank.ef <- effect("mom.strank.quart", adult.mom.rank.adj)
@@ -2712,7 +2703,6 @@ of %CCGG methylation in cubs") +
       
       summary(adult.rank.adj2)  # print model summary, effects and SE
       confint(adult.rank.mod2)  # print 95% CIs for parameter estimates
-      Anova(adult.mom.rank.adj2, Type ="II", test = "Wald") # Wald test p
       
       
   ### 10.4 adult model: methylation by litter size
@@ -2743,7 +2733,6 @@ of %CCGG methylation in cubs") +
     ## e) Parameter estimates
       summary(adult.lit.size.adj)  # model parameter estimates
       confint(adult.lit.size.adj)  # 95% CIs 
-      Anova(adult.lit.size.adj, Type ="II", test = "Wald") # Wald test p
       
     ## f) Check for heteroskedacity, normality, and outliers    
       plot(adult.lit.size.adj) # view the residual and QQ plots
@@ -2760,8 +2749,7 @@ of %CCGG methylation in cubs") +
       
     ## h) Parameter estimates
 #      summary(adult.lit.size.sens)  # model parameter estimates
-#      confint(adult.lit.size.sens)  # 95% CIs 
-#      Anova(adult.lit.size.sens, Type ="II", test = "Wald") # Wald test p  
+#      confint(adult.lit.size.sens)  # 95% CIs
    
          
   ### 10.5 adult model: methylation by human presence proxy
@@ -2792,7 +2780,6 @@ of %CCGG methylation in cubs") +
     ## e) Parameter estimates
       summary(adult.hum.pres.adj)  # model parameter estimates
       confint(adult.hum.pres.adj)  # 95% CIs 
-      Anova(adult.hum.pres.adj, Type ="II", test = "Wald") # Wald test p
       
     ## f) Check for heteroskedacity, normality, and outliers    
       plot(adult.hum.pres.adj) # view the residual and QQ plots
@@ -2814,7 +2801,6 @@ of %CCGG methylation in cubs") +
     ## i) Parameter estimates
       summary(adult.hum.pres.sens)  # model parameter estimates
       confint(adult.hum.pres.sens)  # 95% CIs 
-      Anova(adult.hum.pres.sens, Type ="II", test = "Wald") # Wald test p
       
       
   ### 10.6 adult model: methylation by periconceptional prey density     
