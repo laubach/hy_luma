@@ -140,6 +140,7 @@
         library ('aod')
         
       # Check for car and install if not already installed
+        # includes vif function
         if (!'car' %in% installed.packages()[,1]){
           install.packages ('car')
         }
@@ -1985,7 +1986,132 @@ by Maternal Rank") +
 #      confint(cub.6.9.prim.prey.sens)  # 95% CIs 
         
       
-  ### 8.11 Cub model: mutual adjustment by significatn predictors 
+  ### 8.11 Graph of cub %CCGG methylation by soc and ecologica factors 
+    ## a) make tidy tables of glm model parameter estimates using broom and
+      # dotwhisker pckgs for all adjusted cub models
+      # terms, including intercept can be dropped from tidy table for graphing
+      # purposes, and estimates can be re-labeled 
+      rank_est_cub <- tidy(cub.mom.rank.adj) %>%
+        filter(term != "(Intercept)" &
+               term != "sexm" &
+               term != "age.mon") %>%
+        relabel_predictors(c(mom.strank.quartQ2 = "Q2 (maternal rank)",                       
+                             mom.strank.quartQ3 = "Q3 (maternal rank)", 
+                             mom.strank.quartQ4 = "Q4 (maternal rank)")) 
+      
+      lit_size_est_cub <- tidy(cub.lit.size.adj) %>%
+        filter(term != "(Intercept)" &
+                 term != "sexm" &
+                 term != "age.mon") %>%
+        relabel_predictors(c(lit.sizetwin = "Twin litter")) 
+      
+      hum_est_cub <- tidy(cub.hum.pres.adj) %>%
+        filter(term != "(Intercept)" &
+                 term != "sexm" &
+                 term != "age.mon") %>%
+        relabel_predictors(c(hum.presmed = "Medium human disturbance",
+                             hum.preshi = "High human disturbance")) 
+                             
+      peri_pre_est_cub <- tidy(cub.peri.prim.prey.adj) %>%
+        filter(term != "(Intercept)" &
+                 term != "sexm" &
+                 term != "age.mon") %>%
+        relabel_predictors(c(prim.prey.peri.concpt = 
+                               "Periconceptional prey density")) 
+      
+      gest_prey_est_cub <- tidy(cub.gest.prim.prey.adj) %>%
+        filter(term != "(Intercept)" &
+                 term != "sexm" &
+                 term != "age.mon" &
+                 term != "prim.prey.peri.concpt") %>%
+        relabel_predictors(c(prim.prey.gest = 
+                               "Gestational prey density"))
+      
+      zero_prey_est_cub <- tidy(cub.birth.3.prim.prey.adj) %>%
+        filter(term != "(Intercept)" &
+                 term != "sexm" &
+                 term != "age.mon" &
+                 term != "prim.prey.peri.concpt" &
+                 term != "prim.prey.gest") %>%
+        relabel_predictors(c(prim.prey.birth.3 = 
+                               "Birth - 3 month prey density"))
+      
+      three_prey_est_cub <- tidy(cub.3.6.prim.prey.adj) %>%
+        filter(term != "(Intercept)" &
+                 term != "sexm" &
+                 term != "age.mon" &
+                 term != "prim.prey.peri.concpt" &
+                 term != "prim.prey.gest" &
+                 term != "prim.prey.birth.3") %>%
+        relabel_predictors(c(prim.prey.3.6 = 
+                               "3-6 month prey density"))
+      
+      six_prey_est_cub <- tidy(cub.6.9.prim.prey.adj) %>%
+        filter(term != "(Intercept)" &
+                 term != "sexm" &
+                 term != "age.mon" &
+                 term != "prim.prey.peri.concpt" &
+                 term != "prim.prey.gest" &
+                 term != "prim.prey.birth.3" &
+                 term != "prim.prey.3.6") %>%
+        relabel_predictors(c(prim.prey.6.9 = 
+                               "6-9 month prey density"))
+      
+    ## b) Combine tidy tables of glm estimates into a single tidy table
+      soc_ecolog_meth_ests <- bind_rows(rank_est_cub, lit_size_est_cub, 
+                                        hum_est_cub, peri_pre_est_cub, 
+                                        gest_prey_est_cub, zero_prey_est_cub,
+                                        three_prey_est_cub, six_prey_est_cub)
+      
+    ## c) Graph of the beta estimates from all models 1 which models each
+      # predictor with %CCGG methylation in separate models 
+      # (control for cub age and sex, as well as previous prey density)
+      # uses dotwhisker, broom, dplyr, and ggplot2 packages
+      dwplot(soc_ecolog_meth_ests,
+             vline = geom_vline(xintercept = 0, colour = "red", 
+                                linetype = 2)) + # line at zero behind coefs
+        #geom_vline(xintercept = 0, colour = "grey60", linetype = 2) +
+        ggtitle("Adjusted cub models: Associations of each 
+explanatory variable with %CCGG methylation",
+                subtitle = '(Each model is controlled for cub sex and age, as well as previous prey density in prey models)')+
+        theme(plot.title = element_text( hjust = 0.5)) + # center title
+        theme(plot.subtitle = element_text(hjust = 0.5, size = 12)) + 
+        # bold and size title and axes labels
+        theme(text = element_text(size=18, face = "bold")) +
+        theme(legend.position = "none") + # remove legend
+        theme(axis.ticks = element_blank()) + # remove axis ticks
+        # remove background color
+        theme(panel.background = element_rect(fill = "white")) +
+        # add major axes
+        #theme(axis.line = element_line(colour = "lightgrey", 
+        #                               size = 1, linetype = "solid")) + 
+        # change axes font style, color, size, angle, and margin
+        theme(axis.text.x = element_text(face="bold", color="black", 
+                                         size=16, angle=0,
+                                         margin = margin(t = 10, r = 0, 
+                                                         b = 10, l = 0)),
+              axis.text.y = element_text(face="bold", color="black", 
+                                         size=16, angle=0, 
+                                         margin = margin(t = 0, r = 0, 
+                                                         b = 0, l = 10))) +
+        #scale_color_grey (start = 0, end = 0) + # make color estimates black
+        scale_color_manual(values=c("black")) + # make color estimates black
+        xlab(expression(atop(bold("Coefficient Estimate"), 
+                             paste(symbol('\254'),
+                                   italic("Difference in %CCGG methylation"), 
+                                   symbol('\256'))))) + 
+        ylab("") 
+      
+      ## h) Save Plot
+      # use ggsave to save the linearization plot
+      ggsave("cub_models1_plot.pdf", plot = last_plot(), device = NULL,
+             path = paste0(here(),"/output/output_luma_ecolog"), 
+             scale = 1, width = 11.5,
+             height = 9,
+             units = c("in"), dpi = 300, limitsize = TRUE)
+
+      
+  ### 8.12 Cub model: mutual adjustment by significatn predictors 
     ## a) Adjusted: methlyation by mom rank and birth to 3 months prey density
       cub.mutual.adj <- glm(methylation ~ mom.strank.quart + hum.pres + 
                               prim.prey.peri.concpt + prim.prey.gest + 
@@ -1995,9 +2121,7 @@ by Maternal Rank") +
     ## b) Parameter estimates
       summary(cub.mutual.adj)  # model parameter estimates
       confint(cub.mutual.adj)  # 95% CIs 
-    
-      
-
+ 
     ## c) make a tidy table of glm model parameter estimates using broom pckg
       # terms, including intercept can be dropped from tidy table for graphing
       # purposes, and estimates can be re-labeled
@@ -2013,7 +2137,6 @@ by Maternal Rank") +
                              hum.preshi = "High (anthro. distubance)", 
                              prim.prey.peri.concpt = "Periconception Prey",
                              prim.prey.birth.3 = "Birth to 3 month Prey"))
-      
       
     ## d) Graph of the beta estimates from model 2 which includes significant
       # predictors from model now mutally adjustd for each other
@@ -2039,16 +2162,19 @@ of %CCGG methylation in cubs") +
                                    size=16, angle=0,
                                    margin = margin(t = 10, r = 0, 
                                                    b = 10, l = 0)),
-        axis.text.y = element_text(face="bold", color="black", 
-                                         size=16, angle=0, 
-                                         margin = margin(t = 0, r = 0, 
-                                                         b = 0, l = 10))) +
+              axis.text.y = element_text(face="bold", color="black", 
+                                    size=16, angle=0, 
+                                    margin = margin(t = 0, r = 0, 
+                                                    b = 0, l = 10))) +
         #scale_color_grey (start = 0, end = 0) + # make color estimates black
-        scale_color_manual(values=c("yellow")) + # make color estimates black
-        xlab("Coefficient Estimate") + 
+        scale_color_manual(values=c("black")) + # make color estimates black
+        xlab(expression(atop(bold("Coefficient Estimate"), 
+                             paste(symbol('\254'),
+                                   italic("Difference in %CCGG methylation"), 
+                                   symbol('\256'))))) + 
         ylab("") 
 
-    ## h) Save Plot
+    ## e) Save Plot
       # use ggsave to save the linearization plot
       ggsave("cub_mut_adjust_plot.pdf", plot = last_plot(), device = NULL,
        path = paste0(here(),"/output/output_luma_ecolog"), 
@@ -2519,6 +2645,131 @@ of %CCGG methylation in cubs") +
     ## g) Parameter estimates
 #      summary(sub.6.9.prim.sens)  # model parameter estimates
 #      confint(sub.6.9.prim.sens)  # 95% CIs 
+      
+      
+  ### 9.11 Graph of sub %CCGG methylation by soc and ecologica factors 
+    ## a) make tidy tables of glm model parameter estimates using broom and
+      # dotwhisker pckgs for all adjusted sub models
+      # terms, including intercept can be dropped from tidy table for graphing
+      # purposes, and estimates can be re-labeled 
+      rank_est_sub <- tidy(sub.mom.rank.adj) %>%
+        filter(term != "(Intercept)" &
+                 term != "sexm" &
+                 term != "age.mon") %>%
+        relabel_predictors(c(mom.strank.quartQ2 = "Q2 (maternal rank)",                       
+                             mom.strank.quartQ3 = "Q3 (maternal rank)", 
+                             mom.strank.quartQ4 = "Q4 (maternal rank)")) 
+      
+      lit_size_est_sub <- tidy(sub.lit.size.adj) %>%
+        filter(term != "(Intercept)" &
+                 term != "sexm" &
+                 term != "age.mon") %>%
+        relabel_predictors(c(lit.sizetwin = "Twin litter")) 
+      
+      hum_est_sub <- tidy(sub.hum.pres.adj) %>%
+        filter(term != "(Intercept)" &
+                 term != "sexm" &
+                 term != "age.mon") %>%
+        relabel_predictors(c(hum.presmed = "Medium human disturbance",
+                             hum.preshi = "High human disturbance")) 
+      
+      peri_pre_est_sub <- tidy(sub.peri.prim.adj) %>%
+        filter(term != "(Intercept)" &
+                 term != "sexm" &
+                 term != "age.mon") %>%
+        relabel_predictors(c(prim.prey.peri.concpt = 
+                               "Periconceptional prey density")) 
+      
+      gest_prey_est_sub <- tidy(sub.gest.prim.adj) %>%
+        filter(term != "(Intercept)" &
+                 term != "sexm" &
+                 term != "age.mon" &
+                 term != "prim.prey.peri.concpt") %>%
+        relabel_predictors(c(prim.prey.gest = 
+                               "Gestational prey density"))
+      
+      zero_prey_est_sub <- tidy(sub.birth.3.prim.adj) %>%
+        filter(term != "(Intercept)" &
+                 term != "sexm" &
+                 term != "age.mon" &
+                 term != "prim.prey.peri.concpt" &
+                 term != "prim.prey.gest") %>%
+        relabel_predictors(c(prim.prey.birth.3 = 
+                               "Birth - 3 month prey density"))
+      
+      three_prey_est_sub <- tidy(sub.3.6.prim.adj) %>%
+        filter(term != "(Intercept)" &
+                 term != "sexm" &
+                 term != "age.mon" &
+                 term != "prim.prey.peri.concpt" &
+                 term != "prim.prey.gest" &
+                 term != "prim.prey.birth.3") %>%
+        relabel_predictors(c(prim.prey.3.6 = 
+                               "3-6 month prey density"))
+      
+      six_prey_est_sub <- tidy(sub.6.9.prim.adj) %>%
+        filter(term != "(Intercept)" &
+                 term != "sexm" &
+                 term != "age.mon" &
+                 term != "prim.prey.peri.concpt" &
+                 term != "prim.prey.gest" &
+                 term != "prim.prey.birth.3" &
+                 term != "prim.prey.3.6") %>%
+        relabel_predictors(c(prim.prey.6.9 = 
+                               "6-9 month prey density"))
+      
+    ## b) Combine tidy tables of glm estimates into a single tidy table
+      soc_ecolog_meth_ests_sub <- bind_rows(rank_est_sub, lit_size_est_sub, 
+                                        hum_est_sub, peri_pre_est_sub, 
+                                        gest_prey_est_sub, zero_prey_est_sub,
+                                        three_prey_est_sub, six_prey_est_sub)
+      
+    ## c) Graph of the beta estimates from all models 1 which models each
+      # predictor with %CCGG methylation in separate models 
+      # (control for sub age and sex, as well as previous prey density)
+      # uses dotwhisker, broom, dplyr, and ggplot2 packages
+      dwplot(soc_ecolog_meth_ests_sub,
+             vline = geom_vline(xintercept = 0, colour = "red", 
+                                linetype = 2)) + # line at zero behind coefs
+        #geom_vline(xintercept = 0, colour = "grey60", linetype = 2) +
+        ggtitle("Adjusted subadult models: Associations of each \n explanatory variable with %CCGG methylation",
+                subtitle = '(Each model is controlled for subadult sex and age, as well as previous prey density in prey models)')+
+        theme(plot.title = element_text(hjust = 0.5)) + # center title
+        theme(plot.subtitle = element_text(hjust = 0.5, size = 12)) + 
+        # bold and size title and axes labels
+        theme(text = element_text(size=18, face = "bold")) +
+        theme(legend.position = "none") + # remove legend
+        theme(axis.ticks = element_blank()) + # remove axis ticks
+        # remove background color
+        theme(panel.background = element_rect(fill = "white")) +
+        # add major axes
+        #theme(axis.line = element_line(colour = "lightgrey", 
+        #                               size = 1, linetype = "solid")) + 
+        # change axes font style, color, size, angle, and margin
+        theme(axis.text.x = element_text(face="bold", color="black", 
+                                         size=16, angle=0,
+                                         margin = margin(t = 10, r = 0, 
+                                                         b = 10, l = 0)),
+              axis.text.y = element_text(face="bold", color="black", 
+                                         size=16, angle=0, 
+                                         margin = margin(t = 0, r = 0, 
+                                                         b = 0, l = 10))) +
+        #scale_color_grey (start = 0, end = 0) + # make color estimates black
+        scale_color_manual(values=c("black")) + # make color estimates black
+        xlab(expression(atop(bold("Coefficient Estimate"), 
+                             paste(symbol('\254'),
+                                   italic("Difference in %CCGG methylation"), 
+                                   symbol('\256'))))) + 
+        ylab("") 
+      
+    ## e) Save Plot
+      # use ggsave to save the linearization plot
+      ggsave("sub_models1_plot.pdf", plot = last_plot(), device = NULL,
+             path = paste0(here(),"/output/output_luma_ecolog"), 
+             scale = 1, width = 11.6,
+             height = 9,
+             units = c("in"), dpi = 300, limitsize = TRUE)
+      
       
       
       
@@ -3003,6 +3254,134 @@ of %CCGG methylation in cubs") +
     ## g) Parameter estimates
 #      summary(adult.6.9.prim.sens)  # model parameter estimates
 #      confint(adult.6.9.prim.sens)  # 95% CIs 
+      
+      
+      
+  ### 10.11 Graph of adult %CCGG methylation by soc and ecologica factors 
+    ## a) make tidy tables of glm model parameter estimates using broom and
+      # dotwhisker pckgs for all adjusted adult models
+      # terms, including intercept can be dropped from tidy table for graphing
+      # purposes, and estimates can be re-labeled 
+      rank_est_adult <- tidy(adult.mom.rank.adj) %>%
+        filter(term != "(Intercept)" &
+                 term != "sexm" &
+                 term != "age.mon") %>%
+        relabel_predictors(c(mom.strank.quartQ2 = "Q2 (maternal rank)",                       
+                             mom.strank.quartQ3 = "Q3 (maternal rank)", 
+                             mom.strank.quartQ4 = "Q4 (maternal rank)")) 
+      
+      lit_size_est_adult <- tidy(adult.lit.size.adj) %>%
+        filter(term != "(Intercept)" &
+                 term != "sexm" &
+                 term != "age.mon") %>%
+        relabel_predictors(c(lit.sizetwin = "Twin litter")) 
+      
+      hum_est_adult <- tidy(adult.hum.pres.adj) %>%
+        filter(term != "(Intercept)" &
+                 term != "sexm" &
+                 term != "age.mon") %>%
+        relabel_predictors(c(hum.presmed = "Medium human disturbance",
+                             hum.preshi = "High human disturbance")) 
+      
+      peri_pre_est_adult <- tidy(adult.peri.prim.adj) %>%
+        filter(term != "(Intercept)" &
+                 term != "sexm" &
+                 term != "age.mon") %>%
+        relabel_predictors(c(prim.prey.peri.concpt = 
+                               "Periconceptional prey density")) 
+      
+      gest_prey_est_adult <- tidy(adult.gest.prim.adj) %>%
+        filter(term != "(Intercept)" &
+                 term != "sexm" &
+                 term != "age.mon" &
+                 term != "prim.prey.peri.concpt") %>%
+        relabel_predictors(c(prim.prey.gest = 
+                               "Gestational prey density"))
+      
+      zero_prey_est_adult <- tidy(adult.birth.3.prim.adj) %>%
+        filter(term != "(Intercept)" &
+                 term != "sexm" &
+                 term != "age.mon" &
+                 term != "prim.prey.peri.concpt" &
+                 term != "prim.prey.gest") %>%
+        relabel_predictors(c(prim.prey.birth.3 = 
+                               "Birth - 3 month prey density"))
+      
+      three_prey_est_adult <- tidy(adult.3.6.prim.adj) %>%
+        filter(term != "(Intercept)" &
+                 term != "sexm" &
+                 term != "age.mon" &
+                 term != "prim.prey.peri.concpt" &
+                 term != "prim.prey.gest" &
+                 term != "prim.prey.birth.3") %>%
+        relabel_predictors(c(prim.prey.3.6 = 
+                               "3-6 month prey density"))
+      
+      six_prey_est_adult <- tidy(adult.6.9.prim.adj) %>%
+        filter(term != "(Intercept)" &
+                 term != "sexm" &
+                 term != "age.mon" &
+                 term != "prim.prey.peri.concpt" &
+                 term != "prim.prey.gest" &
+                 term != "prim.prey.birth.3" &
+                 term != "prim.prey.3.6") %>%
+        relabel_predictors(c(prim.prey.6.9 = 
+                               "6-9 month prey density"))
+      
+    ## b) Combine tidy tables of glm estimates into a single tidy table
+      soc_ecolog_meth_ests_adult <- bind_rows(rank_est_adult, 
+                                            lit_size_est_adult, 
+                                            hum_est_adult, peri_pre_est_adult, 
+                                            gest_prey_est_adult, 
+                                            zero_prey_est_adult,
+                                            three_prey_est_adult, 
+                                            six_prey_est_adult)
+      
+    ## c) Graph of the beta estimates from all models 1 which models each
+      # predictor with %CCGG methylation in separate models 
+      # (control for adult age and sex, as well as previous prey density)
+      # uses dotwhisker, broom, dplyr, and ggplot2 packages
+      dwplot(soc_ecolog_meth_ests_adult,
+             vline = geom_vline(xintercept = 0, colour = "red", 
+                                linetype = 2)) + # line at zero behind coefs
+        #geom_vline(xintercept = 0, colour = "grey60", linetype = 2) +
+        ggtitle("Adjusted adult models: Associations of each \n explanatory variable with %CCGG methylation",
+                subtitle = '(Each model is controlled for adult sex and age, as well as previous prey density in prey models)')+
+        theme(plot.title = element_text(hjust = 0.5)) + # center title
+        theme(plot.subtitle = element_text(hjust = 0.5, size = 12)) + 
+        # bold and size title and axes labels
+        theme(text = element_text(size=18, face = "bold")) +
+        theme(legend.position = "none") + # remove legend
+        theme(axis.ticks = element_blank()) + # remove axis ticks
+        # remove background color
+        theme(panel.background = element_rect(fill = "white")) +
+        # add major axes
+        #theme(axis.line = element_line(colour = "lightgrey", 
+        #                               size = 1, linetype = "solid")) + 
+        # change axes font style, color, size, angle, and margin
+        theme(axis.text.x = element_text(face="bold", color="black", 
+                                         size=16, angle=0,
+                                         margin = margin(t = 10, r = 0, 
+                                                         b = 10, l = 0)),
+              axis.text.y = element_text(face="bold", color="black", 
+                                         size=16, angle=0, 
+                                         margin = margin(t = 0, r = 0, 
+                                                         b = 0, l = 10))) +
+        #scale_color_grey (start = 0, end = 0) + # make color estimates black
+        scale_color_manual(values=c("black")) + # make color estimates black
+        xlab(expression(atop(bold("Coefficient Estimate"), 
+                             paste(symbol('\254'),
+                                   italic("Difference in %CCGG methylation"), 
+                                   symbol('\256'))))) + 
+        ylab("") 
+      
+    ## e) Save Plot
+      # use ggsave to save the linearization plot
+      ggsave("adult_models1_plot.pdf", plot = last_plot(), device = NULL,
+             path = paste0(here(),"/output/output_luma_ecolog"), 
+             scale = 1, width = 11.6,
+             height = 9,
+             units = c("in"), dpi = 300, limitsize = TRUE)
       
 
       

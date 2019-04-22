@@ -103,15 +103,15 @@
   
   ### 1.5 Set file paths for data importing and exporting
     ## a) Create path to LUMA data folder
-    luma_data_path <- "~/R/R_wd/fisi/project/hy_GR_global_DNA_meth/LUMA/data/"
+    luma_data_path <- "~/R/R_wd/fisi/project/3_hy_GR_global_DNA_meth/LUMA/data/"
       
     ## b) Create path to meta data folder (compiled from repository query 
       # sample selection)
-    meta_data_path <- paste("~/R/R_wd/fisi/project/hy_GR_global_DNA_meth/",
+    meta_data_path <- paste("~/R/R_wd/fisi/project/3_hy_GR_global_DNA_meth/",
                               "LUMA/meta_data/", sep = '')
       
     ## c) Create path to a LUMA output folder
-    luma_data_out_path <- paste("~/R/R_wd/fisi/project/hy_GR_global_DNA_meth/",
+    luma_data_out_path <- paste("~/R/R_wd/fisi/project/3_hy_GR_global_DNA_meth/",
                                 "LUMA/output/", sep = '')  
 
     
@@ -612,6 +612,9 @@
                      median =  round (quantile (methylation, c(.5), na.rm = T),
                                       2),
                      stdev = round (sd (methylation, na.rm = T), 2),
+#                    iqr = round(IQR(methylation, na.rm = T), 2),
+#                    first.quart = round(quantile (methylation, c(.25), 
+#                                                  na.rm = T),2))
                      n_adjust = sum(!is.na(meth_adjust)),
                      avg_adjust = round (mean (meth_adjust, 
                                                na.rm = T), 2),
