@@ -386,7 +386,6 @@
       
     ## o) mark samples extracted via PAX-gene tubes those collected 2016 
       # onwards
-      
       luma_data <- luma_data  %>%
         mutate(dna_extrct_mth = case_when(samp_year >= 2016 ~ c("pax"),
                                           samp_year < 2016 ~ c("old")))
@@ -1356,7 +1355,33 @@
       intervals(rank_by_age.lme, which = "fixed")    
       # generate p-value from type II Wald test
       car::Anova(rank_by_age.lme,Type ="II", test = "Wald") 
+      
 
+  #*** RESUBMISSION 2 *** addressing reviewer's comments
+    ## c) Model uses 'nmle' package, which will provided p-value estimates
+      rank_by_age_adj.lme <- lme(methylation ~ age.cat * mom.strank + sex, 
+                             random =~1|id, 
+                             subset(luma_data_group,!is.na(x = mom.strank)))
+      
+    ## d) Parameter estimates   
+      summary(rank_by_age_adj.lme) 
+      intervals(rank_by_age_adj.lme, which = "fixed")    
+      # generate p-value from type II Wald test
+      car::Anova(rank_by_age_adj.lme,Type ="II", test = "Wald") 
+      
+    ## e) Model uses 'nmle' package, which will provide p-value estimates
+      rank_by_cat_age_adj.lme <- lme(methylation ~ age.cat * mom.strank.quart 
+                                     + sex, 
+                                 random =~1|id, 
+                                 subset(luma_data_group,!is.na(x = mom.strank)))
+      
+    ## f) Parameter estimates   
+      summary(rank_by_cat_age_adj.lme) 
+      intervals(rank_by_cat_age_adj.lme, which = "fixed")    
+      # generate p-value from type II Wald test
+      car::Anova(rank_by_cat_age_adj.lme,Type ="II", test = "Wald") 
+      
+      
   ### 7.3 View methylation by rank within age strata
       
     ## a) Graph of the raw data for percent global DNA methylaiton by maternal 
@@ -1782,7 +1807,26 @@ by Maternal Rank") +
     ## i) Calculate VIF
       vif(cub.hum.pres.sens)
       
-
+    ## j) Sensitivity: methlyation by samp_year_cnt
+      cub.samp.age.sens <- glm(methylation ~ age.mon + sex +
+                                 samp_year_cnt,
+                               data = luma_data_cub)
+      
+    ## k) Parameter estimates
+      summary(cub.samp.age.sens)  # model parameter estimates
+      confint(cub.samp.age.sens)  # 95% CIs 
+      
+    ## l) Sensitivity: meth by mat_rank, while controling for samp_year_cnt
+      cub.rank.samp.age.sens <- glm(methylation ~ mom.strank.quart + age.mon +
+                                      sex + samp_year_cnt,
+                               data = luma_data_cub)
+      
+    ## m) Parameter estimates
+      summary(cub.rank.samp.age.sens)  # model parameter estimates
+      confint(cub.rank.samp.age.sens)  # 95% CIs 
+      
+      
+      
   ### 8.6 Cub model: methylation by periconceptional prey density     
     ## a) Unadjusted: methlyation by periconceptional prim.prey density
       cub.peri.prim.prey.unadj <- glm(methylation ~ prim.prey.peri.concpt, 
@@ -2110,7 +2154,7 @@ explanatory variable with %CCGG methylation",
              height = 9,
              units = c("in"), dpi = 300, limitsize = TRUE)
 
-      
+   
   ### 8.12 Cub model: mutual adjustment by significatn predictors 
     ## a) Adjusted: methlyation by mom rank and birth to 3 months prey density
       cub.mutual.adj <- glm(methylation ~ mom.strank.quart + hum.pres + 
@@ -2443,6 +2487,24 @@ of %CCGG methylation in cubs") +
     ## i) Parameter estimates
       summary(sub.hum.pres.sens)  # model parameter estimates
       confint(sub.hum.pres.sens)  # 95% CIs 
+      
+    ## j) Sensitivity: methlyation by samp_year_cnt
+      sub.samp.age.sens <- glm(methylation ~ age.mon + sex +
+                                 samp_year_cnt,
+                               data = luma_data_sub)
+      
+    ## k) Parameter estimates
+      summary(sub.samp.age.sens)  # model parameter estimates
+      confint(sub.samp.age.sens)  # 95% CIs 
+      
+    ## l) Sensitivity: meth by mat_rank, while controling for samp_year_cnt
+      sub.rank.samp.age.sens <- glm(methylation ~ mom.strank.quart + age.mon +
+                                      sex + samp_year_cnt,
+                                    data = luma_data_sub)
+      
+    ## m) Parameter estimates
+      summary(sub.rank.samp.age.sens)  # model parameter estimates
+      confint(sub.rank.samp.age.sens)  # 95% CIs 
       
       
   ### 9.6 sub model: methylation by periconceptional prey density     
@@ -3042,7 +3104,7 @@ of %CCGG methylation in cubs") +
       
       
     ## g) Sensitivity: methlyation by age.mon
-      adult.hum.pres.sens <- glm(methylation ~  hum.pres + age.mon + sex +
+      adult.hum.pres.sens <- glm(methylation ~   age.mon + sex +
                                   samp_year_cnt,
                                 data = luma_data_adult)
     
@@ -3052,6 +3114,24 @@ of %CCGG methylation in cubs") +
     ## i) Parameter estimates
       summary(adult.hum.pres.sens)  # model parameter estimates
       confint(adult.hum.pres.sens)  # 95% CIs 
+      
+    ## j) Sensitivity: methlyation by samp_year_cnt
+      adult.samp.age.sens <- glm(methylation ~ age.mon + sex +
+                                 samp_year_cnt,
+                               data = luma_data_adult)
+      
+    ## k) Parameter estimates
+      summary(adult.samp.age.sens)  # model parameter estimates
+      confint(adult.samp.age.sens)  # 95% CIs 
+      
+    ## l) Sensitivity: meth by mat_rank, while controling for samp_year_cnt
+      adult.rank.samp.age.sens <- glm(methylation ~ mom.strank.quart + age.mon +
+                                      sex + samp_year_cnt,
+                                    data = luma_data_adult)
+      
+    ## m) Parameter estimates
+      summary(adult.rank.samp.age.sens)  # model parameter estimates
+      confint(adult.rank.samp.age.sens)  # 95% CIs 
       
       
   ### 10.6 adult model: methylation by periconceptional prey density     

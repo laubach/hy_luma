@@ -208,8 +208,88 @@
 ###############################################################################
 ##############                 4. Assess controls                ##############
 ###############################################################################
+   
+  ### 4.1 Additional check for DNA degradation
+        # Check if non-specific first peak is associated with lower % meth.
+        # Head et al 2014 argue that any non-specific peaks (>5 light units)  
+        # are indicative of degraded DNA and can cause lower % meth estimates
+        # when using LUMA. Bjornsson et al 2008 use extra nucleotide 
+        # incorporations to fill non-specifc overhangs so they do not 
+        # contribute to the signal at the G and T peaks which are used to 
+        # quantify methylation.
+        # Most of our LUMA data (even the commerical lambda phage) have a 
+        # first peak >5 (we do not retain data in which non-specific peaks
+        # >5 persist). Using the first plate of LUMA data, we compare the 
+        # the 1st peak height and % meth. 
         
-  ### 4.1 Intra-Class CV
+    ## a) Read in sample record file
+        peak_vs_meth <- read_csv(paste('~/Git/fisi_lab/hy_luma/data/',
+                                      'p1r1_peak_vs_meth.csv', sep = ''))
+    ## b) Boxplot of 1st peak height
+        # graph of the raw data for percent global DNA methylaiton by age 
+        ggplot(data = peak_vs_meth, aes(y = peak)) + 
+          geom_boxplot() +
+          theme(text = element_text(size=18))+
+          labs(title = "Boxplot of LUMA 1st peak height (plate 1, rxn. 1)") +
+          theme(plot.title = element_text(hjust = 0.5)) + # center title
+          theme(legend.position = "none") + # remove legend
+          theme(axis.ticks = element_blank()) + # remove axis ticks
+          # remove background color
+          theme(panel.background = element_rect(fill = "white")) +
+          # change axes font style, color, size, angle, and margin
+          theme(axis.text.x = element_blank(),
+                axis.text.y = element_text(face="bold", color="black", 
+                                           size=18, angle=0, 
+                                           margin = margin(t = 0, r = 0, 
+                                                           b = 0, l = 10)))+
+          ylab("Peak height (light units)") +
+          xlab("")
+          
+    ## c) Save Plot
+        # use ggsave to save the plot
+        ggsave("first_peak_boxplot.pdf", plot = last_plot(), device = NULL, 
+               path = paste0(here(),"/data"),
+               scale = 1, width = 8, height = 5, 
+               units = c("in"), dpi = 300, limitsize = TRUE)  
+        
+    ## d) Graph of the raw data methylaiton by first peak height
+        ggplot(data = peak_vs_meth, aes(x = peak, y = meth)) +
+          geom_point(size = 1) +
+          theme(text = element_text(size=18))+
+          scale_colour_hue(l = 50) + # Use a slightly darker palette than normal
+          #geom_smooth(method = loess, se = F) + # Add smooth curve best fit lines
+          labs(title = "Plot of methylation by first peak height") +
+          theme(plot.title = element_text(hjust = 0.5)) + # center title
+          theme(legend.position = "none") + # remove legend
+          theme(axis.ticks = element_blank()) + # remove axis ticks
+          # remove background color
+          theme(panel.background = element_rect(fill = "white")) +
+          # add major axes
+          theme(axis.line = element_line(colour = "darkgrey", 
+                                         size = 1, linetype = "solid")) + 
+          # change axes font style, color, size, angle, and margin
+          theme(axis.text.x = element_text(face="bold", color="black", 
+                                           size=18, angle=0,
+                                           margin = margin(t = 0, r = 0, 
+                                                           b = 10, l = 0)),
+                axis.text.y = element_text(face="bold", color="black", 
+                                           size=18, angle=0, 
+                                           margin = margin(t = 0, r = 0, 
+                                                           b = 0, l = 10))) +
+          theme(plot.title = element_text(hjust = 0.5))+
+          ylab("% Global DNA Methylation") +
+          xlab("First peak height (light units)")
+        
+    ## e) Save Plot
+        # use ggsave to save the linearization plot
+        ggsave("meth_by_peak_ht_plot.pdf", plot = last_plot(), 
+               device = NULL,
+               path = paste0(here(),"/data"), 
+               scale = 1, width = 7, height = 5,
+               units = c("in"), dpi = 300, limitsize = TRUE)
+        
+        
+  ### 4.2 Intra-Class CV
     ## a) hy_pool and hy_100% Intra-Class CV
       # use dplyr to calulate the intra-class CV (within plate variation)
       # for control samples.
@@ -229,7 +309,7 @@
         dev.off()
         
         
-  ### 4.2 Inter-Class CV
+  ### 4.3 Inter-Class CV
     ## a) hy_pool and hy_100% Inter-Class CV
       # use ddply to calulate the inter-class CV (between plate variation) 
       # for control samples. 
@@ -249,7 +329,7 @@
         dev.off()    
 
               
-  ### 4.3 Check Linearization
+  ### 4.4 Check Linearization
     ## a) Organize data and create vector of predicted Values
       # arrange the luma_linearz descending order by plate_pos_seq
         luma_linearz <- arrange(luma_linearz, plate_pos_seq)
@@ -282,8 +362,7 @@
                units = c("in"), dpi = 300, limitsize = TRUE)
 
         
-  ### 4.4 Check Plates for Drift    
-        
+  ### 4.5 Check Plates for Drift    
     ## a) Graph Controls Across Plates 
       # Graph the controls on each reaction plate to assess for any plate drift
       # least squares regression is used for the fit function 
@@ -540,12 +619,8 @@
                            GROUP BY plate_rxn_ID, well") # to get rid of dups 
                                                          # created in join
         
-        
-      
-        
     ## b) Convert darting date to formatted date in luma_data 
         luma_data$darting.date <- fix.dates (luma_data$darting.date)
-    
         
     ## c) Join tblHyenas to tblDarting
         # A Left join of 'tblDarting' with select columns from 'tblHyenas', 
@@ -594,12 +669,12 @@
           group_by(id)
           summarise()
   
+          
  
 ###############################################################################
 ##############       6. Descriptive Statistics (Univariate)      ##############
 ###############################################################################               
      
-
   ### 6.1 Outcome Univariate 
     ## a) Descriptive Stats Outcome
       # calculate the mean, median and standard deviation of % methylation
@@ -724,7 +799,9 @@
       # check is done manually; somtimes different hy darted same date
       repeats <- luma_data_no_out %>%
         filter(duplicated(.[["darting.date"]]))       
-        
+ 
+      
+             
 ###############################################################################
 ##############        7. Save Intermediate Tables as .csv        ##############
 ###############################################################################         
