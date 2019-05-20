@@ -679,8 +679,9 @@
           filter (!is.na(methylation))%>% # check/remove rows where meth NA
           group_by (id) %>% # set grouping same ID within same cat age
           summarise (age.reps = sum(!is.na(methylation))) # n per ID w/in age 
-        # class   
       
+        
+        
 ###############################################################################
 ##############               4. UniVariate analyses              ##############
 ###############################################################################      
@@ -1061,7 +1062,7 @@
                 which = "fixed")  # 95% CIs 
       # generate p-value from type II Wald test
       car::Anova(age.lme,Type ="II", test = "Wald") 
-      #anova.lme(age.lme)      # generate p-value from Wald test
+      anova.lme(age.lme)      # generate p-value from Wald test
       
     ## f) Bivariate regression methylatino by age.mon
       # uses 'nmle' package, which will provided p-value estimates
@@ -1643,8 +1644,6 @@ Maternal Rank by Age",
 #      summary(cub.mom.rank.sens)  # print model summary, effects and SE
 #      confint(cub.mom.rank.sens)  # print 95% CIs for parameter estimates
 
-      
-      
     ## i) Extract mom.strank.quart estimates and 
       cub.rank.ef <- effect("mom.strank.quart", cub.mom.rank.adj)
       summary(cub.rank.ef)
@@ -3488,13 +3487,13 @@ of %CCGG methylation in cubs") +
       csv.file.name.luma <- paste("~/R/R_wd/fisi/project/", 
                                   "3_hy_GR_global_DNA_meth/",
                                   "LUMA/soc_eco_detrmnts_ms/",
-                                  "luma_data",".csv", sep= "")   
+                                  "luma_data2",".csv", sep= "")   
     
     ## b) File name for luma_data_group table used in analysis of manuscript
       csv.file.name.luma_data_group <- paste("~/R/R_wd/fisi/project/", 
                                              "3_hy_GR_global_DNA_meth/",
                                               "LUMA/soc_eco_detrmnts_ms/",
-                                              "luma_data_group",".csv", 
+                                              "luma_data_group2",".csv", 
                                              sep= "")   
     
     
