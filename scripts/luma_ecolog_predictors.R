@@ -2,7 +2,7 @@
 ##############       Spotted Hyena Global DNA Methylation        ##############
 ##############             LUMA Ecological Predictors            ##############
 ##############                 By: Zach Laubach                  ##############
-##############            last updated: 10 Sept 2018             ##############
+##############             last updated: 10 May 2019             ##############
 ###############################################################################
 
 
@@ -177,19 +177,22 @@
     setwd(here())
 
   
-  ### 1.5 Set file paths for data importing and exporting
-    ## a) The path to cleand LUMA data
-      luma_data_path <- paste("~/R/R_wd/fisi/project/3_hy_GR_global_DNA_meth/",
-                              "LUMA/output/", sep = '')
+  ### 1.5 Set file paths for data importing 
+    ## a) The path to static archived data used in these analyses
+      luma_data_path <- paste("~/Git/fisi_lab/hy_luma/data/", sep = '')
+      
+    # ## a) LUMA data that has undergone QA/QC...see luma_prep_analysis.R    
+    # luma_data_path <- paste("~/R/R_wd/fisi/project/3_hy_GR_global_DNA_meth/",
+    #                         "LUMA/output/", sep = '')
     
     ## b) The path to prey data
-      prey_data_path <- paste("~/Git/fisi_lab/hy_prey_density/output/",
+      prey_data_path <- paste("~/Git/fisi_lab/hy_luma/data/prey_density/",
                               sep = '')
-      
+
     ## c) The path to static Access Fisi backend
-      acess_fisi_data_path <- paste("~/R/R_wd/fisi/project/", 
+      acess_fisi_data_path <- paste("~/R/R_wd/fisi/project/",
                                     "3_hy_GR_global_DNA_meth/",
-                                    "LUMA/soc_eco_detrmnts_ms/", 
+                                    "LUMA/soc_eco_detrmnts_ms/",
                                     "1_output_tidy_tbls/",
                                     sep = '')
 
@@ -222,8 +225,8 @@
         reduce(rbind)
      
        
-  ### 2.3 Import Access fisi backend # Live backend...swithc to static version
-          # after analyses finalized
+  ### 2.3 Import Access fisi backend 
+      # NOTE: switch to static version after analyses finalized
     ## a) read in tidy Access fisi backend tables and save as data frames
 #      source(paste0("/Volumes/Holekamp/code_repository/R/1_output_tidy_tbls/",
 #                   "load_tidy_tbls.R"))
@@ -242,11 +245,7 @@
     ## a) view the variable classes to determine which need to be modified
       spec(luma_data)
     
-    ## b) fix dates and times functions TEMPORARILY NOT WORKING
-    #source (file = paste0("/Volumes/Holekamp/code_repository/R/",
-      #                    "4_scripts_source/fix_dates_and_times.R"))
-    
-    ## c) Convert dates stored as character (e.g. 03-aug-05) to formatted dates
+    ## b) Convert dates stored as character (e.g. 03-aug-05) to formatted dates
       luma_data$darting.date <- as.Date(luma_data$darting.date, 
                                       format = "%d-%b-%y")
       luma_data$birthdate <- as.Date(luma_data$birthdate, 
@@ -263,7 +262,7 @@
                                         format = "%d-%b-%y")
 
       
-    ## d) Create an estimated age in months by subtracting birthdate from
+    ## c) Create an estimated age in months by subtracting birthdate from
       # grad.date and weandate using lubridate
       luma_data <- luma_data %>%
         mutate(grad.age.mon = interval(birthdate, den.grad) %/% days(1))
@@ -284,13 +283,13 @@
     ## NOTE: To convert from age in days to age in months divde by average 
         # number of days per month  (30.44)  
         
-    ## e) Create an estimated age in months by subtracting birthdate from
+    ## d) Create an estimated age in months by subtracting birthdate from
       # darting.date using lubridate
       luma_data <- luma_data %>%
         mutate(age.mon = round((interval(birthdate, 
                                          darting.date) %/% days(1)/ 30.44), 1))
       
-    ## f) Cobmine age columns to fill in NA
+    ## e) Cobmine age columns to fill in NA
       # replace NA in age.months column where there is a value in 
       # estimated.age.mo column
       luma_data$age.months <- ifelse(is.na(luma_data$age.months),
@@ -303,11 +302,11 @@
                                    luma_data$age.months,
                                    luma_data$age.mon)
       
-    ## g) fix age transcription inconsistencies (e.g. all 'sub' to 'subadult') 
+    ## f) fix age transcription inconsistencies (e.g. all 'sub' to 'subadult') 
       luma_data <- luma_data %>%
         mutate(age = replace(age, str_detect(age, "s"), "subadult")) 
       
-    ## h) Create a categorical age variable based age.mon 
+    ## g) Create a categorical age variable based age.mon 
       # darting.date using lubridate
       # based on Holekamp and Smale 1998
       luma_data <- luma_data %>%
@@ -320,7 +319,7 @@
                                      age.mon <=24 ~ c("subadult"),
                                    sex == "f" & age.mon > 24 ~ c("adult")))
       
-    ## i) replace NA in age.cat column where there is a value in 
+    ## h) replace NA in age.cat column where there is a value in 
       # age column
       # first convert age to character
       luma_data$age <- as.character(luma_data$age)
@@ -328,7 +327,7 @@
                                          luma_data$age,
                                          luma_data$age.cat)
       
-    ## j) drop old age columns
+    ## i) drop old age columns
       luma_data <- luma_data %>%
         select (- c(age)) 
       
@@ -338,12 +337,12 @@
       luma_data <- luma_data %>%
         select (- c(estimated.age.mo)) 
    
-    ## k) extract the year for date of interest (here Birthdate) using lubridate
+    ## j) extract the year for date of interest (here Birthdate) using lubridate
       # and make a new variable
       luma_data$rank_year <- year(as.Date(luma_data$birthdate, 
                                           format="%Y-%m-%d"))
       
-    ## l) Make a new variable hum.pres
+    ## k) Make a new variable hum.pres
       # create a 3-level ordinal factor indicating human pastoralist presence 
       # (mid - talek hyena born after 2000, mid - fig tree born after 2000,
       # and lo - all other hynenas for which clan is known and birthdate)
@@ -373,18 +372,18 @@
                                                             "mara.river")
                                       ~ c("low")))
           
-    ## m) Make a new 2 level nomial variable lit.size
+    ## l) Make a new 2 level nomial variable lit.size
       luma_data <- luma_data  %>%
         mutate(lit.size = case_when(number.littermates == 0 ~ c("single"),
                                           litrank == 1 ~ c("twin"),
                                           litrank == 2 ~ c("twin")))
 
-    ## n) extract the year for sample collection data using lubridate
+    ## m) extract the year for sample collection data using lubridate
       # and make a new variable  
       luma_data$samp_year <- year(as.Date(luma_data$darting.date, 
                                           format="%Y-%m-%d"))
       
-    ## o) mark samples extracted via PAX-gene tubes those collected 2016 
+    ## n) mark samples extracted via PAX-gene tubes those collected 2016 
       # onwards
       luma_data <- luma_data  %>%
         mutate(dna_extrct_mth = case_when(samp_year >= 2016 ~ c("pax"),
@@ -1052,7 +1051,7 @@
              scale = 1, width = 7, height = 5, 
              units = c("in"), dpi = 300, limitsize = TRUE)  
   
-    ## e) Bivariate regression methylatino by age.cat
+    ## e) Bivariate regression Methylation by age.cat
       # uses 'nmle' package, which will provided p-value estimates
       age.lme <- lme(methylation ~ age.cat, random =~1|id, 
                      subset(luma_data_group,!is.na(x = age.cat)))
@@ -1064,7 +1063,7 @@
       car::Anova(age.lme,Type ="II", test = "Wald") 
       anova.lme(age.lme)      # generate p-value from Wald test
       
-    ## f) Bivariate regression methylatino by age.mon
+    ## f) Bivariate regression Methylation by age.mon
       # uses 'nmle' package, which will provided p-value estimates
       age.mon.lme <- lme(methylation ~ age.mon, random =~1|id, 
                      subset(luma_data_group,!is.na(x = age.mon)))
@@ -1113,7 +1112,7 @@
              scale = 1, width = 7, height = 5,
              units = c("in"), dpi = 300, limitsize = TRUE)
       
-    ## c) Bivariate Regression Methylatino by maternal rank 
+    ## c) Bivariate Regression Methylation by maternal rank 
       # uses 'nmle' package, which will provided p-value estimates
       mom.rank.lme <- lme(methylation ~ mom.strank.quart, random =~1|id, 
                      subset(luma_data_group,!is.na(x = mom.strank.quart)))
@@ -1180,7 +1179,7 @@
              scale = 1, width = 7, height = 5, 
              units = c("in"), dpi = 300, limitsize = TRUE)  
       
-      ## e) Bivariate Regression Methylatino by maternal rank 
+    ## e) Bivariate Regression Methylation by maternal rank 
       # uses 'nmle' package, which will provided p-value estimates
       lit.size.lme <- lme(methylation ~ lit.size, random =~1|id, 
                           subset(luma_data_group,!is.na(x = lit.size)))
@@ -1247,7 +1246,7 @@
              scale = 1, width = 7, height = 5, 
              units = c("in"), dpi = 300, limitsize = TRUE)  
       
-    ## e) Bivariate Regression Methylatino by human population size
+    ## e) Bivariate Regression Methylation by human population size
       # uses 'nmle' package, which will provided p-value estimates
       hum.pres.lme <- lme(methylation ~ hum.pres, random =~1|id, 
                                 subset(luma_data_group,!is.na(x = hum.pres)))
@@ -2029,7 +2028,7 @@ by Maternal Rank") +
 #      confint(cub.6.9.prim.prey.sens)  # 95% CIs 
         
       
-  ### 8.11 Graph of cub %CCGG methylation by soc and ecologica factors 
+  ### 8.11 Graph of cub %CCGG methylation by soc and ecological factors 
     ## a) make tidy tables of glm model parameter estimates using broom and
       # dotwhisker pckgs for all adjusted cub models
       # terms, including intercept can be dropped from tidy table for graphing
@@ -2933,15 +2932,15 @@ of %CCGG methylation in cubs") +
       # Robust Standard Errors (HC3 method)
       coeftest(adult.mom.rank.adj, vcov = vcovHC(adult.mom.rank.adj))  
     
-    ## g) Adjusted own rank: methlyation by strank.quart
-#      adult.own.rank.adj <- glm(methylation ~ strank.quart + 
-#                                  age.mon,
-#                                data = luma_data_adult)
-   
+    ## g) Adjusted adult female mom's rank: methlyation by mom.strank.quart
+     adult.fem.mom.rank.adj <- glm(methylation ~ mom.strank.quart +
+                                  age.mon,
+                                data = subset(luma_data_adult, sex == 'f'))
+
     ## h) Parameter estimates
-#      summary(adult.own.rank.adj)  # print model summary, effects and SE
-#      confint(adult.own.rank.adj)  # print 95% CIs for parameter estimates
-      
+      summary(adult.fem.mom.rank.adj)  # print model summary, effects and SE
+      confint(adult.fem.mom.rank.adj)  # print 95% CIs for parameter estimates
+
     ## i) Adjusted mom and own rank: methlyation by mom.strank.quart own strank
       adult.mom.own.rank.adj <- glm(methylation ~ mom.strank.quart + 
                                       strank.quart + age.mon,
@@ -3336,7 +3335,7 @@ of %CCGG methylation in cubs") +
       
       
       
-  ### 10.11 Graph of adult %CCGG methylation by soc and ecologica factors 
+  ### 10.11 Graph of adult %CCGG methylation by soc and ecological factors 
     ## a) make tidy tables of glm model parameter estimates using broom and
       # dotwhisker pckgs for all adjusted adult models
       # terms, including intercept can be dropped from tidy table for graphing
