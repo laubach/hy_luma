@@ -1171,7 +1171,7 @@
         ylab("%CCGG Methylation") +
         xlab("Litter Size")
       
-      ## d) Save Plot
+    ## d) Save Plot
       # use ggsave to save the plot
       ggsave("meth_by_lit_size_plot.pdf", plot = last_plot(), 
              device = NULL, 
@@ -1615,7 +1615,7 @@ Maternal Rank by Age",
       # difference
       Anova(cub.mom.rank.unadj, Type ="II", test = "Wald") # Wald test p
       
-      plot(cub.mom.rank.unadj) # view the residual and QQ plots
+      #plot(cub.mom.rank.unadj) # view the residual and QQ plots
       
     ## d) Adjusted: methlyation by mom.strank.quart
       cub.mom.rank.adj <- glm(methylation ~ mom.strank.quart + sex + 
@@ -1627,7 +1627,7 @@ Maternal Rank by Age",
       confint(cub.mom.rank.adj)  # print 95% CIs for parameter estimates
     
     ## f) Check for heteroskedacity, normality, and outliers    
-      plot(cub.mom.rank.adj) # view the residual and QQ plots
+      #plot(cub.mom.rank.adj) # view the residual and QQ plots
       bptest(cub.mom.rank.adj) # heteroskedasticity using the Breusch-Pagan 
                                # test; if significant, then generate test
                                # Robust Standard Errors
@@ -1729,7 +1729,7 @@ by Maternal Rank") +
       confint(cub.lit.size.unadj)  # 95% CIs
       Anova(cub.lit.size.unadj, Type ="II", test = "Wald") # Wald test p
       
-      plot(cub.lit.size.unadj) # view the residual and QQ plots
+      #plot(cub.lit.size.unadj) # view the residual and QQ plots
       
     ## d) Adjusted: methlyation by lit.size
       cub.lit.size.adj <- glm(methylation ~  lit.size + age.mon + sex,
@@ -1740,7 +1740,7 @@ by Maternal Rank") +
       confint(cub.lit.size.adj)  # 95% CIs 
       
     ## f) Check for heteroskedacity, normality, and outliers    
-      plot(cub.lit.size.adj) # view the residual and QQ plots
+      #plot(cub.lit.size.adj) # view the residual and QQ plots
       bptest(cub.lit.size.adj) # heteroskedasticity using the Breusch-Pagan 
       # test; if significant, then generate test
       # Robust Standard Errors
@@ -1775,7 +1775,7 @@ by Maternal Rank") +
       confint(cub.hum.pres.unadj)  # 95% CIs
       Anova(cub.hum.pres.unadj, Type ="II", test = "Wald") # Wald test p
       
-      plot(cub.hum.pres.unadj) # view the residual and QQ plots
+      #plot(cub.hum.pres.unadj) # view the residual and QQ plots
       
     ## d) Adjusted: methlyation by hum.pres
       cub.hum.pres.adj <- glm(methylation ~  hum.pres + age.mon + sex,
@@ -1786,7 +1786,7 @@ by Maternal Rank") +
       confint(cub.hum.pres.adj)  # 95% CIs 
       
     ## f) Check for heteroskedacity, normality, and outliers    
-      plot(cub.hum.pres.adj) # view the residual and QQ plots
+      #plot(cub.hum.pres.adj) # view the residual and QQ plots
       bptest(cub.hum.pres.adj) # heteroskedasticity using the Breusch-Pagan 
       # test; if significant, then generate test
       # Robust Standard Errors
@@ -1834,7 +1834,7 @@ by Maternal Rank") +
       summary(cub.peri.prim.prey.unadj)  # model parameter estimates
       confint(cub.peri.prim.prey.unadj)  # 95% CIs 
       
-      plot(cub.peri.prim.prey.unadj) # view the residual and QQ plots
+      #plot(cub.peri.prim.prey.unadj) # view the residual and QQ plots
       
     ## c) Adjusted: methlyation by periconceptional prim.prey density
       cub.peri.prim.prey.adj <- glm(methylation ~ prim.prey.peri.concpt + sex + 
@@ -1846,7 +1846,7 @@ by Maternal Rank") +
       confint(cub.peri.prim.prey.adj)  # 95% CIs 
       
     ## e) Check for heteroskedacity, normality, and outliers    
-      plot(cub.peri.prim.prey.adj) # view the residual and QQ plots
+      #plot(cub.peri.prim.prey.adj) # view the residual and QQ plots
       bptest(cub.peri.prim.prey.adj) # heteroskedasticity using the 
       # Breusch-Pagan test; if significant, then generate test
       # Robust Standard Errors
@@ -1872,7 +1872,7 @@ by Maternal Rank") +
       summary(cub.gest.prim.prey.unadj)  # model parameter estimates
       confint(cub.gest.prim.prey.unadj)  # 95% CIs 
       
-      plot(cub.gest.prim.prey.unadj) # view the residual and QQ plots
+      #plot(cub.gest.prim.prey.unadj) # view the residual and QQ plots
       
     ## c) Adjusted: methlyation by gestational prim.prey density
       cub.gest.prim.prey.adj <- glm(methylation ~ prim.prey.gest + 
@@ -1885,7 +1885,7 @@ by Maternal Rank") +
       confint(cub.gest.prim.prey.adj)  # 95% CIs 
   
     ## e) Check for heteroskedacity, normality, and outliers    
-      plot(cub.gest.prey.adj) # view the residual and QQ plots
+      #plot(cub.gest.prey.adj) # view the residual and QQ plots
       bptest(cub.gest.prim.prey.adj) # heteroskedasticity using the 
       # Breusch-Pagan test; if significant, then generate test
       # Robust Standard Errors
@@ -1912,7 +1912,7 @@ by Maternal Rank") +
       summary(cub.birth.3.prim.prey.unadj)  # model parameter estimates
       confint(cub.birth.3.prim.prey.unadj)  # 95% CIs 
       
-      plot(cub.birth.3.prim.prey.unadj) # view the residual and QQ plots
+      #plot(cub.birth.3.prim.prey.unadj) # view the residual and QQ plots
       
     ## c) Adjusted: methlyation by birth to 3 months prim.prey density
       cub.birth.3.prim.prey.adj <- glm(methylation ~ prim.prey.birth.3 + 
@@ -1925,7 +1925,7 @@ by Maternal Rank") +
       confint(cub.birth.3.prim.prey.adj)  # 95% CIs 
       
     ## e) Check for heteroskedacity, normality, and outliers    
-      plot(cub.birth.3.prey.adj) # view the residual and QQ plots
+      #plot(cub.birth.3.prey.adj) # view the residual and QQ plots
       bptest(cub.birth.3.prim.prey.adj) # heteroskedasticity using the 
       # Breusch-Pagan test; if significant, then generate test
       # Robust Standard Errors
@@ -1953,7 +1953,7 @@ by Maternal Rank") +
       summary(cub.3.6.prim.prey.unadj)  # model parameter estimates
       confint(cub.3.6.prim.prey.unadj)  # 95% CIs 
       
-      plot(cub.3.6.prim.prey.unadj) # view the residual and QQ plots
+      #plot(cub.3.6.prim.prey.unadj) # view the residual and QQ plots
       
     ## c) Adjusted: methlyation by 3 to 6 months prim.prey density
       cub.3.6.prim.prey.adj <- glm(methylation ~ prim.prey.3.6 + 
@@ -1967,7 +1967,7 @@ by Maternal Rank") +
       confint(cub.3.6.prim.prey.adj)  # 95% CIs 
       
     ## e) Check for heteroskedacity, normality, and outliers    
-      plot(cub.3.6.prey.adj) # view the residual and QQ plots
+      #plot(cub.3.6.prey.adj) # view the residual and QQ plots
       bptest(cub.3.6.prim.prey.adj) # heteroskedasticity using the 
       # Breusch-Pagan test; if significant, then generate test
       # Robust Standard Errors
@@ -1995,7 +1995,7 @@ by Maternal Rank") +
       summary(cub.6.9.prim.prey.unadj)  # model parameter estimates
       confint(cub.6.9.prim.prey.unadj)  # 95% CIs 
       
-      plot(cub.6.9.prim.prey.unadj) # view the residual and QQ plots
+      #plot(cub.6.9.prim.prey.unadj) # view the residual and QQ plots
       
     ## c) Adjusted: methlyation by 6 to 9 months prim.prey density
       cub.6.9.prim.prey.adj <- glm(methylation ~ prim.prey.6.9 + 
@@ -2009,7 +2009,7 @@ by Maternal Rank") +
       confint(cub.6.9.prim.prey.adj)  # 95% CIs 
       
     ## e) Check for heteroskedacity, normality, and outliers    
-      plot(cub.6.9.prey.adj) # view the residual and QQ plots
+      #plot(cub.6.9.prey.adj) # view the residual and QQ plots
       bptest(cub.6.9.prim.prey.adj) # heteroskedasticity using the 
       # Breusch-Pagan test; if significant, then generate test
       # Robust Standard Errors
@@ -2153,7 +2153,7 @@ explanatory variable with %CCGG methylation",
              units = c("in"), dpi = 300, limitsize = TRUE)
 
    
-  ### 8.12 Cub model: mutual adjustment by significatn predictors 
+  ### 8.12 Cub model: mutual adjustment by significant predictors 
     ## a) Adjusted: methlyation by mom rank and birth to 3 months prey density
       cub.mutual.adj <- glm(methylation ~ mom.strank.quart + hum.pres + 
                               prim.prey.peri.concpt + prim.prey.gest + 
@@ -2306,7 +2306,7 @@ of %CCGG methylation in cubs") +
       # difference
       Anova(sub.mom.rank.unadj, Type ="II", test = "Wald") # Wald test p
       
-      plot(sub.mom.rank.unadj) # view the residual and QQ plots
+      #plot(sub.mom.rank.unadj) # view the residual and QQ plots
       
     ## d) Adjusted: methlyation by mom.strank.quart
       sub.mom.rank.adj <- glm(methylation ~ mom.strank.quart + sex + 
@@ -2318,7 +2318,7 @@ of %CCGG methylation in cubs") +
       confint(sub.mom.rank.adj)  # print 95% CIs for parameter estimates
       
     ## f) Check for heteroskedacity, normality, and outliers    
-      plot(sub.mom.rank.adj) # view the residual and QQ plots
+      #plot(sub.mom.rank.adj) # view the residual and QQ plots
       bptest(sub.mom.rank.adj) # heteroskedasticity using the 
       # Breusch-Pagan test; if significant, then generate test
       # Robust Standard Errors
@@ -2408,7 +2408,7 @@ of %CCGG methylation in cubs") +
       confint(sub.lit.size.unadj)  # 95% CIs
       Anova(sub.lit.size.unadj, Type ="II", test = "Wald") # Wald test p
       
-      plot(sub.lit.size.unadj) # view the residual and QQ plots
+      #plot(sub.lit.size.unadj) # view the residual and QQ plots
       
     ## d) Adjusted: methlyation by age.mon
       sub.lit.size.adj <- glm(methylation ~  lit.size + age.mon + sex,
@@ -2420,7 +2420,7 @@ of %CCGG methylation in cubs") +
 
       
     ## f) Check for heteroskedacity, normality, and outliers    
-      plot(sub.lit.size.adj) # view the residual and QQ plots
+      #plot(sub.lit.size.adj) # view the residual and QQ plots
       bptest(sub.lit.size.adj) # heteroskedasticity using the 
       # Breusch-Pagan test; if significant, then generate test
       # Robust Standard Errors
@@ -2456,7 +2456,7 @@ of %CCGG methylation in cubs") +
       confint(sub.hum.pres.unadj)  # 95% CIs
       Anova(sub.hum.pres.unadj, Type ="II", test = "Wald") # Wald test p
       
-      plot(sub.hum.pres.unadj) # view the residual and QQ plots
+      #plot(sub.hum.pres.unadj) # view the residual and QQ plots
       
     ## d) Adjusted: methlyation by age.mon
       sub.hum.pres.adj <- glm(methylation ~  hum.pres + age.mon + sex,
@@ -2467,7 +2467,7 @@ of %CCGG methylation in cubs") +
       confint(sub.hum.pres.adj)  # 95% CIs 
       
     ## f) Check for heteroskedacity, normality, and outliers    
-      plot(sub.hum.pres.adj) # view the residual and QQ plots
+      #plot(sub.hum.pres.adj) # view the residual and QQ plots
       bptest(sub.hum.pres.adj) # heteroskedasticity using the 
       # Breusch-Pagan test; if significant, then generate test
       # Robust Standard Errors
@@ -2523,10 +2523,10 @@ of %CCGG methylation in cubs") +
       summary(sub.peri.prim.adj)  # model parameter estimates
       confint(sub.peri.prim.adj)  # 95% CIs
       
-      plot(sub.peri.prim.unadj) # view the residual and QQ plots
+      #plot(sub.peri.prim.unadj) # view the residual and QQ plots
       
     ## e) Check for heteroskedacity, normality, and outliers    
-      plot(sub.peri.prim.adj) # view the residual and QQ plots
+      #plot(sub.peri.prim.adj) # view the residual and QQ plots
       bptest(sub.peri.prim.adj) # heteroskedasticity using the 
       # Breusch-Pagan test; if significant, then generate test
       # Robust Standard Errors
@@ -2552,7 +2552,7 @@ of %CCGG methylation in cubs") +
       summary(sub.gest.prim.unadj)  # model parameter estimates
       confint(sub.gest.prim.unadj)  # 95% CIs 
       
-      plot(sub.gest.prim.unadj) # view the residual and QQ plots
+      #plot(sub.gest.prim.unadj) # view the residual and QQ plots
       
     ## c) Adjusted: methlyation by gestational prim.prey density
       sub.gest.prim.adj <- glm(methylation ~ prim.prey.gest + 
@@ -2565,7 +2565,7 @@ of %CCGG methylation in cubs") +
       confint(sub.gest.prim.adj)  # 95% CIs 
       
     ## e) Check for heteroskedacity, normality, and outliers    
-      plot(sub.gest.prim.adj) # view the residual and QQ plots
+      #plot(sub.gest.prim.adj) # view the residual and QQ plots
       bptest(sub.gest.prim.adj) # heteroskedasticity using the 
       # Breusch-Pagan test; if significant, then generate test
       # Robust Standard Errors
@@ -2592,7 +2592,7 @@ of %CCGG methylation in cubs") +
       summary(sub.birth.3.prim.unadj)  # model parameter estimates
       confint(sub.birth.3.prim.unadj)  # 95% CIs 
       
-      plot(sub.birth.3.prim.unadj) # view the residual and QQ plots
+      #plot(sub.birth.3.prim.unadj) # view the residual and QQ plots
       
     ## c) Adjusted: methlyation by birth to 3 months prim.prey density
       sub.birth.3.prim.adj <- glm(methylation ~ prim.prey.birth.3 + 
@@ -2605,7 +2605,7 @@ of %CCGG methylation in cubs") +
       confint(sub.birth.3.prim.adj)  # 95% CIs 
       
     ## e) Check for heteroskedacity, normality, and outliers    
-      plot(sub.birth.3.prim.adj) # view the residual and QQ plots
+      #plot(sub.birth.3.prim.adj) # view the residual and QQ plots
       bptest(sub.birth.3.prim.adj) # heteroskedasticity using the 
       # Breusch-Pagan test; if significant, then generate test
       # Robust Standard Errors
@@ -2632,7 +2632,7 @@ of %CCGG methylation in cubs") +
       summary(sub.3.6.prim.unadj)  # model parameter estimates
       confint(sub.3.6.prim.unadj)  # 95% CIs 
       
-      plot(sub.3.6.prim.unadj) # view the residual and QQ plots
+      #plot(sub.3.6.prim.unadj) # view the residual and QQ plots
       
     ## c) Adjusted: methlyation by 3 to 6 months prim.prey density
       sub.3.6.prim.adj <- glm(methylation ~ prim.prey.3.6 + 
@@ -2646,7 +2646,7 @@ of %CCGG methylation in cubs") +
       confint(sub.3.6.prim.adj)  # 95% CIs 
       
     ## e) Check for heteroskedacity, normality, and outliers    
-      plot(sub.3.6.prim.adj) # view the residual and QQ plots
+      #plot(sub.3.6.prim.adj) # view the residual and QQ plots
       bptest(sub.3.6.prim.adj) # heteroskedasticity using the 
       # Breusch-Pagan test; if significant, then generate test
       # Robust Standard Errors
@@ -2674,7 +2674,7 @@ of %CCGG methylation in cubs") +
       summary(sub.6.9.prim.unadj)  # model parameter estimates
       confint(sub.6.9.prim.unadj)  # 95% CIs 
       
-      plot(sub.6.9.prim.unadj) # view the residual and QQ plots
+      #plot(sub.6.9.prim.unadj) # view the residual and QQ plots
       
     ## c) Adjusted: methlyation by 6 to 9 months prim.prey density
       sub.6.9.prim.adj <- glm(methylation ~ prim.prey.6.9 + 
@@ -2688,7 +2688,7 @@ of %CCGG methylation in cubs") +
       confint(sub.6.9.prim.adj)  # 95% CIs 
       
     ## e) Check for heteroskedacity, normality, and outliers    
-      plot(sub.6.9.prim.adj) # view the residual and QQ plots
+      #plot(sub.6.9.prim.adj) # view the residual and QQ plots
       bptest(sub.6.9.prim.adj) # heteroskedasticity using the 
       # Breusch-Pagan test; if significant, then generate test
       # Robust Standard Errors
@@ -2913,7 +2913,7 @@ of %CCGG methylation in cubs") +
       # difference
       Anova(adult.mom.rank.unadj, Type ="II", test = "Wald") # Wald test p
       
-      plot(adult.mom.rank.unadj) # view the residual and QQ plots
+      #plot(adult.mom.rank.unadj) # view the residual and QQ plots
       
     ## d) Adjusted: methlyation by mom.strank.quart
       adult.mom.rank.adj <- glm(methylation ~ mom.strank.quart + sex + 
@@ -2925,7 +2925,7 @@ of %CCGG methylation in cubs") +
       confint(adult.mom.rank.adj)  # print 95% CIs for parameter estimates
       
     ## f) Check for heteroskedacity, normality, and outliers    
-      plot(adult.mom.rank.adj) # view the residual and QQ plots
+      #plot(adult.mom.rank.adj) # view the residual and QQ plots
       bptest(adult.mom.rank.adj) # heteroskedasticity using the 
       # Breusch-Pagan test; if significant, then generate test
       # Robust Standard Errors
@@ -3035,7 +3035,7 @@ of %CCGG methylation in cubs") +
       confint(adult.lit.size.unadj)  # 95% CIs
       Anova(adult.lit.size.unadj, Type ="II", test = "Wald") # Wald test p
       
-      plot(adult.lit.size.unadj) # view the residual and QQ plots
+      #plot(adult.lit.size.unadj) # view the residual and QQ plots
 
     ## d) Adjusted: methlyation by age.mon
       adult.lit.size.adj <- glm(methylation ~  lit.size + age.mon + sex,
@@ -3046,7 +3046,7 @@ of %CCGG methylation in cubs") +
       confint(adult.lit.size.adj)  # 95% CIs 
       
     ## f) Check for heteroskedacity, normality, and outliers    
-      plot(adult.lit.size.adj) # view the residual and QQ plots
+      #plot(adult.lit.size.adj) # view the residual and QQ plots
       bptest(adult.lit.size.adj) # heteroskedasticity using the 
       # Breusch-Pagan test; if significant, then generate test
       # Robust Standard Errors
@@ -3082,7 +3082,7 @@ of %CCGG methylation in cubs") +
       confint(adult.hum.pres.unadj)  # 95% CIs
       Anova(adult.hum.pres.unadj, Type ="II", test = "Wald") # Wald test p
       
-      plot(adult.hum.pres.unadj) # view the residual and QQ plots
+      #plot(adult.hum.pres.unadj) # view the residual and QQ plots
       
     ## d) Adjusted: methlyation by age.mon
       adult.hum.pres.adj <- glm(methylation ~  hum.pres + age.mon + sex,
@@ -3093,7 +3093,7 @@ of %CCGG methylation in cubs") +
       confint(adult.hum.pres.adj)  # 95% CIs 
       
     ## f) Check for heteroskedacity, normality, and outliers    
-      plot(adult.hum.pres.adj) # view the residual and QQ plots
+      #plot(adult.hum.pres.adj) # view the residual and QQ plots
       bptest(adult.hum.pres.adj) # heteroskedasticity using the 
       # Breusch-Pagan test; if significant, then generate test
       # Robust Standard Errors
@@ -3141,7 +3141,7 @@ of %CCGG methylation in cubs") +
       summary(adult.peri.prim.unadj)  # model parameter estimates
       confint(adult.peri.prim.unadj)  # 95% CIs 
       
-      plot(adult.peri.prim.unadj) # view the residual and QQ plots
+      #plot(adult.peri.prim.unadj) # view the residual and QQ plots
 
     ## c) Adjusted: methlyation by periconceptional prim.prey density
       adult.peri.prim.adj <- glm(methylation ~ prim.prey.peri.concpt + sex + 
@@ -3153,7 +3153,7 @@ of %CCGG methylation in cubs") +
       confint(adult.peri.prim.adj)  # 95% CIs 
    
     ## e) Check for heteroskedacity, normality, and outliers    
-      plot(adult.peri.prim.adj) # view the residual and QQ plots
+      #plot(adult.peri.prim.adj) # view the residual and QQ plots
       bptest(adult.peri.prim.adj) # heteroskedasticity using the 
       # Breusch-Pagan test; if significant, then generate test
       # Robust Standard Errors
@@ -3179,7 +3179,7 @@ of %CCGG methylation in cubs") +
       summary(adult.gest.prim.unadj)  # model parameter estimates
       confint(adult.gest.prim.unadj)  # 95% CIs 
       
-      plot(adult.gest.prim.unadj) # view the residual and QQ plots
+      #plot(adult.gest.prim.unadj) # view the residual and QQ plots
       
     ## c) Adjusted: methlyation by gestational prim.prey density
       adult.gest.prim.adj <- glm(methylation ~ prim.prey.gest + 
@@ -3192,7 +3192,7 @@ of %CCGG methylation in cubs") +
       confint(adult.gest.prim.adj)  # 95% CIs 
       
     ## e) Check for heteroskedacity, normality, and outliers    
-      plot(adult.gest.prim.adj) # view the residual and QQ plots
+      #plot(adult.gest.prim.adj) # view the residual and QQ plots
       bptest(adult.gest.prim.adj) # heteroskedasticity using the 
       # Breusch-Pagan test; if significant, then generate test
       # Robust Standard Errors
@@ -3219,7 +3219,7 @@ of %CCGG methylation in cubs") +
       summary(adult.birth.3.prim.unadj)  # model parameter estimates
       confint(adult.birth.3.prim.unadj)  # 95% CIs 
       
-      plot(adult.birth.3.prim.unadj) # view the residual and QQ plots
+      #plot(adult.birth.3.prim.unadj) # view the residual and QQ plots
       
     ## c) Adjusted: methlyation by birth to 3 months prim.prey density
       adult.birth.3.prim.adj <- glm(methylation ~ prim.prey.birth.3 + 
@@ -3232,7 +3232,7 @@ of %CCGG methylation in cubs") +
       confint(adult.birth.3.prim.adj)  # 95% CIs 
       
     ## e) Check for heteroskedacity, normality, and outliers    
-      plot(adult.birth.3.prim.adj) # view the residual and QQ plots
+      #plot(adult.birth.3.prim.adj) # view the residual and QQ plots
       bptest(adult.birth.3.prim.adj) # heteroskedasticity using the 
       # Breusch-Pagan test; if significant, then generate test
       # Robust Standard Errors
@@ -3259,7 +3259,7 @@ of %CCGG methylation in cubs") +
       summary(adult.3.6.prim.unadj)  # model parameter estimates
       confint(adult.3.6.prim.unadj)  # 95% CIs 
       
-      plot(adult.3.6.prim.unadj) # view the residual and QQ plots
+      #plot(adult.3.6.prim.unadj) # view the residual and QQ plots
       
     ## c) Adjusted: methlyation by 3 to 6 months prim.prey density
       adult.3.6.prim.adj <- glm(methylation ~ prim.prey.3.6 + 
@@ -3273,7 +3273,7 @@ of %CCGG methylation in cubs") +
       confint(adult.3.6.prim.adj)  # 95% CIs 
       
     ## e) Check for heteroskedacity, normality, and outliers    
-      plot(adult.3.6.prim.adj) # view the residual and QQ plots
+      #plot(adult.3.6.prim.adj) # view the residual and QQ plots
       bptest(adult.3.6.prim.adj) # heteroskedasticity using the 
       # Breusch-Pagan test; if significant, then generate test
       # Robust Standard Errors
@@ -3301,7 +3301,7 @@ of %CCGG methylation in cubs") +
       summary(adult.6.9.prim.unadj)  # model parameter estimates
       confint(adult.6.9.prim.unadj)  # 95% CIs 
       
-      plot(adult.6.9.prim.unadj) # view the residual and QQ plots
+      #plot(adult.6.9.prim.unadj) # view the residual and QQ plots
       
     ## c) Adjusted: methlyation by 6 to 9 months prim.prey density
       adult.6.9.prim.adj <- glm(methylation ~ prim.prey.6.9 + 
@@ -3315,7 +3315,7 @@ of %CCGG methylation in cubs") +
       confint(adult.6.9.prim.adj)  # 95% CIs 
       
     ## e) Check for heteroskedacity, normality, and outliers    
-      plot(adult.6.9.prim.adj) # view the residual and QQ plots
+      #plot(adult.6.9.prim.adj) # view the residual and QQ plots
       bptest(adult.6.9.prim.adj) # heteroskedasticity using the 
       # Breusch-Pagan test; if significant, then generate test
       # Robust Standard Errors
